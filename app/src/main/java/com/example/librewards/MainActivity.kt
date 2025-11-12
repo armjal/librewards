@@ -1,0 +1,160 @@
+package com.example.librewards
+
+import android.app.Dialog
+import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.os.Bundle
+import android.view.MenuItem
+import android.widget.ImageView
+import android.widget.Toast
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.GravityCompat
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentPagerAdapter
+import com.example.librewards.RewardsFragment.RewardsListener
+import com.example.librewards.TimerFragment.TimerListener
+import com.facebook.AccessToken
+import com.facebook.login.LoginManager
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.ktx.Firebase
+import com.google.zxing.qrcode.encoder.QRCode
+import com.squareup.picasso.Picasso
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.popup_layout.*
+import java.util.*
+import kotlin.math.log
+
+class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
+    private lateinit var timerFragment: TimerFragment
+    private lateinit var rewardsFragment: RewardsFragment
+    private lateinit var popup: Dialog
+    lateinit var email: String
+    lateinit var firstName: String
+    lateinit var lastName: String
+    lateinit var photoURL: String
+    lateinit var university: String
+    lateinit var userImage : ImageView
+    private lateinit var database: DatabaseReference
+    private lateinit var fh: FirebaseHandler
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        //Sets the layout to the XML file associated with it
+        setContentView(R.layout.activity_main)
+        //Assigns the field to the view's specified in the fragment_timer XML file file
+        timerFragment = TimerFragment()
+        rewardsFragment = RewardsFragment()
+        fh = FirebaseHandler()
+        database = FirebaseDatabase.getInstance().reference
+
+
+        initialiseVariables()
+
+        //val navLayout = setContentView(R.layout.nav_header)
+        Picasso.get().load(photoURL).into(profileImage)
+
+        "$firstName $lastName".also { username.text = it }
+
+        tabLayout.setupWithViewPager(viewPager)
+        val viewPagerAdapter = ViewPagerAdapter(supportFragmentManager, 0)
+        viewPagerAdapter.addFragment(timerFragment,"")
+        viewPagerAdapter.addFragment(rewardsFragment,"" )
+        viewPager.adapter = viewPagerAdapter
+        tabLayout.getTabAt(0)?.setIcon(R.drawable.timer)
+        tabLayout.getTabAt(1)?.setIcon(R.drawable.reward)
+
+        profileImage.setOnClickListener {
+            logoutApp()
+        }
+    }
+
+    private fun initialiseVariables() {
+        val extras = intent.extras
+        email = extras?.getString("email").toString()
+        firstName = extras?.getString("first_name").toString()
+        lastName = extras?.getString("last_name").toString()
+        university = extras?.getString("university").toString()
+        photoURL = extras?.getString("photo").toString()
+
+    }
+
+    private fun logoutApp() {
+        // Logout from Facebook
+        val auth = Firebase.auth
+        if (auth.currentUser != null) {
+            auth.signOut()
+        }
+        if (AccessToken.getCurrentAccessToken() != null) {
+            LoginManager.getInstance().logOut()
+            val intent = Intent(this, Login::class.java)
+            intent.flags =
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+            supportFragmentManager.popBackStack()
+            startActivity(intent)
+            finish()
+        }
+    }
+
+    //Method that creates a popup
+    private fun showPopup(text: String) {
+        popup = Dialog(this)
+        popup.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popup.setContentView(R.layout.popup_layout)
+        popupText.text = text
+        closeBtn.setOnClickListener { popup.dismiss() }
+        popup.show()
+    }
+
+    private fun toastMessage(message: String) {
+        Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+    }
+
+    //Creating a preference for activity on first start-up only
+    private fun firstStart(): Boolean {
+        val rewardsPrefs = this.getSharedPreferences("rewardsPrefs", Context.MODE_PRIVATE)
+        return rewardsPrefs.getBoolean("firstStart", true)
+    }
+
+    //Using the interface in both fragments, the main activity is able to facilitate communication between the two fragments. Here, it sets the points in each fragment each time
+    //it's updated
+    override fun onPointsRewardsSent(points: Int) {
+        timerFragment.updatePoints(points)
+    }
+
+    override fun onPointsTimerSent(points: Int) {
+        rewardsFragment.updatedPoints(points)
+    }
+
+    //Using a tab layout tutorial from YouTube user @Coding In Flow, I was able to create a tab layout and customise it so it fit my theme.
+    private inner class ViewPagerAdapter(fm: FragmentManager, behavior: Int) :
+        FragmentPagerAdapter(fm, behavior) {
+        private val fragments: MutableList<Fragment> = ArrayList()
+        private val fragmentTitle: MutableList<String> = ArrayList()
+        fun addFragment(fragment: Fragment, title: String) {
+            fragments.add(fragment)
+            fragmentTitle.add(title)
+        }
+
+        override fun getItem(position: Int): Fragment {
+            return fragments[position]
+        }
+
+        override fun getCount(): Int {
+            return fragments.size
+        }
+
+        override fun getPageTitle(position: Int): CharSequence {
+            return fragmentTitle[position]
+        }
+
+
+    }
+
+}

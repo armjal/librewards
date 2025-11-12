@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="130dp"
+    android:paddingLeft="10dp"
+    android:paddingBottom="10dp"
+    android:paddingRight="10dp"
+    tools:context=".RewardsFragment">
+
+    <TextView
+        android:id="@+id/rewardsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="70dp"
+        android:background="@drawable/layout_bg"
+        android:paddingLeft="20dp"
+        android:paddingTop="10dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/rewardsPointsViewer"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="@drawable/points_box"
+        android:contentDescription="@string/pointsHolder"
+        app:layout_constraintEnd_toEndOf="@+id/rewardsContainer"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@+id/rewardsContainer"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/rewardsPoints"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/pointsRewards"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="@+id/rewardsPointsViewer"
+        app:layout_constraintStart_toStartOf="@+id/rewardsPointsViewer"
+        app:layout_constraintTop_toTopOf="@+id/rewardsPointsViewer" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/pointsRewardsText"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="@+id/rewardsPointsViewer"
+        app:layout_constraintStart_toStartOf="@+id/rewardsPointsViewer"
+        app:layout_constraintTop_toBottomOf="@+id/rewardsPoints" />
+
+    <TextView
+        android:id="@+id/rewardsText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/_10sdp"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:textAllCaps="true"
+        android:textSize="@dimen/_10sdp"
+        app:layout_constraintStart_toStartOf="@id/rewardsContainer"
+        app:layout_constraintTop_toBottomOf="@id/rewardsPointsViewer" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rewardsRecycler"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="120dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/rewardsContainer" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

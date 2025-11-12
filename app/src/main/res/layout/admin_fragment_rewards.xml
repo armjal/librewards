@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="130dp"
+    android:paddingLeft="10dp"
+    android:paddingBottom="10dp"
+    android:paddingRight="10dp"
+    tools:context=".RewardsFragment">
+
+    <TextView
+        android:id="@+id/adminRewardsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="30dp"
+        android:background="@drawable/layout_bg"
+        android:paddingLeft="20dp"
+        android:paddingTop="10dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/adminRewardsText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/_10sdp"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:text="@string/adminRewards"
+        android:textAllCaps="true"
+        android:textSize="@dimen/_10sdp"
+        app:layout_constraintStart_toStartOf="@id/adminRewardsContainer"
+        app:layout_constraintTop_toBottomOf="@id/adminRewardsPointsViewer" />
+
+    <ImageView
+        android:id="@+id/addAProduct"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/_10sdp"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:src="@drawable/add_products"
+        app:layout_constraintEnd_toEndOf="@id/adminRewardsContainer"
+        app:layout_constraintTop_toBottomOf="@id/adminRewardsPointsViewer"
+        app:tint= "@color/colorOrange"
+        android:contentDescription="@string/add_a_product" />
+
+    <ImageView
+        android:id="@+id/adminRewardsPointsViewer"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="@drawable/points_box"
+        android:contentDescription="@string/pointsHolder"
+        app:layout_constraintEnd_toEndOf="@+id/adminRewardsContainer"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@+id/adminRewardsContainer"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/adminRewardsRecycler"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="90dp"
+        android:layout_marginBottom="13dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/adminRewardsContainer" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

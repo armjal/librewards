@@ -1,0 +1,143 @@
+package com.example.librewards
+
+import android.content.Intent
+import android.os.Bundle
+import android.util.Log
+import android.view.View
+import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.ktx.Firebase
+import kotlinx.android.synthetic.main.activity_register.*
+
+
+class Register : AppCompatActivity() {
+    private lateinit var localDb: DatabaseHandler
+    private lateinit var database: DatabaseReference
+    private lateinit var auth: FirebaseAuth
+    private lateinit var uniSelected: String
+    private var spinnerPos: Int? = null
+    private lateinit var fh: FirebaseHandler
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_register)
+        auth = Firebase.auth
+        localDb = DatabaseHandler(applicationContext)
+        fh = FirebaseHandler()
+        database = FirebaseDatabase.getInstance().reference
+        //storeUniversities()
+
+        backToLogin.setOnClickListener {
+            val intent = Intent(this, Login::class.java)
+            startActivity(intent)
+        }
+
+        registrationSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+
+            }
+
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                spinnerPos = position
+                if (position == 0) {
+                    Log.d(TAG, "First element in spinner")
+                } else {
+                    // On selecting a spinner item
+                    uniSelected = parent?.getItemAtPosition(position).toString()
+
+                    // Showing selected spinner item
+                    Toast.makeText(
+                        parent?.context, "You selected: $uniSelected",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                }
+            }
+        }
+
+        loadSpinnerData()
+
+        registerHereButton.setOnClickListener {
+            if (registrationEmail.text.toString() == "" || registrationPassword.toString() == "" || registrationFirstName.toString() == "" || registrationLastName.text.toString() == "" || spinnerPos == 0) {
+                Toast.makeText(
+                    baseContext,
+                    "Please ensure all fields are correctly filled out.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                signUp()
+            }
+        }
+
+    }
+
+    private fun signUp() {
+        auth.createUserWithEmailAndPassword(
+            registrationEmail.text.toString(),
+            registrationPassword.text.toString()
+        )
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    fh.writeNewUser(
+                        registrationEmail.text.toString(),
+                        registrationFirstName.text.toString(),
+                        registrationLastName.text.toString(),
+                        registrationEmail.text.toString(),
+                        uniSelected
+                    )
+                    // Sign in success, update UI with the signed-in user's information
+                    Log.d(TAG, "createUserWithEmail:success")
+                    val user = auth.currentUser
+                    updateUI(user)
+                    val intent = Intent(this, Login::class.java)
+                    startActivity(intent)
+
+                } else {
+                    // If sign in fails, display a message to the user.
+                    Log.w(TAG, "createUserWithEmail:failure", task.exception)
+
+                    Toast.makeText(
+                        baseContext, "Authentication failed.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    updateUI(null)
+                }
+            }
+    }
+
+    private fun loadSpinnerData() {
+        val listFromFile = ListFromFile(applicationContext)
+        val uniList: MutableList<String> = listFromFile.readLine("universities.txt")
+        // Spinner Drop down elements
+        uniList.add(0, "Please choose a University")
+        // Creating adapter for spinner
+        val dataAdapter = ArrayAdapter(
+            this,
+            R.layout.spinner_text, uniList
+        )
+        // Drop down layout style - list view with radio button
+        dataAdapter
+            .setDropDownViewResource(R.layout.simple_spinner_dropdown)
+
+        // attaching data adapter to spinner
+        registrationSpinner.adapter = dataAdapter
+    }
+
+
+    private fun updateUI(user: FirebaseUser?) {
+    }
+
+    companion object {
+        val TAG: String = Register::class.java.simpleName
+    }
+}
