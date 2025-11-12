@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/adminHomeFragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:paddingStart="@dimen/_8sdp"
+    android:paddingTop="@dimen/_100sdp"
+    android:paddingEnd="@dimen/_8sdp"
+    android:paddingBottom="@dimen/_8sdp">
+
+    <TextView
+        android:id="@+id/adminHomeContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="30dp"
+        android:background="@drawable/layout_bg"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/adminHomePointsViewer"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="@drawable/points_box"
+        android:contentDescription="@string/pointsHolderTimer"
+        app:layout_constraintEnd_toEndOf="@+id/adminHomeContainer"
+        app:layout_constraintStart_toStartOf="@+id/adminHomeContainer"
+        app:layout_constraintTop_toTopOf="parent" />
+    <TextView
+        android:id="@+id/adminRewardsText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/adminScanQr"
+        android:textAllCaps="true"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:layout_marginStart="@dimen/_10sdp"
+        android:textSize="@dimen/_10sdp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/adminHomePointsViewer" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/_10sdp"
+        android:layout_marginTop="@dimen/_30sdp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/adminHomePointsViewer">
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/scanTimerButton"
+            android:layout_width="@dimen/_200sdp"
+            android:layout_height="@dimen/_40sdp"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/_5sdp"
+            android:background="@drawable/rounded_shape"
+            android:text="Scan to start timer"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/_12ssp" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/scanRewardButton"
+            android:layout_width="@dimen/_200sdp"
+            android:layout_height="@dimen/_40sdp"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:background="@drawable/rounded_shape"
+            android:text="@string/redeemStudentsReward"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/_12ssp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="@dimen/_20sdp"
+            android:layout_gravity="center">
+
+            <View
+                android:layout_width="@dimen/_80sdp"
+                android:layout_height="2dp"
+                android:layout_marginEnd="@dimen/_10sdp"
+                android:layout_gravity="center"
+                android:background="@color/colorDarkGrey" />
+
+            <TextView
+                android:id="@+id/adminOrText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="@string/or"
+                android:textAllCaps="true"
+                android:textSize="@dimen/_10sdp" />
+
+            <View
+                android:layout_width="@dimen/_80sdp"
+                android:layout_height="2dp"
+                android:layout_marginStart="@dimen/_10sdp"
+                android:layout_gravity="center"
+                android:background="@color/colorDarkGrey" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/enterQr"
+            android:layout_width="@dimen/_200sdp"
+            android:layout_height="@dimen/_40sdp"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/_20sdp"
+            android:background="@drawable/rounded_shape_outline"
+            android:hint="@string/enter_qr"
+            android:inputType="text"
+            android:paddingStart="@dimen/_10sdp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/startTimerButton"
+                android:layout_width="@dimen/_95sdp"
+                android:layout_height="@dimen/_30sdp"
+                android:layout_gravity="center"
+                android:layout_marginEnd="@dimen/_5sdp"
+                android:background="@drawable/rounded_shape"
+                android:text="@string/startTimer"
+                android:textAllCaps="true"
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/_10ssp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/redeemRewardButton"
+                android:layout_width="@dimen/_95sdp"
+                android:layout_height="@dimen/_30sdp"
+                android:layout_gravity="center"
+                android:layout_marginStart="@dimen/_5sdp"
+                android:background="@drawable/rounded_shape"
+                android:backgroundTint="@color/colorOrange"
+                android:text="@string/redeemReward"
+                android:textColor="@color/colorWhite"
+                android:textSize="@dimen/_10ssp" />
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

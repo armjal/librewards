@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<com.sothree.slidinguppanel.SlidingUpPanelLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="bottom"
+    android:id="@+id/slidingPanel"
+    app:umanoPanelHeight="@dimen/_45sdp"
+    app:umanoOverlay="true"
+    app:umanoShadowHeight="0dp"
+    tools:context=".TimerFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/timerFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:paddingStart="@dimen/_8sdp"
+        android:paddingTop="@dimen/_100sdp"
+        android:paddingEnd="@dimen/_8sdp"
+        android:paddingBottom="@dimen/_8sdp">
+
+        <TextView
+            android:id="@+id/timerContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="70dp"
+            android:layout_marginBottom="@dimen/_35sdp"
+            android:background="@drawable/layout_bg"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/timerPointsViewer"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:background="@drawable/points_box"
+            android:contentDescription="@string/pointsHolderTimer"
+            app:layout_constraintEnd_toEndOf="@+id/timerContainer"
+            app:layout_constraintStart_toStartOf="@+id/timerContainer"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/usersPoints"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/pointsTimer"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="@+id/timerPointsViewer"
+            app:layout_constraintStart_toStartOf="@+id/timerPointsViewer"
+            app:layout_constraintTop_toTopOf="@+id/timerPointsViewer" />
+
+        <TextView
+            android:id="@+id/pointsTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/pointsTextTimer"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="@+id/timerPointsViewer"
+            app:layout_constraintStart_toStartOf="@+id/timerPointsViewer"
+            app:layout_constraintTop_toBottomOf="@+id/usersPoints" />
+
+        <LinearLayout
+            android:id="@+id/stopwatchContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/_10sdp"
+            android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="@+id/timerContainer"
+            app:layout_constraintStart_toStartOf="@+id/timerContainer"
+            app:layout_constraintTop_toBottomOf="@+id/timerPointsViewer">
+
+            <TextView
+                android:id="@+id/stopwatchName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/stopwatch"
+                android:textAllCaps="true"
+                android:textSize="@dimen/_10ssp" />
+
+            <Chronometer
+                android:id="@+id/stopwatch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="-10dp"
+                android:textColor="@color/colorVeryDarkGrey"
+                android:textSize="@dimen/_64ssp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/map"
+                android:textAllCaps="true"
+                android:layout_marginTop="@dimen/_12sdp"
+                android:textSize="@dimen/_10ssp" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/mapHolder"
+                android:layout_width="@dimen/_210sdp"
+                android:layout_height="@dimen/_130sdp"
+                app:cardCornerRadius="@dimen/_12sdp"
+                app:cardElevation="@dimen/_8sdp"
+                android:layout_gravity="center"
+                android:layout_marginTop="@dimen/_12sdp"
+                android:layout_marginBottom="@dimen/_20sdp">
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/googleMap"
+                    android:name="com.google.android.gms.maps.SupportMapFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:id="@+id/timerMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/scanQrToStart"
+                android:textAllCaps="true"
+                android:textSize="@dimen/_10ssp" />
+
+        </LinearLayout>
+
+    <!--  <ScrollView
+          android:id="@+id/scrollRecycler"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          app:layout_constraintBottom_toBottomOf="@+id/timeContainer">
+
+          <LinearLayout
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:padding="@dimen/_8sdp">
+
+              <RelativeLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  tools:ignore="UselessParent">
+
+                  <TextView
+                      android:id="@+id/universityName"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:text="@string/university_name"
+                      android:textAllCaps="true"
+                      android:textSize="@dimen/_12ssp" />
+
+              </RelativeLayout>
+
+              <androidx.recyclerview.widget.RecyclerView
+                  android:id="@+id/timerRecycler"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent">
+
+              </androidx.recyclerview.widget.RecyclerView>
+
+          </LinearLayout>
+
+      </ScrollView> -->
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <RelativeLayout
+            android:id="@+id/dragView"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/_380sdp"
+            android:background="@drawable/shadow">
+            <View
+                android:layout_width="@dimen/_37sdp"
+                android:layout_height="@dimen/_2sdp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:background="@drawable/rounded_shape"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_18sdp"
+                android:layout_centerHorizontal="true"
+                android:textAllCaps="true"
+                android:text="@string/qrCode" />
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/qrCode"
+                android:layout_width="@dimen/_200sdp"
+                android:layout_height="@dimen/_200sdp"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:contentDescription="@string/qrCode"
+                android:elevation="@dimen/_7sdp"
+                app:shapeAppearanceOverlay="@style/roundedImageViewRoundedSquare" />
+            <TextView
+                android:id="@+id/qrCodeNumber"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="@dimen/_50sdp"
+                android:textStyle="bold"
+                android:textColor="@color/colorDarkOrange"
+                android:textSize="@dimen/_18ssp"
+                android:text="@string/qrCodeNumber" />
+
+        </RelativeLayout>
+</com.sothree.slidinguppanel.SlidingUpPanelLayout>
+
+
+
+
+
+    
+
+

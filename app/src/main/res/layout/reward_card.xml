@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/_170sdp"
+    android:layout_height="@dimen/_100sdp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="20dp"
+    android:layout_margin="@dimen/_10sdp"
+    android:id="@+id/homeCardView"
+    app:cardElevation="@dimen/_6sdp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/background_color"
+        android:layout_width="@dimen/_180sdp"
+        android:layout_height="match_parent"
+        android:background="@drawable/gradient_white"
+        >
+
+
+        <ImageView
+            android:id="@+id/homeProductImage"
+            android:layout_width="@dimen/_170sdp"
+            android:layout_height="@dimen/_170sdp"
+            android:scaleType="fitXY"
+            android:alpha="0.5"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentBottom="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/homeProductTitle"
+            android:layout_width="@dimen/_140sdp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_16sdp"
+            android:layout_marginBottom="@dimen/_28sdp"
+            android:shadowColor="@color/colorWhite"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="10"
+            android:text="Reward"
+            android:textAllCaps="true"
+            android:textColor="@color/colorVeryDarkGrey"
+            android:textSize="@dimen/_14ssp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@id/background_color"
+            app:layout_constraintStart_toStartOf="@+id/background_color" />
+
+        <TextView
+            android:id="@+id/homeProductCost"
+            android:layout_width="@dimen/_89sdp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="@dimen/_16sdp"
+            android:layout_toEndOf="@+id/homeProductImage"
+            android:shadowColor="@color/colorBlackText"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2"
+            android:text="Reward"
+            android:textColor="@color/colorOrange"
+            android:textSize="@dimen/_12ssp"
+            app:layout_constraintStart_toStartOf="@+id/background_color"
+            app:layout_constraintTop_toBottomOf="@+id/homeProductTitle" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+</androidx.cardview.widget.CardView>

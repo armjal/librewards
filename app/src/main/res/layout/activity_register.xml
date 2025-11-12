@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_white"
+    tools:context=".Register">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingStart="@dimen/_30sdp"
+        android:paddingTop="@dimen/_100sdp"
+        android:paddingEnd="@dimen/_30sdp"
+        android:paddingBottom="@dimen/_100sdp">
+
+        <TextView
+            android:id="@+id/registerContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/_60sdp"
+            android:background="@drawable/layout_bg" />
+
+        <RelativeLayout
+            android:id="@+id/registrationContainerHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:background="@drawable/points_box"
+                android:contentDescription="@string/registrationContainerHeader" />
+
+            <TextView
+                android:id="@+id/registrationText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:text="@string/registration"
+                android:textSize="32sp"/>
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="@dimen/_200sdp"
+            android:layout_height="match_parent"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:layout_alignTop="@+id/registerContainer">
+
+            <EditText
+                android:id="@+id/registrationFirstName"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:layout_gravity="center_horizontal"
+                android:paddingStart="@dimen/_10sdp"
+                android:paddingEnd="0dp"
+                android:background="@drawable/rounded_shape_outline"
+                android:hint="@string/first_name"
+                android:inputType="textEmailAddress" />
+
+            <EditText
+                android:id="@+id/registrationLastName"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:paddingStart="@dimen/_10sdp"
+                android:paddingEnd="0dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:background="@drawable/rounded_shape_outline"
+                android:hint="@string/last_name"
+                android:inputType="textEmailAddress" />
+
+            <EditText
+                android:id="@+id/registrationEmail"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:paddingStart="@dimen/_10sdp"
+                android:paddingEnd="0dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:background="@drawable/rounded_shape_outline"
+                android:hint="@string/email"
+                android:inputType="textEmailAddress"/>
+
+            <EditText
+                android:id="@+id/registrationPassword"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:paddingStart="@dimen/_10sdp"
+                android:paddingEnd="0dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:background="@drawable/rounded_shape_outline"
+                android:hint="@string/password"
+                android:inputType="textPassword"/>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_30sdp"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:background="@drawable/rounded_shape_outline"
+                android:orientation="horizontal">
+
+                <Spinner
+                    android:id="@+id/registrationSpinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="5dp"
+                    android:background="@android:color/transparent"
+                    android:gravity="center"
+                    android:prompt="@string/spinner_title"
+                    android:spinnerMode="dropdown" />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_baseline_arrow_drop_down_24" />
+
+            </RelativeLayout>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/registerHereButton"
+                android:background="@drawable/rounded_shape"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:textColor="@color/colorWhite"
+                android:text="@string/register"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+        </LinearLayout>
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/backToLogin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/abc_vector_test"
+        app:tint="@color/colorOrange" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
