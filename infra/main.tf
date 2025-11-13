@@ -14,12 +14,20 @@ provider "google-beta" {
 }
 
 resource "google_project" "lib_rewards_project" {
+  provider = google-beta
   project_id = "librewards-2ea18"
   name       = "LibRewards"
+  billing_account = "0147E8-8D8F4A-3B7036"
 
   labels = {
     "firebase" = "enabled"
   }
+}
+
+resource "google_project_service" "default" {
+  provider = google-beta
+  project = google_project.lib_rewards_project.project_id
+  service = "identitytoolkit.googleapis.com"
 }
 
 resource "google_firebase_project" "firebase_project" {
@@ -29,8 +37,18 @@ resource "google_firebase_project" "firebase_project" {
 
 resource "google_firebase_android_app" "app" {
   provider = google-beta
-
   project      = google_project.lib_rewards_project.project_id
   display_name = "LibRewards"
   package_name = "android.librewards"
+}
+
+resource "google_identity_platform_config" "default" {
+  provider = google-beta
+  project = google_project.lib_rewards_project.project_id
+  sign_in {
+    email {
+      enabled = true
+      password_required = true
+    }
+  }
 }
