@@ -32,6 +32,8 @@ resource "google_project_service" "default" {
     "cloudresourcemanager.googleapis.com",
     "identitytoolkit.googleapis.com",
     "firebasedatabase.googleapis.com",
+    "firebasestorage.googleapis.com",
+    "storage.googleapis.com"
   ])
   service = each.key
 }
@@ -67,4 +69,19 @@ resource "google_firebase_database_instance" "database" {
   region      = "europe-west1"
   instance_id = "${google_project.lib_rewards_project.project_id}-default-rtdb"
   type        = "DEFAULT_DATABASE"
+}
+
+# Provisions the bucket.
+resource "google_storage_bucket" "rewards_bucket" {
+  provider                    = google-beta
+  project                     = google_project.lib_rewards_project.project_id
+  name                        = "rewards_bucket-${google_project.lib_rewards_project.project_id}"
+  location                    = "EU"
+  uniform_bucket_level_access = true
+}
+
+resource "google_firebase_storage_bucket" "rewards_bucket" {
+  provider  = google-beta
+  project   = google_firebase_project.firebase_project.project
+  bucket_id = google_storage_bucket.rewards_bucket.name
 }
