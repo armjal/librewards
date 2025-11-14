@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.librewards.databinding.ActivityLoginBinding
 import com.example.librewards.models.User
 import com.facebook.*
 import com.facebook.appevents.AppEventsLogger
@@ -16,7 +17,6 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.*
 import com.google.firebase.ktx.Firebase
-import kotlinx.android.synthetic.main.activity_login.*
 
 
 class Login : AppCompatActivity() {
@@ -29,10 +29,12 @@ class Login : AppCompatActivity() {
     private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
     private lateinit var fh: FirebaseHandler
+    private lateinit var binding: ActivityLoginBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        binding = ActivityLoginBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         fh = FirebaseHandler()
         auth = Firebase.auth
 
@@ -41,22 +43,22 @@ class Login : AppCompatActivity() {
         callbackManager = CallbackManager.Factory.create()
         database = FirebaseDatabase.getInstance().reference
 
-        facebookLoginButton.setPermissions(listOf("public_profile", "email"))
+        binding.facebookLoginButton.setPermissions(listOf("public_profile", "email"))
 
-        registerButton.setOnClickListener {
+        binding.registerButton.setOnClickListener {
             val intent = Intent(this, Register::class.java)
             startActivity(intent)
         }
 
-        loginButton.setOnClickListener {
-            if (loginEmail.text.toString() == "" || loginPassword.text.toString() == "") {
+        binding.loginButton.setOnClickListener {
+            if (binding.loginEmail.text.toString() == "" || binding.loginPassword.text.toString() == "") {
                 Toast.makeText(baseContext, "Please ensure all fields are correctly filled out.", Toast.LENGTH_SHORT).show()
             } else {
                 signIn()
             }
         }
 
-        facebookLoginButton.registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
+        binding.facebookLoginButton.registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
             override fun onSuccess(loginResult: LoginResult) {
                 Log.d(TAG, "facebook:onSuccess:$loginResult")
                 handleFacebookAccessToken(loginResult.accessToken)
@@ -177,8 +179,7 @@ class Login : AppCompatActivity() {
                 })
                 reload()
             }
-        }
-        else{
+        } else {
             val mainActivity = MainActivity()
             getFacebookInfo(AccessToken.getCurrentAccessToken(), mainActivity)
         }
@@ -190,23 +191,21 @@ class Login : AppCompatActivity() {
     }
 
     private fun signIn() {
-        auth.signInWithEmailAndPassword(loginEmail.text.toString(), loginPassword.text.toString())
+        auth.signInWithEmailAndPassword(binding.loginEmail.text.toString(), binding.loginPassword.text.toString())
                 .addOnCompleteListener(this) { task ->
                     if (task.isSuccessful) {
                         // Sign in success, update UI with the signed-in user's information
                         Log.d(TAG, "signInWithEmail:success")
                         val user = auth.currentUser
                         var isAdmin: String
-                        val refChild = fh.getChild("users", loginEmail.text.toString(), "admin")
+                        val refChild = fh.getChild("users", binding.loginEmail.text.toString(), "admin")
                         refChild.addValueEventListener(object : ValueEventListener {
                             override fun onDataChange(dataSnapshot: DataSnapshot) {
                                 isAdmin = dataSnapshot.value.toString()
                                 if (isAdmin == "0") {
-                                    val intent = Intent(this@Login, MainActivity::class.java)
-                                    startActivity(intent)
-                                    finish()
+                                    getUserLoginInfo(binding.loginEmail.text.toString(), MainActivity())
                                 } else if (isAdmin == "1") {
-                                    getUserLoginInfo(loginEmail.text.toString(), AdminActivity())
+                                    getUserLoginInfo(binding.loginEmail.text.toString(), AdminActivity())
                                 }
                             }
 

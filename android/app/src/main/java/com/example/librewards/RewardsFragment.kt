@@ -9,22 +9,17 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.setMargins
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.librewards.databinding.FragmentRewardsBinding
+import com.example.librewards.databinding.PopupLayoutBinding
 import com.example.librewards.models.Product
 import com.google.firebase.database.*
 import com.squareup.picasso.Picasso
-import kotlinx.android.synthetic.main.fragment_rewards.*
-import kotlinx.android.synthetic.main.fragment_rewards.view.*
-import kotlinx.android.synthetic.main.fragment_timer.*
-import kotlinx.android.synthetic.main.popup_layout.*
 
 
 class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
@@ -36,9 +31,11 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private var layoutManager: RecyclerView.LayoutManager? = null
     private var adapter: RecyclerView.Adapter<RecyclerAdapter.ViewHolder>? = null
     private var listener: RewardsListener? = null
-    private lateinit var v: View
     private var counter: Int? = null
     private lateinit var productPopup : Dialog
+
+    private var _binding: FragmentRewardsBinding? = null
+    private val binding get() = _binding!!
 
     //Interface that consists of a method that will update the points in "TimerFragment"
     interface RewardsListener {
@@ -56,20 +53,19 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // Inflate the layout for this fragment
-        v = inflater.inflate(R.layout.fragment_rewards, container, false)
-        return v
+        _binding = FragmentRewardsBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mainActivity = activity as MainActivity
         layoutManager = LinearLayoutManager(context)
-        "See rewards from ${mainActivity.university}".also { view.rewardsText.text = it }
-        view.rewardsRecycler.layoutManager = layoutManager
+        "See rewards from ${mainActivity.university}".also { binding.rewardsText.text = it }
+        binding.rewardsRecycler.layoutManager = layoutManager
         productsList = mutableListOf()
         adapter = RecyclerAdapter(requireActivity(), productsList, this)
-        view.rewardsRecycler.adapter = adapter
+        binding.rewardsRecycler.adapter = adapter
         database = FirebaseDatabase.getInstance().reference
             .child("products")
             .child(mainActivity.university)
@@ -89,12 +85,17 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         fh = FirebaseHandler()
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     private fun calculatePointsFromPurchase(position: Int) {
         val pointsInt =
-            Integer.parseInt(rewardsPoints.text.toString()) - Integer.parseInt(productsList[position].productcost!!)
+            Integer.parseInt(binding.rewardsPoints.text.toString()) - Integer.parseInt(productsList[position].productcost!!)
 
         if (pointsInt > 0) {
-            rewardsPoints.text = pointsInt.toString()
+            binding.rewardsPoints.text = pointsInt.toString()
             minusPointsListener(Integer.parseInt(productsList[position].productcost!!))
         } else {
             toastMessage("You do not have sufficient points for this purchase")
@@ -105,10 +106,11 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     //Method that creates a custom popup
     private fun showTextPopup(text: String) {
         popup = Dialog(requireActivity())
+        val popupBinding = PopupLayoutBinding.inflate(layoutInflater)
         popup.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        popup.setContentView(R.layout.popup_layout)
-        popupText.text = text
-        closeBtn.setOnClickListener { popup.dismiss() }
+        popup.setContentView(popupBinding.root)
+        popupBinding.popupText.text = text
+        popupBinding.closeBtn.setOnClickListener { popup.dismiss() }
         popup.show()
     }
 
@@ -121,43 +123,43 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         redeemRef.setValue("0")
         productPopup = Dialog(requireActivity())
         productPopup.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        productPopup.setContentView(R.layout.popup_layout)
-        val popUpImageView = productPopup.findViewById<ImageView>(R.id.popupImageView)
-        val popUpCost = productPopup.findViewById<TextView>(R.id.popupCost)
-        val popUpText = productPopup.findViewById<TextView>(R.id.popupText)
-        val closeBtn = productPopup.findViewById<AppCompatImageView>(R.id.closeBtn)
-        popUpImageView.layoutParams.height = 150
-        popUpImageView.layoutParams.width = 150
-        popUpImageView.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(30, 0, 0, 0) }
-        val popupQr = productPopup.findViewById<ImageView>(R.id.popupQr)
-        val drawableQR = mainActivity.qrCode.drawable
-        popupQr.setImageDrawable(drawableQR)
-        popupQr.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(50) }
-        popUpText.text = list[position].productname
-        "${list[position].productcost} points".also { popUpCost.text = it }
-        popUpCost.textSize = 20F
-        popUpText.textSize = 25F
-        popUpCost.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(0, 0, 0, 50) }
-        Picasso.get().load(list[position].productimage).into(popUpImageView)
+
+        val popupBinding = PopupLayoutBinding.inflate(layoutInflater)
+        productPopup.setContentView(popupBinding.root)
+
+        popupBinding.popupImageView.layoutParams.height = 150
+        popupBinding.popupImageView.layoutParams.width = 150
+        popupBinding.popupImageView.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(30, 0, 0, 0) }
+
+//         val drawableQR = mainActivity.qrCode.drawable
+//         popupBinding.popupQr.setImageDrawable(drawableQR)
+
+        popupBinding.popupQr.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(50) }
+        popupBinding.popupText.text = list[position].productname
+        "${list[position].productcost} points".also { popupBinding.popupCost.text = it }
+        popupBinding.popupCost.textSize = 20F
+        popupBinding.popupText.textSize = 25F
+        popupBinding.popupCost.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(0, 0, 0, 50) }
+        Picasso.get().load(list[position].productimage).into(popupBinding.popupImageView)
 
         var redeemed: String
 
-            val redeemListener = redeemRef.addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    redeemed = snapshot.value.toString()
-                    if (redeemed == "1") {
-                        redeemRef.setValue("0")
-                        calculatePointsFromPurchase(position)
-                    }
+        val redeemListener = redeemRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                redeemed = snapshot.value.toString()
+                if (redeemed == "1") {
+                    redeemRef.setValue("0")
+                    calculatePointsFromPurchase(position)
                 }
+            }
 
-                override fun onCancelled(error: DatabaseError) {
-                    Log.e(TAG, "Could not access database")
-                }
+            override fun onCancelled(error: DatabaseError) {
+                Log.e(TAG, "Could not access database")
+            }
 
-            })
+        })
 
-        closeBtn.setOnClickListener {
+        popupBinding.closeBtn.setOnClickListener {
             productPopup.dismiss()
         }
         productPopup.setOnDismissListener { redeemRef.removeEventListener(redeemListener) }
@@ -184,7 +186,7 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
                 dbPoints = dataSnapshot.value.toString()
                 val finalPoints = Integer.parseInt(dbPoints) - minusValue
                 refChild.setValue(finalPoints.toString())
-                rewardsPoints.text = finalPoints.toString()
+                binding.rewardsPoints.text = finalPoints.toString()
                 listener?.onPointsRewardsSent(finalPoints)
             }
 
@@ -198,7 +200,7 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 
     //Method that is used between fragments to update each other's points
     fun updatedPoints(newPoints: Int) {
-        v.rewardsPoints.text = newPoints.toString()
+        binding.rewardsPoints.text = newPoints.toString()
     }
 
     override fun onAttach(context: Context) {
