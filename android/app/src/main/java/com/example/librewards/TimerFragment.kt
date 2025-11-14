@@ -24,7 +24,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.view.setMargins
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.RecyclerView
 import com.example.librewards.models.Product
 import com.example.librewards.qrcode.QRCodeGenerator
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -35,10 +34,10 @@ import com.google.android.gms.maps.model.*
 import com.google.firebase.database.*
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import com.squareup.picasso.Picasso
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.fragment_timer.*
-import kotlinx.android.synthetic.main.fragment_timer.view.*
-import kotlinx.android.synthetic.main.popup_layout.*
+import com.example.librewards.databinding.ActivityMainBinding
+import com.example.librewards.databinding.AdminFragmentHomeBinding
+import com.example.librewards.databinding.FragmentTimerBinding
+import com.example.librewards.databinding.PopupLayoutBinding
 
 
 class TimerFragment : Fragment(), OnMapReadyCallback {
@@ -54,8 +53,8 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
     private lateinit var fh: FirebaseHandler
     private lateinit var mainActivity: MainActivity
     private lateinit var adminActivity: AdminActivity
-    private var locationOne: Location? = null
-    private var locationTwo: Location? = null
+    private lateinit var locationOne: Location
+    private lateinit var locationTwo: Location
     private var pointsListener: ValueEventListener? = null
     private lateinit var database: DatabaseReference
     private lateinit var productsList: MutableList<Product>
@@ -65,7 +64,10 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
     lateinit var mapFragment: SupportMapFragment
     private var googleMap: GoogleMap? = null
     private lateinit var circleOptions: CircleOptions
+    private var _binding: FragmentTimerBinding? = null
+    private val binding get() = _binding!!
 
+    private var popupLayoutBinding: PopupLayoutBinding? = null
     //Interface that consists of a method that will update the points in "RewardsFragment"
     interface TimerListener {
         fun onPointsTimerSent(points: Int)
@@ -83,30 +85,27 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         // Inflate the layout for this fragment
         mainActivity = activity as MainActivity
         adminActivity = AdminActivity()
         fh = FirebaseHandler()
         database = FirebaseDatabase.getInstance().reference
-        //Assigns the field to the view's specified in the fragment_timer XML file file
-        v = inflater.inflate(R.layout.fragment_timer, container, false)
-        mapFragment = childFragmentManager.findFragmentById(R.id.googleMap) as SupportMapFragment
 
-        return v
+        mapFragment = childFragmentManager.findFragmentById(R.id.googleMap) as SupportMapFragment
+        _binding = FragmentTimerBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         addTimerEventListener()
         val qrGen = QRCodeGenerator()
-        view.qrCode.setImageBitmap(qrGen.createQR(fh.hashFunction(mainActivity.email), 400, 400))
-        view.qrCodeNumber.text = fh.hashFunction(mainActivity.email)
+        binding.qrCode.setImageBitmap(qrGen.createQR(fh.hashFunction(mainActivity.email), 400, 400))
+        binding.qrCodeNumber.text = fh.hashFunction(mainActivity.email)
 
         val touchableList: ArrayList<View?> = mainActivity.tabLayout.touchables
-        view.slidingPanel.addPanelSlideListener(object : SlidingUpPanelLayout.PanelSlideListener {
+        binding.slidingPanel.addPanelSlideListener(object : SlidingUpPanelLayout.PanelSlideListener {
             override fun onPanelSlide(panel: View?, slideOffset: Float) {
                 mainActivity.profileImage.alpha = (1.3 - slideOffset).toFloat()
                 mainActivity.logo.alpha = (1.3 - slideOffset).toFloat()
@@ -146,27 +145,20 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
         val locManager = mainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val locListener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
-                if (locationOne == null) {
-                    locationOne = location
-                    latLngLocOne = LatLng(locationOne!!.latitude, locationOne!!.longitude)
-                    mapFragment.getMapAsync(this@TimerFragment)
-
+                locationTwo = location
+                distance = locationOne.distanceTo(locationTwo)
+                Log.d(TAG, distance.toString())
+                latLngLocTwo = LatLng(locationTwo.latitude, locationTwo.longitude)
+                if (marker != null) {
+                    marker!!.position = latLngLocTwo
+                }
+                if (distance!! > 40) {
+                    circle.fillColor = Color.parseColor("#4dff0000")
                 } else {
-                    locationTwo = location
-                    distance = locationOne?.distanceTo(locationTwo)!!
-                    Log.d(TAG, distance.toString())
-                    latLngLocTwo = LatLng(locationTwo!!.latitude, locationTwo!!.longitude)
-                    if (marker != null) {
-                        marker!!.position = latLngLocTwo
-                    }
-                    if (distance!! > 40) {
-                        circle.fillColor = Color.parseColor("#4dff0000")
-                    } else {
-                        circle.fillColor = Color.parseColor("#4d318ce7")
-
-                    }
+                    circle.fillColor = Color.parseColor("#4d318ce7")
 
                 }
+
             }
 
             override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
@@ -254,32 +246,32 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
                 isStudying = dataSnapshot.value.toString()
                 Log.d(TAG, isStudying)
                 if (isStudying == "1") {
-                    v.stopwatch.base = SystemClock.elapsedRealtime()
-                    v.stopwatch.start()
+                    binding.stopwatch.base = SystemClock.elapsedRealtime()
+                    binding.stopwatch.start()
                     getLocationDistance()
-                    v.stopwatch.onChronometerTickListener = OnChronometerTickListener {
+                    binding.stopwatch.onChronometerTickListener = OnChronometerTickListener {
                         //Checks if the stopwatch has gone over 24 hours. If so, the stopwatch resets back to its original state
-                        if (SystemClock.elapsedRealtime() - stopwatch.base >= 800000) {
-                            v.stopwatch.base = SystemClock.elapsedRealtime()
-                            v.stopwatch.stop()
+                        if (SystemClock.elapsedRealtime() - binding.stopwatch.base >= 800000) {
+                            binding.stopwatch.base = SystemClock.elapsedRealtime()
+                            binding.stopwatch.stop()
                             showPopup("No stop code was entered for 24 hours. The timer has been reset")
                         }
                         if (distance != null && distance!! > 50) {
-                            v.stopwatch.base = SystemClock.elapsedRealtime()
-                            v.stopwatch.stop()
+                            binding.stopwatch.base = SystemClock.elapsedRealtime()
+                            binding.stopwatch.stop()
                             fh.getChild("users", mainActivity.email, "studying").setValue("2")
                         }
                     }
 
                 } else if (isStudying == "0") {
-                    totalTime = SystemClock.elapsedRealtime() - stopwatch.base
+                    totalTime = SystemClock.elapsedRealtime() - binding.stopwatch.base
                     setPointsFromTime(totalTime!!)
-                    v.stopwatch.base = SystemClock.elapsedRealtime()
-                    v.stopwatch.stop()
+                    binding.stopwatch.base = SystemClock.elapsedRealtime()
+                    binding.stopwatch.stop()
                     googleMap?.stopAnimation()
                     googleMap?.clear()
                     //Listener to communicate with Rewards Fragment and give the points to display in there
-                    listener?.onPointsTimerSent(Integer.parseInt(usersPoints.text.toString()))
+                    listener?.onPointsTimerSent(Integer.parseInt(binding.usersPoints.text.toString()))
                     refChild.setValue("2")
                 }
 
@@ -303,7 +295,7 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
                 if (dbPoints != "null") {
                     finalPoints = Integer.parseInt(dbPoints) + addValue
                     refChild.setValue(finalPoints.toString())
-                    v.usersPoints.text = finalPoints.toString()
+                    binding.usersPoints.text = finalPoints.toString()
                     listener?.onPointsTimerSent(finalPoints)
                 }
             }
@@ -333,7 +325,7 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
 
         addPointsListener(pointsEarned)
 
-        val newPoints = pointsEarned + Integer.parseInt(v.usersPoints.text.toString())
+        val newPoints = pointsEarned + Integer.parseInt(binding.usersPoints.text.toString())
 
         if (minutes == 1) {
             showPopup("Well done, you spent $minutes minute at the library and have earned $pointsEarned points! Your new points balance is: $newPoints")
@@ -350,16 +342,17 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
 
 
     fun updatePoints(newPoints: Int) {
-        v.usersPoints.text = newPoints.toString()
+        binding.usersPoints.text = newPoints.toString()
     }
 
     //Method that creates a popup
     private fun showPopup(text: String?) {
         popup = Dialog(requireActivity())
         popup?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        popup?.setContentView(R.layout.popup_layout)
-        popup!!.popupText.text = text
-        popup!!.closeBtn.setOnClickListener { popup?.dismiss() }
+        popupLayoutBinding = PopupLayoutBinding.inflate(layoutInflater)
+        popup?.setContentView(popupLayoutBinding!!.root)
+        popupLayoutBinding!!.popupText.text = text
+        popupLayoutBinding!!.closeBtn.setOnClickListener { popup?.dismiss() }
         popup?.show()
     }
 
@@ -375,7 +368,7 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
         popUpImageView.layoutParams.width = 150
         popUpImageView.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(30, 0, 0, 0) }
         val popupQr = popup.findViewById<ImageView>(R.id.popupQr)
-        val drawableQR = mainActivity.qrCode.drawable
+        val drawableQR = binding.qrCode.drawable
         popupQr.setImageDrawable(drawableQR)
         popupQr.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(50) }
         popUpText.text = list[position].productname
