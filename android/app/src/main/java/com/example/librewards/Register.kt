@@ -6,14 +6,13 @@ import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.example.librewards.databinding.ActivityRegisterBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.ktx.Firebase
-import kotlinx.android.synthetic.main.activity_register.*
-
 
 class Register : AppCompatActivity() {
     private lateinit var localDb: DatabaseHandler
@@ -22,22 +21,24 @@ class Register : AppCompatActivity() {
     private lateinit var uniSelected: String
     private var spinnerPos: Int? = null
     private lateinit var fh: FirebaseHandler
+    private lateinit var binding: ActivityRegisterBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_register)
+        binding = ActivityRegisterBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         auth = Firebase.auth
         localDb = DatabaseHandler(applicationContext)
         fh = FirebaseHandler()
         database = FirebaseDatabase.getInstance().reference
         //storeUniversities()
 
-        backToLogin.setOnClickListener {
+        binding.backToLogin.setOnClickListener {
             val intent = Intent(this, Login::class.java)
             startActivity(intent)
         }
 
-        registrationSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        binding.registrationSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) {
 
             }
@@ -67,8 +68,8 @@ class Register : AppCompatActivity() {
 
         loadSpinnerData()
 
-        registerHereButton.setOnClickListener {
-            if (registrationEmail.text.toString() == "" || registrationPassword.toString() == "" || registrationFirstName.toString() == "" || registrationLastName.text.toString() == "" || spinnerPos == 0) {
+        binding.registerHereButton.setOnClickListener {
+            if (binding.registrationEmail.text.toString() == "" || binding.registrationPassword.text.toString() == "" || binding.registrationFirstName.text.toString() == "" || binding.registrationLastName.text.toString() == "" || spinnerPos == 0) {
                 Toast.makeText(
                     baseContext,
                     "Please ensure all fields are correctly filled out.",
@@ -83,16 +84,16 @@ class Register : AppCompatActivity() {
 
     private fun signUp() {
         auth.createUserWithEmailAndPassword(
-            registrationEmail.text.toString(),
-            registrationPassword.text.toString()
+            binding.registrationEmail.text.toString(),
+            binding.registrationPassword.text.toString()
         )
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     fh.writeNewUser(
-                        registrationEmail.text.toString(),
-                        registrationFirstName.text.toString(),
-                        registrationLastName.text.toString(),
-                        registrationEmail.text.toString(),
+                        binding.registrationEmail.text.toString(),
+                        binding.registrationFirstName.text.toString(),
+                        binding.registrationLastName.text.toString(),
+                        binding.registrationEmail.text.toString(),
                         uniSelected
                     )
                     // Sign in success, update UI with the signed-in user's information
@@ -130,7 +131,7 @@ class Register : AppCompatActivity() {
             .setDropDownViewResource(R.layout.simple_spinner_dropdown)
 
         // attaching data adapter to spinner
-        registrationSpinner.adapter = dataAdapter
+        binding.registrationSpinner.adapter = dataAdapter
     }
 
 

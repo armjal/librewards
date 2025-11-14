@@ -6,8 +6,7 @@ import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.fragment_facebook_university.*
-
+import com.example.librewards.databinding.FragmentFacebookUniversityBinding
 
 class FacebookUniversity : AppCompatActivity() {
     private var spinnerPos : Int? = null
@@ -15,17 +14,20 @@ class FacebookUniversity : AppCompatActivity() {
     private lateinit var localDb : DatabaseHandler
     private lateinit var login : Login
     private lateinit var fh : FirebaseHandler
+    private var _binding : FragmentFacebookUniversityBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.fragment_facebook_university)
+        _binding = FragmentFacebookUniversityBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         localDb = DatabaseHandler(applicationContext)
         login = Login()
         fh = FirebaseHandler()
 
         storeUniversities()
 
-        fbUniversitySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        binding.fbUniversitySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) {
             }
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
@@ -45,7 +47,7 @@ class FacebookUniversity : AppCompatActivity() {
             }
         }
         loadSpinnerData()
-        selectUniversityButton.setOnClickListener {
+        binding.selectUniversityButton.setOnClickListener {
             if(spinnerPos!=0){
                 val extras = intent.extras
                 val email = extras?.getString("email")
@@ -81,7 +83,7 @@ class FacebookUniversity : AppCompatActivity() {
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
 
         // attaching data adapter to spinner
-        fbUniversitySpinner.adapter = dataAdapter
+        binding.fbUniversitySpinner.adapter = dataAdapter
     }
 
     private fun storeUniversities() {
