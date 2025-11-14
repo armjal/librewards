@@ -18,10 +18,13 @@ import com.example.librewards.databinding.ActivityMainBinding
 import com.example.librewards.databinding.PopupLayoutBinding
 import com.facebook.AccessToken
 import com.facebook.login.LoginManager
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.tabs.TabLayout
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.ktx.Firebase
+import com.google.zxing.qrcode.encoder.QRCode
 import com.squareup.picasso.Picasso
 import java.util.*
 
@@ -34,12 +37,18 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
     lateinit var lastName: String
     lateinit var photoURL: String
     lateinit var university: String
-    lateinit var userImage : ImageView
     private lateinit var database: DatabaseReference
     private lateinit var fh: FirebaseHandler
     private var popupLayoutBinding: PopupLayoutBinding? = null
     private var _binding: ActivityMainBinding? = null
     private val binding get() = _binding!!
+
+    // Exposing views for fragments temporarily
+    val profileImage: ImageView get() = binding.profileImage
+    val logo: ImageView get() = binding.logo
+    val appBarLayout: AppBarLayout get() = binding.appBarLayout
+    val tabLayout: TabLayout get() = binding.tabLayout
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //Sets the layout to the XML file associated with it
@@ -71,6 +80,12 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
         binding.profileImage.setOnClickListener {
             logoutApp()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
+        popupLayoutBinding = null
     }
 
     private fun initialiseVariables() {
