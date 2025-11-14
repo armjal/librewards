@@ -17,15 +17,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.librewards.databinding.AddProductPopupBinding
+import com.example.librewards.databinding.AdminFragmentRewardsBinding
+import com.example.librewards.databinding.ManageProductPopupBinding
 import com.example.librewards.models.Product
 import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.squareup.picasso.Picasso
-import kotlinx.android.synthetic.main.add_product_popup.*
-import kotlinx.android.synthetic.main.admin_fragment_rewards.view.*
-import kotlinx.android.synthetic.main.fragment_rewards.view.*
-import kotlinx.android.synthetic.main.manage_product_popup.*
 import java.io.IOException
 
 
@@ -35,14 +34,18 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private lateinit var database: DatabaseReference
     private lateinit var storageReference: StorageReference
     private lateinit var adminActivity: AdminActivity
-    private lateinit var v: View
     private var popup: Dialog? = null
-    private var popup1: Dialog? = null
 
     private var filePath: Uri? = null
     private lateinit var productsList: MutableList<Product>
     private var layoutManager: RecyclerView.LayoutManager? = null
     private var adapter: RecyclerView.Adapter<RecyclerAdapter.ViewHolder>? = null
+
+    private var _binding: AdminFragmentRewardsBinding? = null
+    private val binding get() = _binding!!
+
+    private var addProductBinding: AddProductPopupBinding? = null
+    private var manageProductBinding: ManageProductPopupBinding? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,18 +59,18 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        v = inflater.inflate(R.layout.admin_fragment_rewards, container, false)
-        return v
+        _binding = AdminFragmentRewardsBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        v.addAProduct.setOnClickListener { showAddProductPopup() }
+        binding.addAProduct.setOnClickListener { showAddProductPopup() }
         layoutManager = LinearLayoutManager(context)
-        view.adminRewardsRecycler.layoutManager = layoutManager
+        binding.adminRewardsRecycler.layoutManager = layoutManager
         productsList = mutableListOf()
         adapter = RecyclerAdapter(requireActivity(), productsList, this)
-        view.adminRewardsRecycler.adapter = adapter
+        binding.adminRewardsRecycler.adapter = adapter
         database = FirebaseDatabase.getInstance().reference.child("products")
             .child(adminActivity.university)
         database.addValueEventListener(object : ValueEventListener {
@@ -87,6 +90,13 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         })
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+        addProductBinding = null
+        manageProductBinding = null
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == PICK_IMAGE_REQUEST &&
@@ -98,9 +108,11 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             try {
                 val bitmap =
                     MediaStore.Images.Media.getBitmap(requireActivity().contentResolver, filePath)
-                popup!!.chosenImage.layoutParams.height = 300
-                popup!!.chosenImage.layoutParams.width = 300
-                popup!!.chosenImage.setImageBitmap(bitmap)
+                addProductBinding?.chosenImage?.let {
+                    it.layoutParams.height = 300
+                    it.layoutParams.width = 300
+                    it.setImageBitmap(bitmap)
+                }
             } catch (e: IOException) {
                 e.printStackTrace()
             }
@@ -111,10 +123,11 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private fun showAddProductPopup() {
         popup = Dialog(requireActivity())
         popup?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        popup?.setContentView(R.layout.add_product_popup)
-        popup?.chooseButton?.setOnClickListener { fileChooser() }
-        popup?.uploadButton?.setOnClickListener { fileUploader() }
-        popup?.closeBtnAdmin?.setOnClickListener { popup?.dismiss() }
+        addProductBinding = AddProductPopupBinding.inflate(layoutInflater)
+        popup?.setContentView(addProductBinding!!.root)
+        addProductBinding!!.chooseButton.setOnClickListener { fileChooser() }
+        addProductBinding!!.uploadButton.setOnClickListener { fileUploader() }
+        addProductBinding!!.closeBtnAdmin.setOnClickListener { popup?.dismiss() }
         popup?.show()
     }
 
@@ -123,24 +136,25 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             .child(fh.hashFunction(list[position].productname!!))
         popup = Dialog(requireActivity())
         popup?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        popup?.setContentView(R.layout.manage_product_popup)
-        Picasso.get().load(list[position].productimage).into(popup!!.manageProductImage)
-        popup!!.manageProductName.setText(list[position].productname)
-        popup!!.manageProductCost.setText(list[position].productcost)
-        popup!!.closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
-        popup!!.updateButton.setOnClickListener {
+        manageProductBinding = ManageProductPopupBinding.inflate(layoutInflater)
+        popup?.setContentView(manageProductBinding!!.root)
+        Picasso.get().load(list[position].productimage).into(manageProductBinding!!.manageProductImage)
+        manageProductBinding!!.manageProductName.setText(list[position].productname)
+        manageProductBinding!!.manageProductCost.setText(list[position].productcost)
+        manageProductBinding!!.closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
+        manageProductBinding!!.updateButton.setOnClickListener {
             dbCurrentProduct.child("productimage")
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         val tempImageUrl = snapshot.value.toString()
                         val updatedProduct = Product(
-                            popup!!.manageProductName.text.toString(),
-                            popup!!.manageProductCost.text.toString(),
+                            manageProductBinding!!.manageProductName.text.toString(),
+                            manageProductBinding!!.manageProductCost.text.toString(),
                             tempImageUrl
                         )
                         dbCurrentProduct.removeValue()
                         val updatedProductDb = database
-                            .child(fh.hashFunction(popup!!.manageProductName.text.toString()))
+                            .child(fh.hashFunction(manageProductBinding!!.manageProductName.text.toString()))
                         updatedProductDb.setValue(updatedProduct)
                     }
 
@@ -150,7 +164,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
                 })
 
         }
-        popup!!.deleteButton.setOnClickListener {
+        manageProductBinding!!.deleteButton.setOnClickListener {
             dbCurrentProduct.removeValue()
             popup?.dismiss()
             Toast.makeText(requireActivity(), "Product successfully deleted", Toast.LENGTH_SHORT)
@@ -172,32 +186,34 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             val progressDialog = ProgressDialog(requireActivity())
             progressDialog.setTitle("Uploading...")
             progressDialog.show()
-            val refProduct = database.child(fh.hashFunction(popup!!.productName.text.toString()))
+            val refProduct = database.child(fh.hashFunction(addProductBinding!!.productName.text.toString()))
             val imageRef = storageReference.child(
                 "${adminActivity.university}/images/${fh.hashFunction(filePath.toString())}-${
-                    popup!!.productName.text.toString().replace(' ', '-')
+                    addProductBinding!!.productName.text.toString().replace(' ', '-')
                 }"
             )
             imageRef.putFile(filePath!!)
-                .addOnSuccessListener {
+                .addOnSuccessListener { 
                     progressDialog.dismiss()
                     Toast.makeText(context, "File Uploaded", Toast.LENGTH_SHORT).show()
                     imageRef.downloadUrl.addOnSuccessListener { taskSnapshot ->
                         val productImageUrl = taskSnapshot.toString()
                         refProduct.child("productname")
-                            .setValue(popup!!.productName.text.toString())
+                            .setValue(addProductBinding!!.productName.text.toString())
                         refProduct.child("productcost")
-                            .setValue(popup!!.productCost.text.toString())
+                            .setValue(addProductBinding!!.productCost.text.toString())
                         refProduct.child("productimage").setValue(productImageUrl)
-                        popup!!.productName.text.clear()
-                        popup!!.productCost.text.clear()
-                        popup!!.chosenImage.layoutParams.height = 0
-                        popup!!.chosenImage.layoutParams.width = 0
-                        popup!!.chosenImage.setImageDrawable(null)
+                        addProductBinding?.let {
+                            it.productName.text.clear()
+                            it.productCost.text.clear()
+                            it.chosenImage.layoutParams.height = 0
+                            it.chosenImage.layoutParams.width = 0
+                            it.chosenImage.setImageDrawable(null)
+                        }
 
                     }
                 }
-                .addOnFailureListener {
+                .addOnFailureListener { 
                     progressDialog.dismiss()
                     Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show()
                 }

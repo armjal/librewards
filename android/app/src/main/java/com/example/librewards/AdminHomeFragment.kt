@@ -11,8 +11,8 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
+import com.example.librewards.databinding.AdminFragmentHomeBinding
 import com.google.firebase.database.*
-import kotlinx.android.synthetic.main.admin_fragment_home.view.*
 import com.example.librewards.qrcode.IntentIntegratorExtended
 
 class AdminHomeFragment : Fragment() {
@@ -20,7 +20,8 @@ class AdminHomeFragment : Fragment() {
     private val SCAN_TIMER = 341
     private val SCAN_REWARD = 143
     private lateinit var database: DatabaseReference
-    private lateinit var v: View
+    private var _binding: AdminFragmentHomeBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,21 +33,26 @@ class AdminHomeFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        v = inflater.inflate(R.layout.admin_fragment_home, container, false)
-        return v
+        _binding = AdminFragmentHomeBinding.inflate(inflater, container, false)
+        return binding.root
 
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         if (checkPermission()) {
-            v.scanTimerButton.setOnClickListener { scanButton(SCAN_TIMER) }
-            v.scanRewardButton.setOnClickListener { scanButton(SCAN_REWARD) }
+            binding.scanTimerButton.setOnClickListener { scanButton(SCAN_TIMER) }
+            binding.scanRewardButton.setOnClickListener { scanButton(SCAN_REWARD) }
         } else {
             requestPermission()
         }
-        v.startTimerButton.setOnClickListener { startStudentTimer(v.enterQr.text.toString()) }
-        v.redeemRewardButton.setOnClickListener { redeemStudentReward(v.enterQr.text.toString()) }
+        binding.startTimerButton.setOnClickListener { startStudentTimer(binding.enterQr.text.toString()) }
+        binding.redeemRewardButton.setOnClickListener { redeemStudentReward(binding.enterQr.text.toString()) }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

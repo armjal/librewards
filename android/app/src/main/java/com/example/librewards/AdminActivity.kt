@@ -6,9 +6,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import com.example.librewards.databinding.ActivityAdminBinding
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import kotlinx.android.synthetic.main.activity_admin.*
 import java.util.*
 
 class AdminActivity : AppCompatActivity() {
@@ -20,24 +20,26 @@ class AdminActivity : AppCompatActivity() {
     private lateinit var timerFragment: TimerFragment
     private lateinit var adminHomeFragment: AdminHomeFragment
     private lateinit var adminRewardsFragment: AdminRewardsFragment
+    private lateinit var binding: ActivityAdminBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //Sets the layout to the XML file associated with it
-        setContentView(R.layout.activity_admin)
+        binding = ActivityAdminBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         initialiseVariables()
-        adminProfileImage.setOnClickListener { logoutApp() }
-        ("$firstName $lastName").also { adminUsername.text = it }
+        binding.adminProfileImage.setOnClickListener { logoutApp() }
+        ("$firstName $lastName").also { binding.adminUsername.text = it }
         timerFragment = TimerFragment()
         adminHomeFragment = AdminHomeFragment()
         adminRewardsFragment = AdminRewardsFragment()
-        adminTabLayout.setupWithViewPager(adminViewPager)
+        binding.adminTabLayout.setupWithViewPager(binding.adminViewPager)
         val viewPagerAdapter = ViewPagerAdapter(supportFragmentManager, 0)
         viewPagerAdapter.addFragment(adminHomeFragment,"")
         viewPagerAdapter.addFragment(adminRewardsFragment,"")
-        adminViewPager.adapter = viewPagerAdapter
-        adminTabLayout.getTabAt(0)?.setIcon(R.drawable.home)
-        adminTabLayout.getTabAt(1)?.setIcon(R.drawable.reward)
+        binding.adminViewPager.adapter = viewPagerAdapter
+        binding.adminTabLayout.getTabAt(0)?.setIcon(R.drawable.home)
+        binding.adminTabLayout.getTabAt(1)?.setIcon(R.drawable.reward)
 
     }
 

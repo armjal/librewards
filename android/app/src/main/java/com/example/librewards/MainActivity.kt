@@ -3,33 +3,27 @@ package com.example.librewards
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.view.MenuItem
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import com.example.librewards.RewardsFragment.RewardsListener
 import com.example.librewards.TimerFragment.TimerListener
+import com.example.librewards.databinding.ActivityMainBinding
+import com.example.librewards.databinding.PopupLayoutBinding
 import com.facebook.AccessToken
 import com.facebook.login.LoginManager
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.ktx.Firebase
-import com.google.zxing.qrcode.encoder.QRCode
 import com.squareup.picasso.Picasso
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.popup_layout.*
 import java.util.*
-import kotlin.math.log
 
 class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
     private lateinit var timerFragment: TimerFragment
@@ -43,11 +37,15 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
     lateinit var userImage : ImageView
     private lateinit var database: DatabaseReference
     private lateinit var fh: FirebaseHandler
-
+    private var popupLayoutBinding: PopupLayoutBinding? = null
+    private var _binding: ActivityMainBinding? = null
+    private val binding get() = _binding!!
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //Sets the layout to the XML file associated with it
-        setContentView(R.layout.activity_main)
+        _binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
         //Assigns the field to the view's specified in the fragment_timer XML file file
         timerFragment = TimerFragment()
         rewardsFragment = RewardsFragment()
@@ -58,19 +56,19 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
         initialiseVariables()
 
         //val navLayout = setContentView(R.layout.nav_header)
-        Picasso.get().load(photoURL).into(profileImage)
+        Picasso.get().load(photoURL).into(binding.profileImage)
 
-        "$firstName $lastName".also { username.text = it }
+        "$firstName $lastName".also { binding.username.text = it }
 
-        tabLayout.setupWithViewPager(viewPager)
+        binding.tabLayout.setupWithViewPager(binding.viewPager)
         val viewPagerAdapter = ViewPagerAdapter(supportFragmentManager, 0)
         viewPagerAdapter.addFragment(timerFragment,"")
         viewPagerAdapter.addFragment(rewardsFragment,"" )
-        viewPager.adapter = viewPagerAdapter
-        tabLayout.getTabAt(0)?.setIcon(R.drawable.timer)
-        tabLayout.getTabAt(1)?.setIcon(R.drawable.reward)
+        binding.viewPager.adapter = viewPagerAdapter
+        binding.tabLayout.getTabAt(0)?.setIcon(R.drawable.timer)
+        binding.tabLayout.getTabAt(1)?.setIcon(R.drawable.reward)
 
-        profileImage.setOnClickListener {
+        binding.profileImage.setOnClickListener {
             logoutApp()
         }
     }
@@ -106,9 +104,10 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
     private fun showPopup(text: String) {
         popup = Dialog(this)
         popup.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        popup.setContentView(R.layout.popup_layout)
-        popupText.text = text
-        closeBtn.setOnClickListener { popup.dismiss() }
+        popupLayoutBinding = PopupLayoutBinding.inflate(layoutInflater)
+        popup.setContentView(popupLayoutBinding!!.root)
+        popupLayoutBinding!!.popupText.text = text
+        popupLayoutBinding!!.closeBtn.setOnClickListener { popup.dismiss() }
         popup.show()
     }
 
