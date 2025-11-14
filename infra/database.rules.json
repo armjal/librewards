@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "users": {
+      "$email": {
+        ".read": "auth != null && auth.email == $email",
+        ".write": "auth != null && auth.email == $email"
+      }
+    }
+  }
+}
