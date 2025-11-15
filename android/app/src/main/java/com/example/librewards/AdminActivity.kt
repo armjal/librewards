@@ -51,7 +51,6 @@ class AdminActivity : AppCompatActivity() {
     }
 
     private fun logoutApp() {
-        // Logout from Facebook
         val auth = Firebase.auth
         if (auth.currentUser != null) {
             auth.signOut()

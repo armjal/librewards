@@ -8,11 +8,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.librewards.databinding.ActivityLoginBinding
 import com.example.librewards.models.User
-import com.facebook.*
-import com.facebook.appevents.AppEventsLogger
-import com.facebook.login.LoginResult
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
@@ -24,12 +20,6 @@ import com.google.firebase.database.database
 
 
 class Login : AppCompatActivity() {
-    private lateinit var facebookFirstName: String
-    private lateinit var facebookLastName: String
-    private lateinit var facebookEmail: String
-    private lateinit var facebookPhotoURL: String
-    private lateinit var id: String
-    private lateinit var callbackManager: CallbackManager
     private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
     private lateinit var fh: FirebaseHandler
@@ -42,12 +32,8 @@ class Login : AppCompatActivity() {
         fh = FirebaseHandler()
         auth = Firebase.auth
 
-        FacebookSdk.sdkInitialize(this.applicationContext)
-        AppEventsLogger.activateApp(application)
-        callbackManager = CallbackManager.Factory.create()
         database = Firebase.database.reference
 
-        binding.facebookLoginButton.setPermissions("public_profile, email")
         binding.registerButton.setOnClickListener {
             val intent = Intent(this, Register::class.java)
             startActivity(intent)
@@ -60,27 +46,6 @@ class Login : AppCompatActivity() {
                 signIn()
             }
         }
-
-        binding.facebookLoginButton.registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
-            override fun onSuccess(result: LoginResult) {
-                Log.d(TAG, "facebook:onSuccess:$result")
-                handleFacebookAccessToken(result.accessToken)
-                val facebookUniversity = FacebookUniversity()
-                getFacebookInfo(result.accessToken, facebookUniversity)
-
-            }
-
-            override fun onCancel() {
-                Log.d(TAG, "Facebook onCancel.")
-                Toast.makeText(this@Login, "Login Cancelled", Toast.LENGTH_LONG).show()
-            }
-
-            override fun onError(error: FacebookException) {
-                Log.d(TAG, "Facebook onError.")
-                Toast.makeText(this@Login, error.message, Toast.LENGTH_LONG).show()
-            }
-        })
-
     }
 
     private fun getUserLoginInfo(email: String, activity: AppCompatActivity) {
@@ -106,89 +71,11 @@ class Login : AppCompatActivity() {
         })
     }
 
-    private fun getFacebookInfo(token: AccessToken?, activity: AppCompatActivity) {
-        val request = GraphRequest.newMeRequest(token) { `object`, response ->
-            Log.d(TAG, `object`.toString())
-            if (`object`?.has("first_name") == true) {
-                facebookFirstName = `object`.getString("first_name")
-            }
-            if (`object`?.has("last_name") == true ) {
-                facebookLastName = `object`.getString("last_name").toString()
-            }
-            if (`object`?.has("email") == true) {
-                facebookEmail = `object`.getString("email").toString()
-            }
-            if (`object`?.has("id") == true) {
-                id = `object`.getString("id")
-                facebookPhotoURL = "https://graph.facebook.com/$id/picture?type=normal"
-            }
-            var university: String
-            val refChild = fh.getChild("users", facebookEmail, "university")
-            refChild.addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    university = dataSnapshot.value.toString()
-                    var intent = Intent(this@Login, activity::class.java)
-                    if(university != "null" && university != ""){
-                        intent = Intent(this@Login,MainActivity::class.java)
-                        intent.putExtra("university", university)
-                    }
-                    intent.putExtra("email", facebookEmail)
-                    intent.putExtra("first_name", facebookFirstName)
-                    intent.putExtra("last_name", facebookLastName)
-                    intent.putExtra("photo", facebookPhotoURL)
-                    startActivity(intent)
-                    finish()
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    // Failed to read value
-                    Log.w(TAG, "Failed to read value.", error.toException())
-                }
-            })
-
-        }
-        val parameters = Bundle()
-        parameters.putString("fields", "id,first_name,last_name,email")
-        request.parameters = parameters
-        request.executeAsync()
-    }
-
     public override fun onStart() {
         super.onStart()
-
-        if(!isFacebookUserLoggedIn()) {
-            val currentUser = auth.currentUser
-            updateUI(currentUser)
-            // Check if user is signed in (non-null) and update UI accordingly.
-            if (currentUser != null) {
-                var isAdmin: String
-                val refChild = fh.getChild("users", currentUser.email!!, "admin")
-                refChild.addValueEventListener(object : ValueEventListener {
-                    override fun onDataChange(dataSnapshot: DataSnapshot) {
-                        isAdmin = dataSnapshot.value.toString()
-                        if (isAdmin == "0") {
-                            getUserLoginInfo(currentUser.email!!, MainActivity())
-                            finish()
-                        } else if (isAdmin == "1") {
-                            getUserLoginInfo(currentUser.email!!, AdminActivity())
-                        }
-                    }
-
-                    override fun onCancelled(error: DatabaseError) {
-                        // Failed to read value
-                        Log.w(TAG, "Failed to read value.", error.toException())
-                    }
-                })
-                reload()
-            }
-        } else {
-            val mainActivity = MainActivity()
-            getFacebookInfo(AccessToken.getCurrentAccessToken(), mainActivity)
-        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        callbackManager.onActivityResult(requestCode, resultCode, data)
         super.onActivityResult(requestCode, resultCode, data)
     }
 
@@ -226,32 +113,6 @@ class Login : AppCompatActivity() {
                     }
                 }
     }
-
-    private fun handleFacebookAccessToken(token: AccessToken) {
-        Log.d(TAG, "handleFacebookAccessToken:$token")
-
-        val credential = FacebookAuthProvider.getCredential(token.token)
-        auth.signInWithCredential(credential)
-                .addOnCompleteListener(this) { task ->
-                    if (task.isSuccessful) {
-                        // Sign in success, update UI with the signed-in user's information
-                        Log.d(TAG, "signInWithCredential:success")
-                        val user = auth.currentUser
-                        updateUI(user)
-                    } else {
-                        // If sign in fails, display a message to the user.
-                        Log.w(TAG, "signInWithCredential:failure", task.exception)
-                        Toast.makeText(baseContext, "Authentication failed.",
-                                Toast.LENGTH_SHORT).show()
-                        updateUI(null)
-                    }
-                }
-    }
-
-    private fun isFacebookUserLoggedIn(): Boolean {
-        return AccessToken.getCurrentAccessToken() != null && !AccessToken.getCurrentAccessToken()?.isExpired!!
-    }
-
 
     private fun updateUI(user: FirebaseUser?) {
 
