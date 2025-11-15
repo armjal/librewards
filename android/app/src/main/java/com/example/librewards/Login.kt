@@ -11,12 +11,16 @@ import com.example.librewards.models.User
 import com.facebook.*
 import com.facebook.appevents.AppEventsLogger
 import com.facebook.login.LoginResult
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.database.*
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.database
 
 
 class Login : AppCompatActivity() {
@@ -41,10 +45,9 @@ class Login : AppCompatActivity() {
         FacebookSdk.sdkInitialize(this.applicationContext)
         AppEventsLogger.activateApp(application)
         callbackManager = CallbackManager.Factory.create()
-        database = FirebaseDatabase.getInstance().reference
+        database = Firebase.database.reference
 
-        binding.facebookLoginButton.setPermissions(listOf("public_profile", "email"))
-
+        binding.facebookLoginButton.setPermissions("public_profile, email")
         binding.registerButton.setOnClickListener {
             val intent = Intent(this, Register::class.java)
             startActivity(intent)
@@ -59,11 +62,11 @@ class Login : AppCompatActivity() {
         }
 
         binding.facebookLoginButton.registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
-            override fun onSuccess(loginResult: LoginResult) {
-                Log.d(TAG, "facebook:onSuccess:$loginResult")
-                handleFacebookAccessToken(loginResult.accessToken)
+            override fun onSuccess(result: LoginResult) {
+                Log.d(TAG, "facebook:onSuccess:$result")
+                handleFacebookAccessToken(result.accessToken)
                 val facebookUniversity = FacebookUniversity()
-                getFacebookInfo(loginResult.accessToken, facebookUniversity)
+                getFacebookInfo(result.accessToken, facebookUniversity)
 
             }
 
@@ -72,9 +75,9 @@ class Login : AppCompatActivity() {
                 Toast.makeText(this@Login, "Login Cancelled", Toast.LENGTH_LONG).show()
             }
 
-            override fun onError(exception: FacebookException) {
+            override fun onError(error: FacebookException) {
                 Log.d(TAG, "Facebook onError.")
-                Toast.makeText(this@Login, exception.message, Toast.LENGTH_LONG).show()
+                Toast.makeText(this@Login, error.message, Toast.LENGTH_LONG).show()
             }
         })
 
@@ -103,19 +106,19 @@ class Login : AppCompatActivity() {
         })
     }
 
-    private fun getFacebookInfo(token: AccessToken, activity: AppCompatActivity) {
+    private fun getFacebookInfo(token: AccessToken?, activity: AppCompatActivity) {
         val request = GraphRequest.newMeRequest(token) { `object`, response ->
             Log.d(TAG, `object`.toString())
-            if (`object`.has("first_name")) {
+            if (`object`?.has("first_name") == true) {
                 facebookFirstName = `object`.getString("first_name")
             }
-            if (`object`.has("last_name")) {
-                facebookLastName = `object`.getString("last_name")
+            if (`object`?.has("last_name") == true ) {
+                facebookLastName = `object`.getString("last_name").toString()
             }
-            if (`object`.has("email")) {
-                facebookEmail = `object`.getString("email")
+            if (`object`?.has("email") == true) {
+                facebookEmail = `object`.getString("email").toString()
             }
-            if (`object`.has("id")) {
+            if (`object`?.has("id") == true) {
                 id = `object`.getString("id")
                 facebookPhotoURL = "https://graph.facebook.com/$id/picture?type=normal"
             }
@@ -164,8 +167,7 @@ class Login : AppCompatActivity() {
                     override fun onDataChange(dataSnapshot: DataSnapshot) {
                         isAdmin = dataSnapshot.value.toString()
                         if (isAdmin == "0") {
-                            val intent = Intent(this@Login, MainActivity::class.java)
-                            startActivity(intent)
+                            getUserLoginInfo(currentUser.email!!, MainActivity())
                             finish()
                         } else if (isAdmin == "1") {
                             getUserLoginInfo(currentUser.email!!, AdminActivity())
@@ -247,7 +249,7 @@ class Login : AppCompatActivity() {
     }
 
     private fun isFacebookUserLoggedIn(): Boolean {
-        return AccessToken.getCurrentAccessToken() != null && !AccessToken.getCurrentAccessToken().isExpired
+        return AccessToken.getCurrentAccessToken() != null && !AccessToken.getCurrentAccessToken()?.isExpired!!
     }
 
 

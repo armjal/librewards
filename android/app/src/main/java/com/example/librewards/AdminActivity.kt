@@ -7,8 +7,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import com.example.librewards.databinding.ActivityAdminBinding
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import java.util.*
 
 class AdminActivity : AppCompatActivity() {
@@ -68,9 +68,9 @@ class AdminActivity : AppCompatActivity() {
         val extras = intent.extras
         email = extras?.getString("email").toString()
         firstName = extras?.getString("first_name").toString()
-        firstName = firstName[0].toUpperCase().toString() + firstName.substring(1)
+        firstName = firstName[0].uppercaseChar().toString() + firstName.substring(1)
         lastName = extras?.getString("last_name").toString()
-        lastName = lastName[0].toUpperCase().toString() + lastName.substring(1)
+        lastName = lastName[0].uppercaseChar().toString() + lastName.substring(1)
         university = extras?.getString("university").toString()
     }
 

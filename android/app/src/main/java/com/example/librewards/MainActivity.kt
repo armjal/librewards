@@ -20,10 +20,10 @@ import com.facebook.AccessToken
 import com.facebook.login.LoginManager
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
-import com.google.firebase.auth.ktx.auth
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.ktx.Firebase
 import com.google.zxing.qrcode.encoder.QRCode
 import com.squareup.picasso.Picasso
 import java.util.*
