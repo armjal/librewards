@@ -9,7 +9,6 @@ import androidx.fragment.app.FragmentPagerAdapter
 import com.example.librewards.databinding.ActivityAdminBinding
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import java.util.*
 
 class AdminActivity : AppCompatActivity() {
     private lateinit var email: String
@@ -35,8 +34,8 @@ class AdminActivity : AppCompatActivity() {
         adminRewardsFragment = AdminRewardsFragment()
         binding.adminTabLayout.setupWithViewPager(binding.adminViewPager)
         val viewPagerAdapter = ViewPagerAdapter(supportFragmentManager, 0)
-        viewPagerAdapter.addFragment(adminHomeFragment,"")
-        viewPagerAdapter.addFragment(adminRewardsFragment,"")
+        viewPagerAdapter.addFragment(adminHomeFragment, "")
+        viewPagerAdapter.addFragment(adminRewardsFragment, "")
         binding.adminViewPager.adapter = viewPagerAdapter
         binding.adminTabLayout.getTabAt(0)?.setIcon(R.drawable.home)
         binding.adminTabLayout.getTabAt(1)?.setIcon(R.drawable.reward)
@@ -76,7 +75,8 @@ class AdminActivity : AppCompatActivity() {
     companion object {
         val TAG: String = AdminActivity::class.java.simpleName
     }
-    private inner class ViewPagerAdapter(fm: FragmentManager, behavior: Int) :
+
+    private class ViewPagerAdapter(fm: FragmentManager, behavior: Int) :
         FragmentPagerAdapter(fm, behavior) {
         private val fragments: MutableList<Fragment> = ArrayList()
         private val fragmentTitle: MutableList<String> = ArrayList()

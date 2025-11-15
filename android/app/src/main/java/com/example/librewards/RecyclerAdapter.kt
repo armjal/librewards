@@ -10,14 +10,18 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.librewards.models.Product
 import com.squareup.picasso.Picasso
 
-class RecyclerAdapter(var context : Context, var list: MutableList<Product>, var mOnProductListener:OnProductListener) : RecyclerView.Adapter<RecyclerAdapter.ViewHolder>() {
+class RecyclerAdapter(
+    var context: Context,
+    var list: MutableList<Product>,
+    var mOnProductListener: OnProductListener
+) : RecyclerView.Adapter<RecyclerAdapter.ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.card_layout, parent, false)
         return ViewHolder(v, mOnProductListener)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val product : Product = list[position]
+        val product: Product = list[position]
         holder.itemTitle.text = product.productname
         (product.productcost + " points").also { holder.itemDetail.text = it }
         Picasso.get().load(product.productimage).into(holder.itemImage)
@@ -28,7 +32,8 @@ class RecyclerAdapter(var context : Context, var list: MutableList<Product>, var
         return list.size
     }
 
-    inner class ViewHolder(itemView: View, var onProductListener: OnProductListener) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
+    inner class ViewHolder(itemView: View, var onProductListener: OnProductListener) :
+        RecyclerView.ViewHolder(itemView), View.OnClickListener {
         var itemImage: ImageView = itemView.findViewById(R.id.rewardImage)
         var itemTitle: TextView = itemView.findViewById(R.id.rewardTitle)
         var itemDetail: TextView = itemView.findViewById(R.id.rewardCost)
@@ -43,7 +48,8 @@ class RecyclerAdapter(var context : Context, var list: MutableList<Product>, var
             onProductListener.onProductClick(adapterPosition)
         }
     }
-    interface OnProductListener{
+
+    interface OnProductListener {
         fun onProductClick(position: Int)
     }
 

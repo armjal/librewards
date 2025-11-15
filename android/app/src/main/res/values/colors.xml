@@ -1,20 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorOrange">#FF8000</color>
-    <color name="colorLightOrange">#FF9A36</color>
     <color name="colorVeryDarkOrange">#3C1F00</color>
     <color name="colorDarkOrange">#C86600</color>
     <color name="colorQuiteDarkOrange">#A55500</color>
     <color name="colorWhite">#FFF8F0</color>
     <color name="colorVeryLightGrey">#F3F0ED</color>
-    <color name="colorLightGrey">#DDDAD6</color>
     <color name="colorLightOrangeGrey">#E6DCCE</color>
     <color name="colorDarkGrey">#858382</color>
     <color name="colorVeryDarkGrey">#424040</color>
     <color name="colorBlackText">#100800</color>
-    <color name="colorPinkLight">#D99DD3</color>
-    <color name="colorPink">#E869FF</color>
-    <color name="colorPinkDark">#B244BA</color>
-    <color name="transparent">#00000000</color>
 
 </resources>

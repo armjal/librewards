@@ -12,8 +12,12 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import com.example.librewards.databinding.AdminFragmentHomeBinding
-import com.google.firebase.database.*
 import com.example.librewards.qrcode.IntentIntegratorExtended
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 class AdminHomeFragment : Fragment() {
     private val PERMISSION_ID = 2020
@@ -146,16 +150,11 @@ class AdminHomeFragment : Fragment() {
 
     private fun checkPermission(): Boolean {
         //check if location permissions have been granted by user
-        if (ActivityCompat.checkSelfPermission(
-                requireActivity(),
-                Manifest.permission.CAMERA
-            )
-            == PackageManager.PERMISSION_GRANTED
-        ) {
-            return true
-        }
-
-        return false
+        return (ActivityCompat.checkSelfPermission(
+            requireActivity(),
+            Manifest.permission.CAMERA
+        )
+                == PackageManager.PERMISSION_GRANTED)
 
     }
 

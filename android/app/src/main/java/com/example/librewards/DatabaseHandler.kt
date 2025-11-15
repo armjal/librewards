@@ -8,7 +8,8 @@ import android.database.sqlite.SQLiteOpenHelper
 class DatabaseHandler(context: Context?) : SQLiteOpenHelper(context, DATABASE_NAME, null, 1) {
     //Method that creates the tables and the columns within where the columns have been given data types and names.
     override fun onCreate(db: SQLiteDatabase) {
-        val table1 = "CREATE TABLE $TABLE1 (id INTEGER PRIMARY KEY AUTOINCREMENT,universities TEXT) "
+        val table1 =
+            "CREATE TABLE $TABLE1 (id INTEGER PRIMARY KEY AUTOINCREMENT,universities TEXT) "
         db.execSQL(table1)
 
     }
@@ -17,6 +18,7 @@ class DatabaseHandler(context: Context?) : SQLiteOpenHelper(context, DATABASE_NA
         db.execSQL("DROP TABLE IF EXISTS $TABLE1")
         onCreate(db)
     }
+
     fun storeUniversities(universityList: List<String?>, table: String) {
         val db = this.writableDatabase
         val sql = "INSERT INTO $table(universities)VALUES (?)"

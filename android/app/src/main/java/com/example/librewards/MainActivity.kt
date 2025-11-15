@@ -1,7 +1,6 @@
 package com.example.librewards
 
 import android.app.Dialog
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -22,9 +21,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import com.google.zxing.qrcode.encoder.QRCode
 import com.squareup.picasso.Picasso
-import java.util.*
 
 class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
     private lateinit var timerFragment: TimerFragment
@@ -69,8 +66,8 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
 
         binding.tabLayout.setupWithViewPager(binding.viewPager)
         val viewPagerAdapter = ViewPagerAdapter(supportFragmentManager, 0)
-        viewPagerAdapter.addFragment(timerFragment,"")
-        viewPagerAdapter.addFragment(rewardsFragment,"" )
+        viewPagerAdapter.addFragment(timerFragment, "")
+        viewPagerAdapter.addFragment(rewardsFragment, "")
         binding.viewPager.adapter = viewPagerAdapter
         binding.tabLayout.getTabAt(0)?.setIcon(R.drawable.timer)
         binding.tabLayout.getTabAt(1)?.setIcon(R.drawable.reward)
@@ -108,27 +105,6 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
         }
     }
 
-    //Method that creates a popup
-    private fun showPopup(text: String) {
-        popup = Dialog(this)
-        popup.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        popupLayoutBinding = PopupLayoutBinding.inflate(layoutInflater)
-        popup.setContentView(popupLayoutBinding!!.root)
-        popupLayoutBinding!!.popupText.text = text
-        popupLayoutBinding!!.closeBtn.setOnClickListener { popup.dismiss() }
-        popup.show()
-    }
-
-    private fun toastMessage(message: String) {
-        Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
-    }
-
-    //Creating a preference for activity on first start-up only
-    private fun firstStart(): Boolean {
-        val rewardsPrefs = this.getSharedPreferences("rewardsPrefs", Context.MODE_PRIVATE)
-        return rewardsPrefs.getBoolean("firstStart", true)
-    }
-
     //Using the interface in both fragments, the main activity is able to facilitate communication between the two fragments. Here, it sets the points in each fragment each time
     //it's updated
     override fun onPointsRewardsSent(points: Int) {
@@ -140,7 +116,7 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
     }
 
     //Using a tab layout tutorial from YouTube user @Coding In Flow, I was able to create a tab layout and customise it so it fit my theme.
-    private inner class ViewPagerAdapter(fm: FragmentManager, behavior: Int) :
+    private class ViewPagerAdapter(fm: FragmentManager, behavior: Int) :
         FragmentPagerAdapter(fm, behavior) {
         private val fragments: MutableList<Fragment> = ArrayList()
         private val fragmentTitle: MutableList<String> = ArrayList()
