@@ -34,7 +34,9 @@ resource "google_project_service" "default" {
     "firebasedatabase.googleapis.com",
     "firebasestorage.googleapis.com",
     "firebaserules.googleapis.com",
-    "storage.googleapis.com"
+    "storage.googleapis.com",
+    "maps-android-backend.googleapis.com",
+    "apikeys.googleapis.com"
   ])
   service = each.key
 }
@@ -85,4 +87,29 @@ resource "google_firebase_storage_bucket" "rewards_bucket" {
   provider  = google-beta
   project   = google_firebase_project.firebase_project.project
   bucket_id = google_storage_bucket.rewards_bucket.name
+}
+
+resource "google_apikeys_key" "android_maps_key" {
+  provider        = google-beta
+  name         = "android-maps-api-key"
+  display_name = "Maps SDK for Android Key"
+  project      = google_project.lib_rewards_project.project_id
+
+  restrictions {
+    api_targets {
+      service = "maps-android-backend.googleapis.com"
+    }
+
+    android_key_restrictions {
+      allowed_applications {
+        package_name     = google_firebase_android_app.app.package_name
+        sha1_fingerprint = var.app_sha1_fingerprint
+      }
+    }
+  }
+}
+
+output "android_maps_api_key_string" {
+  value     = google_apikeys_key.android_maps_key.key_string
+  sensitive = true
 }
