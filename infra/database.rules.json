@@ -1,10 +1,10 @@
 {
-  "rules": {
-    "users": {
-      "$email": {
-        ".read": "auth != null && auth.email == $email",
-        ".write": "auth != null && auth.email == $email"
-      }
+    "rules": {
+        "users": {
+            "$customHashKey": {
+                ".read": "auth != null && data.child('email').val() == auth.token.email",
+                ".write": "auth != null && ((data.exists() && data.child('email').val() == auth.token.email) || (!data.exists() && newData.child('email').val() == auth.token.email))"
+            }
+        }
     }
-  }
 }
