@@ -16,8 +16,6 @@ import com.example.librewards.RewardsFragment.RewardsListener
 import com.example.librewards.TimerFragment.TimerListener
 import com.example.librewards.databinding.ActivityMainBinding
 import com.example.librewards.databinding.PopupLayoutBinding
-import com.facebook.AccessToken
-import com.facebook.login.LoginManager
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
 import com.google.firebase.Firebase
@@ -99,14 +97,9 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
     }
 
     private fun logoutApp() {
-        // Logout from Facebook
         val auth = Firebase.auth
         if (auth.currentUser != null) {
             auth.signOut()
-        }
-        if (AccessToken.getCurrentAccessToken() != null) {
-            LoginManager.getInstance().logOut()
-            val intent = Intent(this, Login::class.java)
             intent.flags =
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
             supportFragmentManager.popBackStack()

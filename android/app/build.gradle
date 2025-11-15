@@ -74,7 +74,6 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "androidx.wear:wear:1.1.0"
-    implementation 'com.facebook.android:facebook-android-sdk:5.15.3'
     implementation "com.squareup.picasso:picasso:2.8"
     implementation 'org.jsoup:jsoup:1.10.2'
     implementation 'com.google.guava:guava:22.0-android'
