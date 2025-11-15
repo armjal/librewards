@@ -24,8 +24,6 @@
     <string name="enterName">Name</string>
     <string name="insufficientFunds">Woops! Unfortunately you don\'t have sufficient points for this reward. Please choose another reward
     or carry on doing a great job at the library to be able to get this</string>
-    <string name="facebook_app_id">RANDOM APP ID</string>
-    <string name="fb_login_protocol_scheme">RANDOM PROTOCOL</string>
     <string name="title_activity_login"> Login</string>
     <string name="title_activity_register" />
     <string name="spinner_title">Spinner</string>
