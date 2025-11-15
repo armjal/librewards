@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">LibRewards</string>
-    <string name="apiKey" translatable="false">RANDOM_KEY</string>
     <string name="start"> Start </string>
     <string name="stopwatch"> Stopwatch </string>
     <string name="map"> Check yourself out on the map </string>
