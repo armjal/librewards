@@ -92,13 +92,16 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
         fh = FirebaseHandler()
         database = FirebaseDatabase.getInstance().reference
 
-        mapFragment = childFragmentManager.findFragmentById(R.id.googleMap) as SupportMapFragment
         _binding = FragmentTimerBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        mapFragment = childFragmentManager.findFragmentById(R.id.googleMap) as SupportMapFragment
+        mapFragment.getMapAsync(this)
+
         addTimerEventListener()
         val qrGen = QRCodeGenerator()
         binding.qrCode.setImageBitmap(qrGen.createQR(fh.hashFunction(mainActivity.email), 400, 400))
@@ -401,13 +404,23 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
     }
 
     override fun onMapReady(p0: GoogleMap) {
-        latLngLocOne = LatLng(locationOne!!.latitude, locationOne!!.longitude)
-        markerOptions =
-            MarkerOptions().position(latLngLocOne).title("I am here.")
-        p0.animateCamera(CameraUpdateFactory.newLatLng(latLngLocOne))
-        p0.animateCamera(CameraUpdateFactory.newLatLngZoom(latLngLocOne, 17F))
-        marker = p0.addMarker(markerOptions)!!
-        drawCircle(latLngLocOne, p0)
         googleMap = p0
+        if (checkPermission()) {
+            val locManager = mainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val lastKnownLocation = locManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+            if (lastKnownLocation != null) {
+                locationOne = lastKnownLocation // The crucial initialization
+                latLngLocOne = LatLng(locationOne.latitude, locationOne.longitude)
+                markerOptions = MarkerOptions().position(latLngLocOne).title("I am here.")
+                p0.animateCamera(CameraUpdateFactory.newLatLng(latLngLocOne))
+                p0.animateCamera(CameraUpdateFactory.newLatLngZoom(latLngLocOne, 17F))
+                marker = p0.addMarker(markerOptions)!!
+                drawCircle(latLngLocOne, p0)
+            } else {
+                Toast.makeText(requireContext(), "Could not determine location. Please ensure location services are enabled.", Toast.LENGTH_LONG).show()
+            }
+        } else {
+            requestPermission()
+        }
     }
 }
