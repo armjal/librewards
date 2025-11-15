@@ -9,7 +9,7 @@ class ListFromFile     //Parameter of 'Context' to state to the list which activ
     fun readLine(path: String?): MutableList<String> {
         val lines: MutableList<String>
         val inputStream: String = context.assets.open(path!!).bufferedReader().use { it.readText() }
-        lines = inputStream.split("\r\n").toMutableList()
+        lines = inputStream.split("\n").toMutableList()
         //Returns the list of values
         return lines
     }
