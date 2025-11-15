@@ -6,15 +6,17 @@ import android.content.Intent;
 import com.google.zxing.client.android.Intents;
 import com.google.zxing.integration.android.IntentIntegrator;
 
-public class IntentIntegratorExtended extends IntentIntegrator{
+public class IntentIntegratorExtended extends IntentIntegrator {
 
     public IntentIntegratorExtended(Activity activity) {
         super(activity);
 
     }
-    public void extendedInitiateScan(int requestCode){
-        startActivityForResult(createScanIntent(),requestCode);
+
+    public void extendedInitiateScan(int requestCode) {
+        startActivityForResult(createScanIntent(), requestCode);
     }
+
     public static IntentResultsExtended extendedParseActivityResult(int requestCode, int resultCode, Intent intent, int finalRequestCode) {
         if (requestCode == finalRequestCode) {
             if (resultCode == Activity.RESULT_OK) {

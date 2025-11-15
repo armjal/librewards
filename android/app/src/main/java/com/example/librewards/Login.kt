@@ -41,7 +41,11 @@ class Login : AppCompatActivity() {
 
         binding.loginButton.setOnClickListener {
             if (binding.loginEmail.text.toString() == "" || binding.loginPassword.text.toString() == "") {
-                Toast.makeText(baseContext, "Please ensure all fields are correctly filled out.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    baseContext,
+                    "Please ensure all fields are correctly filled out.",
+                    Toast.LENGTH_SHORT
+                ).show()
             } else {
                 signIn()
             }
@@ -80,49 +84,51 @@ class Login : AppCompatActivity() {
     }
 
     private fun signIn() {
-        auth.signInWithEmailAndPassword(binding.loginEmail.text.toString(), binding.loginPassword.text.toString())
-                .addOnCompleteListener(this) { task ->
-                    if (task.isSuccessful) {
-                        // Sign in success, update UI with the signed-in user's information
-                        Log.d(TAG, "signInWithEmail:success")
-                        val user = auth.currentUser
-                        var isAdmin: String
-                        val refChild = fh.getChild("users", binding.loginEmail.text.toString(), "admin")
-                        refChild.addValueEventListener(object : ValueEventListener {
-                            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                                isAdmin = dataSnapshot.value.toString()
-                                if (isAdmin == "0") {
-                                    getUserLoginInfo(binding.loginEmail.text.toString(), MainActivity())
-                                } else if (isAdmin == "1") {
-                                    getUserLoginInfo(binding.loginEmail.text.toString(), AdminActivity())
-                                }
+        auth.signInWithEmailAndPassword(
+            binding.loginEmail.text.toString(),
+            binding.loginPassword.text.toString()
+        )
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    // Sign in success, update UI with the signed-in user's information
+                    Log.d(TAG, "signInWithEmail:success")
+                    val user = auth.currentUser
+                    var isAdmin: String
+                    val refChild = fh.getChild("users", binding.loginEmail.text.toString(), "admin")
+                    refChild.addValueEventListener(object : ValueEventListener {
+                        override fun onDataChange(dataSnapshot: DataSnapshot) {
+                            isAdmin = dataSnapshot.value.toString()
+                            if (isAdmin == "0") {
+                                getUserLoginInfo(binding.loginEmail.text.toString(), MainActivity())
+                            } else if (isAdmin == "1") {
+                                getUserLoginInfo(
+                                    binding.loginEmail.text.toString(),
+                                    AdminActivity()
+                                )
                             }
+                        }
 
-                            override fun onCancelled(error: DatabaseError) {
-                                // Failed to read value
-                                Log.w(TAG, "Failed to read value.", error.toException())
-                            }
-                        })
-                        updateUI(user)
-                    } else {
-                        // If sign in fails, display a message to the user.
-                        Log.w(TAG, "signInWithEmail:failure", task.exception)
-                        Toast.makeText(baseContext, "Authentication failed.",
-                                Toast.LENGTH_SHORT).show()
-                        updateUI(null)
-                    }
+                        override fun onCancelled(error: DatabaseError) {
+                            // Failed to read value
+                            Log.w(TAG, "Failed to read value.", error.toException())
+                        }
+                    })
+                    updateUI(user)
+                } else {
+                    // If sign in fails, display a message to the user.
+                    Log.w(TAG, "signInWithEmail:failure", task.exception)
+                    Toast.makeText(
+                        baseContext, "Authentication failed.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    updateUI(null)
                 }
+            }
     }
 
     private fun updateUI(user: FirebaseUser?) {
 
     }
-
-    private fun reload() {
-
-    }
-
-    fun login(view: View) {}
 
     companion object {
         val TAG = Login::class.java.simpleName

@@ -15,15 +15,17 @@ public class IntentResultsExtended {
     private final Integer orientation;
     private final String errorCorrectionLevel;
     private final String barcodeImagePath;
+
     IntentResultsExtended() {
         this(null, null, null, null, null, null);
     }
+
     IntentResultsExtended(String contents,
-                 String formatName,
-                 byte[] rawBytes,
-                 Integer orientation,
-                 String errorCorrectionLevel,
-                 String barcodeImagePath) {
+                          String formatName,
+                          byte[] rawBytes,
+                          Integer orientation,
+                          String errorCorrectionLevel,
+                          String barcodeImagePath) {
         this.contents = contents;
         this.formatName = formatName;
         this.rawBytes = rawBytes;

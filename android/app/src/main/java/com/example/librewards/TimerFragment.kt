@@ -16,28 +16,28 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Chronometer.OnChronometerTickListener
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.app.ActivityCompat
-import androidx.core.view.setMargins
-import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
+import com.example.librewards.databinding.FragmentTimerBinding
+import com.example.librewards.databinding.PopupLayoutBinding
 import com.example.librewards.models.Product
 import com.example.librewards.qrcode.QRCodeGenerator
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.*
-import com.google.firebase.database.*
+import com.google.android.gms.maps.model.Circle
+import com.google.android.gms.maps.model.CircleOptions
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
-import com.squareup.picasso.Picasso
-import com.example.librewards.databinding.ActivityMainBinding
-import com.example.librewards.databinding.AdminFragmentHomeBinding
-import com.example.librewards.databinding.FragmentTimerBinding
-import com.example.librewards.databinding.PopupLayoutBinding
 
 
 class TimerFragment : Fragment(), OnMapReadyCallback {
@@ -57,7 +57,6 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
     private lateinit var locationTwo: Location
     private var pointsListener: ValueEventListener? = null
     private lateinit var database: DatabaseReference
-    private lateinit var productsList: MutableList<Product>
     private var counter: Int? = null
     private lateinit var v: View
     private var distance: Float? = null
@@ -68,6 +67,7 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
     private val binding get() = _binding!!
 
     private var popupLayoutBinding: PopupLayoutBinding? = null
+
     //Interface that consists of a method that will update the points in "RewardsFragment"
     interface TimerListener {
         fun onPointsTimerSent(points: Int)
@@ -85,7 +85,8 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View {
         // Inflate the layout for this fragment
         mainActivity = activity as MainActivity
         adminActivity = AdminActivity()
@@ -108,7 +109,8 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
         binding.qrCodeNumber.text = fh.hashFunction(mainActivity.email)
 
         val touchableList: ArrayList<View?> = mainActivity.tabLayout.touchables
-        binding.slidingPanel.addPanelSlideListener(object : SlidingUpPanelLayout.PanelSlideListener {
+        binding.slidingPanel.addPanelSlideListener(object :
+            SlidingUpPanelLayout.PanelSlideListener {
             override fun onPanelSlide(panel: View?, slideOffset: Float) {
                 mainActivity.profileImage.alpha = (1.3 - slideOffset).toFloat()
                 mainActivity.logo.alpha = (1.3 - slideOffset).toFloat()
@@ -200,20 +202,14 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
 
     private fun checkPermission(): Boolean {
         //check if location permissions have been granted by user
-        if (
-            ActivityCompat.checkSelfPermission(
-                mainActivity,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED ||
-            ActivityCompat.checkSelfPermission(
-                mainActivity,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            return true
-        }
-
-        return false
+        return ActivityCompat.checkSelfPermission(
+            mainActivity,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(
+                    mainActivity,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
 
     }
 
@@ -337,13 +333,6 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    private fun firstStart(): Boolean {
-        //Creating a preference for activity on first start-up only
-        val timerPrefs = requireActivity().getSharedPreferences("timerPrefs", Context.MODE_PRIVATE)
-        return timerPrefs.getBoolean("firstStart", true)
-    }
-
-
     fun updatePoints(newPoints: Int) {
         binding.usersPoints.text = newPoints.toString()
     }
@@ -357,36 +346,6 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
         popupLayoutBinding!!.popupText.text = text
         popupLayoutBinding!!.closeBtn.setOnClickListener { popup?.dismiss() }
         popup?.show()
-    }
-
-    private fun showImagePopup(list: MutableList<Product>, position: Int) {
-        val popup = Dialog(requireActivity())
-        popup.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        popup.setContentView(R.layout.popup_layout)
-        val popUpImageView = popup.findViewById<ImageView>(R.id.popupImageView)
-        val popUpCost = popup.findViewById<TextView>(R.id.popupCost)
-        val popUpText = popup.findViewById<TextView>(R.id.popupText)
-        val closeBtn = popup.findViewById<AppCompatImageView>(R.id.closeBtn)
-        popUpImageView.layoutParams.height = 150
-        popUpImageView.layoutParams.width = 150
-        popUpImageView.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(30, 0, 0, 0) }
-        val popupQr = popup.findViewById<ImageView>(R.id.popupQr)
-        val drawableQR = binding.qrCode.drawable
-        popupQr.setImageDrawable(drawableQR)
-        popupQr.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(50) }
-        popUpText.text = list[position].productname
-        "${list[position].productcost} points".also { popUpCost.text = it }
-        popUpCost.textSize = 20F
-        popUpText.textSize = 25F
-        popUpCost.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(0, 0, 0, 50) }
-        Picasso.get().load(list[position].productimage).into(popUpImageView)
-        closeBtn.setOnClickListener { popup.dismiss() }
-        popup.show()
-    }
-
-    //Custom Toast message
-    fun toastMessage(message: String?) {
-        Toast.makeText(requireActivity().applicationContext, message, Toast.LENGTH_LONG).show()
     }
 
     override fun onAttach(context: Context) {
@@ -406,8 +365,10 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
     override fun onMapReady(p0: GoogleMap) {
         googleMap = p0
         if (checkPermission()) {
-            val locManager = mainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            val lastKnownLocation = locManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+            val locManager =
+                mainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val lastKnownLocation =
+                locManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
             if (lastKnownLocation != null) {
                 locationOne = lastKnownLocation // The crucial initialization
                 latLngLocOne = LatLng(locationOne.latitude, locationOne.longitude)
@@ -417,7 +378,11 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
                 marker = p0.addMarker(markerOptions)!!
                 drawCircle(latLngLocOne, p0)
             } else {
-                Toast.makeText(requireContext(), "Could not determine location. Please ensure location services are enabled.", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Could not determine location. Please ensure location services are enabled.",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         } else {
             requestPermission()

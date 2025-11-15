@@ -18,7 +18,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.librewards.databinding.FragmentRewardsBinding
 import com.example.librewards.databinding.PopupLayoutBinding
 import com.example.librewards.models.Product
-import com.google.firebase.database.*
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.squareup.picasso.Picasso
 
 
@@ -32,7 +36,7 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private var adapter: RecyclerView.Adapter<RecyclerAdapter.ViewHolder>? = null
     private var listener: RewardsListener? = null
     private var counter: Int? = null
-    private lateinit var productPopup : Dialog
+    private lateinit var productPopup: Dialog
 
     private var _binding: FragmentRewardsBinding? = null
     private val binding get() = _binding!!
@@ -129,7 +133,14 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 
         popupBinding.popupImageView.layoutParams.height = 150
         popupBinding.popupImageView.layoutParams.width = 150
-        popupBinding.popupImageView.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(30, 0, 0, 0) }
+        popupBinding.popupImageView.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+            setMargins(
+                30,
+                0,
+                0,
+                0
+            )
+        }
 
 //         val drawableQR = mainActivity.qrCode.drawable
 //         popupBinding.popupQr.setImageDrawable(drawableQR)
@@ -139,7 +150,14 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         "${list[position].productcost} points".also { popupBinding.popupCost.text = it }
         popupBinding.popupCost.textSize = 20F
         popupBinding.popupText.textSize = 25F
-        popupBinding.popupCost.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(0, 0, 0, 50) }
+        popupBinding.popupCost.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+            setMargins(
+                0,
+                0,
+                0,
+                50
+            )
+        }
         Picasso.get().load(list[position].productimage).into(popupBinding.popupImageView)
 
         var redeemed: String
