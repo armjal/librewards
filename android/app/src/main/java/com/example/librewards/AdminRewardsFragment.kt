@@ -21,7 +21,11 @@ import com.example.librewards.databinding.AddProductPopupBinding
 import com.example.librewards.databinding.AdminFragmentRewardsBinding
 import com.example.librewards.databinding.ManageProductPopupBinding
 import com.example.librewards.models.Product
-import com.google.firebase.database.*
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.squareup.picasso.Picasso
@@ -138,7 +142,8 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         popup?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         manageProductBinding = ManageProductPopupBinding.inflate(layoutInflater)
         popup?.setContentView(manageProductBinding!!.root)
-        Picasso.get().load(list[position].productimage).into(manageProductBinding!!.manageProductImage)
+        Picasso.get().load(list[position].productimage)
+            .into(manageProductBinding!!.manageProductImage)
         manageProductBinding!!.manageProductName.setText(list[position].productname)
         manageProductBinding!!.manageProductCost.setText(list[position].productcost)
         manageProductBinding!!.closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
@@ -186,14 +191,15 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             val progressDialog = ProgressDialog(requireActivity())
             progressDialog.setTitle("Uploading...")
             progressDialog.show()
-            val refProduct = database.child(fh.hashFunction(addProductBinding!!.productName.text.toString()))
+            val refProduct =
+                database.child(fh.hashFunction(addProductBinding!!.productName.text.toString()))
             val imageRef = storageReference.child(
                 "${adminActivity.university}/images/${fh.hashFunction(filePath.toString())}-${
                     addProductBinding!!.productName.text.toString().replace(' ', '-')
                 }"
             )
             imageRef.putFile(filePath!!)
-                .addOnSuccessListener { 
+                .addOnSuccessListener {
                     progressDialog.dismiss()
                     Toast.makeText(context, "File Uploaded", Toast.LENGTH_SHORT).show()
                     imageRef.downloadUrl.addOnSuccessListener { taskSnapshot ->
@@ -213,7 +219,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 
                     }
                 }
-                .addOnFailureListener { 
+                .addOnFailureListener {
                     progressDialog.dismiss()
                     Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show()
                 }

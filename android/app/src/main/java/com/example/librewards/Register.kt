@@ -4,7 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.librewards.databinding.ActivityRegisterBinding
 import com.google.firebase.Firebase
@@ -38,33 +40,34 @@ class Register : AppCompatActivity() {
             startActivity(intent)
         }
 
-        binding.registrationSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-
-            }
-
-            override fun onItemSelected(
-                parent: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
-                spinnerPos = position
-                if (position == 0) {
-                    Log.d(TAG, "First element in spinner")
-                } else {
-                    // On selecting a spinner item
-                    uniSelected = parent?.getItemAtPosition(position).toString()
-
-                    // Showing selected spinner item
-                    Toast.makeText(
-                        parent?.context, "You selected: $uniSelected",
-                        Toast.LENGTH_LONG
-                    ).show()
+        binding.registrationSpinner.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onNothingSelected(parent: AdapterView<*>?) {
 
                 }
+
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    spinnerPos = position
+                    if (position == 0) {
+                        Log.d(TAG, "First element in spinner")
+                    } else {
+                        // On selecting a spinner item
+                        uniSelected = parent?.getItemAtPosition(position).toString()
+
+                        // Showing selected spinner item
+                        Toast.makeText(
+                            parent?.context, "You selected: $uniSelected",
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                    }
+                }
             }
-        }
 
         loadSpinnerData()
 
