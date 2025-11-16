@@ -1,35 +1,49 @@
 package com.example.librewards
 
 import android.Manifest
-import android.content.Intent
-import android.content.pm.PackageManager
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.fragment.app.Fragment
 import com.example.librewards.databinding.AdminFragmentHomeBinding
-import com.example.librewards.qrcode.IntentIntegratorExtended
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 
 class AdminHomeFragment : Fragment() {
-    private val PERMISSION_ID = 2020
-    private val SCAN_TIMER = 341
-    private val SCAN_REWARD = 143
+    private lateinit var requestCameraPermissionLauncher: ActivityResultLauncher<String>
     private lateinit var database: DatabaseReference
     private var _binding: AdminFragmentHomeBinding? = null
     private val binding get() = _binding!!
+    private var currentScanIsForTimer: Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         database = FirebaseDatabase.getInstance().reference
+        requestCameraPermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+                if (isGranted) {
+                    startScanner()
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "Camera permission is required to scan barcodes.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
 
     }
 
@@ -44,12 +58,16 @@ class AdminHomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        if (checkPermission()) {
-            binding.scanTimerButton.setOnClickListener { scanButton(SCAN_TIMER) }
-            binding.scanRewardButton.setOnClickListener { scanButton(SCAN_REWARD) }
-        } else {
-            requestPermission()
+
+        binding.scanTimerButton.setOnClickListener {
+            currentScanIsForTimer = true
+            scanQRCode()
         }
+        binding.scanRewardButton.setOnClickListener {
+            currentScanIsForTimer = false
+            scanQRCode()
+        }
+
         binding.startTimerButton.setOnClickListener { startStudentTimer(binding.enterQr.text.toString()) }
         binding.redeemRewardButton.setOnClickListener { redeemStudentReward(binding.enterQr.text.toString()) }
     }
@@ -57,47 +75,6 @@ class AdminHomeFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        val scanTimerIntent = IntentIntegratorExtended.extendedParseActivityResult(
-            requestCode,
-            resultCode,
-            data,
-            SCAN_TIMER
-        )
-        val scanRewardIntent = IntentIntegratorExtended.extendedParseActivityResult(
-            requestCode,
-            resultCode,
-            data,
-            SCAN_REWARD
-        )
-        super.onActivityResult(requestCode, resultCode, data)
-        if (scanTimerIntent != null) {
-            if (scanTimerIntent.contents == null) {
-                Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()
-            } else {
-                Toast.makeText(
-                    context,
-                    "You have successfully scanned ${scanTimerIntent.contents}",
-                    Toast.LENGTH_LONG
-                ).show()
-                startStudentTimer(scanTimerIntent.contents)
-            }
-        }
-        if (scanRewardIntent != null) {
-            if (scanRewardIntent.contents == null) {
-                Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()
-            } else {
-                Toast.makeText(
-                    context,
-                    "You have successfully scanned ${scanRewardIntent.contents}",
-                    Toast.LENGTH_LONG
-                ).show()
-                redeemStudentReward(scanRewardIntent.contents)
-            }
-        }
-
     }
 
     private fun redeemStudentReward(studentNumber: String) {
@@ -142,46 +119,51 @@ class AdminHomeFragment : Fragment() {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // Failed to read value
                 Log.w(TAG, "Failed to read value.", error.toException())
             }
         })
     }
 
-    private fun checkPermission(): Boolean {
-        //check if location permissions have been granted by user
-        return (ActivityCompat.checkSelfPermission(
+    private fun checkCameraPermission(): Boolean {
+        return checkSelfPermission(
             requireActivity(),
             Manifest.permission.CAMERA
-        )
-                == PackageManager.PERMISSION_GRANTED)
-
+        ) == PERMISSION_GRANTED
     }
 
-    private fun requestPermission() {
-        //this function will allow us to tell the user to request the necessary permission if they are not granted
-        ActivityCompat.requestPermissions(
-            requireActivity(),
-            arrayOf(Manifest.permission.CAMERA),
-            PERMISSION_ID
-        )
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        if (requestCode == PERMISSION_ID) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "You have the Permission")
-            }
+    private fun scanQRCode() {
+        if (checkCameraPermission()) {
+            startScanner()
+        } else {
+            requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
-    private fun scanButton(requestCode: Int) {
-        val intentIntegrator = IntentIntegratorExtended(requireActivity())
-        intentIntegrator.extendedInitiateScan(requestCode)
+    private fun startScanner() {
+        val options = GmsBarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+            .build()
+        val scanner = GmsBarcodeScanning.getClient(requireContext(), options)
+        scanner.startScan()
+            .addOnSuccessListener { barcode ->
+                val rawValue = barcode.rawValue
+                if (rawValue != null) {
+                    if (currentScanIsForTimer) {
+                        startStudentTimer(rawValue)
+                    } else {
+                        redeemStudentReward(rawValue)
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "No barcode found", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnCanceledListener {
+                Toast.makeText(requireContext(), "Scan cancelled", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(requireContext(), "Scan failed: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
+            }
     }
 
     companion object {
