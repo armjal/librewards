@@ -22,13 +22,11 @@
                 app:tabTextColor="@color/colorVeryDarkGrey">
 
                 <com.google.android.material.tabs.TabItem
-                    android:id="@+id/adminHomeTab"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:icon="@drawable/home"/>
 
                 <com.google.android.material.tabs.TabItem
-                    android:id="@+id/adminProductsTab"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:icon="@drawable/reward"/>
