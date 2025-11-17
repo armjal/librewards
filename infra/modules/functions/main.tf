@@ -10,7 +10,7 @@ resource "google_storage_bucket" "default" {
 data "archive_file" "default" {
   type        = "zip"
   output_path = "../set-admin-auth.zip"
-  source_dir  = "../functions/set-admin-auth"
+  source_dir  = "../functions/set-admin-auth/src"
 }
 
 resource "google_storage_bucket_object" "object" {
