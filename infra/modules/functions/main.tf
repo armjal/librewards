@@ -36,7 +36,8 @@ resource "google_cloudfunctions2_function" "default" {
       storage_source {
         bucket = google_storage_bucket.default.name
         object = google_storage_bucket_object.object.name
-      }
+        generation = google_storage_bucket_object.object.generation
+  }
     }
   }
 
