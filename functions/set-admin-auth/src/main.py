@@ -1,10 +1,13 @@
-import functions_framework
+
+from typing import TypedDict
 
 
-@functions_framework.cloud_event
-def hello_world(event):
-    """Cloud Event Function.
+class Request(TypedDict):
+    user_id: str
+
+def handler(request: Request):
+    """Process the request to set admin authentication claim.
     Args:
-        event: Cloud event for the function trigger
+        request: Request object containing the user_id assign the admin authentication claim to
     """
-    print("Hello, stdout!")
+    return request['user_id']

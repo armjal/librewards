@@ -25,6 +25,13 @@ test = [
 [tool.uv]
 default-groups = ["dev", "test"]
 
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+pythonpath = [
+    "src",
+]
 
 [project.urls]
 repository = "https://github.com/armjal/librewards"
