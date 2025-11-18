@@ -10,7 +10,8 @@ requires-python = ">=3.13, <3.14"
 dependencies = [
     "firebase-admin~=7.1",
     "google-cloud-functions~=1.21",
-    "functions-framework~=3.0"
+    "functions-framework~=3.0",
+    "werkzeug~=3.1",
 ]
 
 [dependency-groups]
@@ -29,9 +30,11 @@ default-groups = ["dev", "test"]
 testpaths = [
     "tests",
 ]
+
 pythonpath = [
     "src",
 ]
+
 
 [project.urls]
 repository = "https://github.com/armjal/librewards"

@@ -802,6 +802,7 @@ dependencies = [
     { name = "firebase-admin" },
     { name = "functions-framework" },
     { name = "google-cloud-functions" },
+    { name = "werkzeug" },
 ]
 
 [package.dev-dependencies]
@@ -818,6 +819,7 @@ requires-dist = [
     { name = "firebase-admin", specifier = "~=7.1" },
     { name = "functions-framework", specifier = "~=3.0" },
     { name = "google-cloud-functions", specifier = "~=1.21" },
+    { name = "werkzeug", specifier = "~=3.1" },
 ]
 
 [package.metadata.requires-dev]

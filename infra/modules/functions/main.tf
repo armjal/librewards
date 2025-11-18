@@ -7,18 +7,12 @@ resource "google_storage_bucket" "default" {
   uniform_bucket_level_access = true
 }
 
-data "archive_file" "default" {
-  type        = "zip"
-  output_path = "../set-admin-auth.zip"
-  source_dir  = "../functions/set-admin-auth/src"
-}
-
 resource "google_storage_bucket_object" "object" {
   provider = google-beta
 
   name   = "set-admin-auth.zip"
   bucket = google_storage_bucket.default.name
-  source = data.archive_file.default.output_path
+  source = "../functions/set-admin-auth/function.zip"
 }
 
 resource "google_cloudfunctions2_function" "default" {
@@ -32,12 +26,16 @@ resource "google_cloudfunctions2_function" "default" {
   build_config {
     runtime     = "python313"
     entry_point = "handler"
+
+    environment_variables = {
+      GOOGLE_PYTHON_PACKAGE_MANAGER = "uv"
+    }
     source {
       storage_source {
         bucket = google_storage_bucket.default.name
         object = google_storage_bucket_object.object.name
         generation = google_storage_bucket_object.object.generation
-  }
+      }
     }
   }
 
