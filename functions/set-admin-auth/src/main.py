@@ -3,6 +3,7 @@ import json
 from typing import TypedDict
 from werkzeug.wrappers import Request
 from firebase_admin.auth import set_custom_user_claims
+from firebase_admin import initialize_app
 import logging
 
 
@@ -23,6 +24,7 @@ def handler(request: Request):
     """
     request_data: RequestData = request.get_json()
     claims = CustomAuthClaims(admin=True)
+    initialize_app()
 
     try:
         set_custom_user_claims(request_data["user_id"], claims)

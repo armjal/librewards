@@ -38,10 +38,10 @@ resource "google_cloudfunctions2_function" "default" {
       }
     }
   }
-
   service_config {
     max_instance_count = 1
     available_memory   = "256M"
     timeout_seconds    = 60
+    service_account_email = var.admin_service_account_email
   }
 }
