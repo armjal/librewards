@@ -4,7 +4,8 @@ from typing import TypedDict
 from werkzeug.wrappers import Request
 from firebase_admin.auth import set_custom_user_claims, get_user_by_email, UserRecord
 import logging
-
+from firebase_admin import initialize_app
+import firebase_admin
 
 class RequestData(TypedDict):
     email: str
@@ -21,6 +22,8 @@ def handler(request: Request):
     Returns:
         A JSON string with status and user_id
     """
+
+    _initialize_firebase_app()
     request_data: RequestData = request.get_json()
     claims = CustomAuthClaims(admin=True)
     user: UserRecord = get_user_by_email(request_data["email"])
@@ -39,3 +42,10 @@ def handler(request: Request):
                 "error": "Failed to set claims",
             }
         )
+
+
+def _initialize_firebase_app():
+    try:
+        firebase_admin.get_app()
+    except ValueError:
+        initialize_app()
