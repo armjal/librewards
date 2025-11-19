@@ -9,11 +9,11 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.librewards.databinding.FragmentFacebookUniversityBinding
+import com.example.librewards.resources.universities
 
 class FacebookUniversity : AppCompatActivity() {
     private var spinnerPos: Int? = null
     private lateinit var uniSelected: String
-    private lateinit var localDb: DatabaseHandler
     private lateinit var login: Login
     private lateinit var fh: FirebaseHandler
     private var _binding: FragmentFacebookUniversityBinding? = null
@@ -23,17 +23,14 @@ class FacebookUniversity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         _binding = FragmentFacebookUniversityBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        localDb = DatabaseHandler(applicationContext)
         login = Login()
         fh = FirebaseHandler()
-
-        storeUniversities()
 
         binding.fbUniversitySpinner.onItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
                 override fun onNothingSelected(parent: AdapterView<*>?) {
+                    Log.d("FacebookUniversity", "Unselected")
                 }
-
                 override fun onItemSelected(
                     parent: AdapterView<*>?,
                     view: View?,
@@ -42,7 +39,7 @@ class FacebookUniversity : AppCompatActivity() {
                 ) {
                     spinnerPos = position
                     if (position == 0) {
-                        Log.d("TAG", "First element in spinner")
+                        Log.d("FacebookUniversity", "First element in spinner")
                     } else {
                         // On selecting a spinner item
                         uniSelected = parent?.getItemAtPosition(position).toString()
@@ -86,7 +83,7 @@ class FacebookUniversity : AppCompatActivity() {
 
     private fun loadSpinnerData() {
         // Spinner Drop down elements
-        val universities: MutableList<String> = localDb.getAllUniversities() as MutableList<String>
+        val universities: MutableList<String> = universities as MutableList<String>
         universities.add(0, "Please choose a University")
         // Creating adapter for spinner
         val dataAdapter = ArrayAdapter(
@@ -101,11 +98,4 @@ class FacebookUniversity : AppCompatActivity() {
         binding.fbUniversitySpinner.adapter = dataAdapter
     }
 
-    private fun storeUniversities() {
-        val listFromFile = ListFromFile(applicationContext)
-        val uniList: List<String> = listFromFile.readLine("universities.txt")
-        for (s in uniList) Log.d("letsSee", s)
-        localDb.storeUniversities(uniList, "universities_table")
-
-    }
 }

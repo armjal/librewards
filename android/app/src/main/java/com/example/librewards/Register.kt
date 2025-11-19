@@ -9,15 +9,14 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.librewards.databinding.ActivityRegisterBinding
+import com.example.librewards.resources.universities
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 
 class Register : AppCompatActivity() {
-    private lateinit var localDb: DatabaseHandler
     private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
     private lateinit var uniSelected: String
@@ -30,7 +29,6 @@ class Register : AppCompatActivity() {
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
         auth = Firebase.auth
-        localDb = DatabaseHandler(applicationContext)
         fh = FirebaseHandler()
         database = FirebaseDatabase.getInstance().reference
         //storeUniversities()
@@ -43,7 +41,7 @@ class Register : AppCompatActivity() {
         binding.registrationSpinner.onItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
                 override fun onNothingSelected(parent: AdapterView<*>?) {
-
+                    Log.d(TAG, "Unselected")
                 }
 
                 override fun onItemSelected(
@@ -101,8 +99,6 @@ class Register : AppCompatActivity() {
                     )
                     // Sign in success, update UI with the signed-in user's information
                     Log.d(TAG, "createUserWithEmail:success")
-                    val user = auth.currentUser
-                    updateUI(user)
                     val intent = Intent(this, Login::class.java)
                     startActivity(intent)
 
@@ -114,14 +110,12 @@ class Register : AppCompatActivity() {
                         baseContext, "Authentication failed.",
                         Toast.LENGTH_SHORT
                     ).show()
-                    updateUI(null)
                 }
             }
     }
 
     private fun loadSpinnerData() {
-        val listFromFile = ListFromFile(applicationContext)
-        val uniList: MutableList<String> = listFromFile.readLine("universities.txt")
+        val uniList: MutableList<String> = universities.toMutableList()
         // Spinner Drop down elements
         uniList.add(0, "Please choose a University")
         // Creating adapter for spinner
@@ -135,10 +129,6 @@ class Register : AppCompatActivity() {
 
         // attaching data adapter to spinner
         binding.registrationSpinner.adapter = dataAdapter
-    }
-
-
-    private fun updateUI(user: FirebaseUser?) {
     }
 
     companion object {
