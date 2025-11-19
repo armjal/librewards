@@ -38,6 +38,8 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
+import androidx.core.graphics.toColorInt
+import androidx.core.graphics.drawable.toDrawable
 
 
 class TimerFragment : Fragment(), OnMapReadyCallback {
@@ -158,9 +160,9 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
                     marker!!.position = latLngLocTwo
                 }
                 if (distance!! > 40) {
-                    circle.fillColor = Color.parseColor("#4dff0000")
+                    circle.fillColor = "#4dff0000".toColorInt()
                 } else {
-                    circle.fillColor = Color.parseColor("#4d318ce7")
+                    circle.fillColor = "#4d318ce7".toColorInt()
 
                 }
 
@@ -193,7 +195,7 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
         // Border color of the circle
         circleOptions.strokeColor(Color.BLACK)
         // Fill color of the circle
-        circleOptions.fillColor(Color.parseColor("#4d318ce7"))
+        circleOptions.fillColor("#4d318ce7".toColorInt())
         // Border width of the circle
         circleOptions.strokeWidth(2f)
         // Adding the circle to the GoogleMap
@@ -340,7 +342,7 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
     //Method that creates a popup
     private fun showPopup(text: String?) {
         popup = Dialog(requireActivity())
-        popup?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         popupLayoutBinding = PopupLayoutBinding.inflate(layoutInflater)
         popup?.setContentView(popupLayoutBinding!!.root)
         popupLayoutBinding!!.popupText.text = text

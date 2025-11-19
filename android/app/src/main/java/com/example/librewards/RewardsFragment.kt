@@ -24,6 +24,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.squareup.picasso.Picasso
+import androidx.core.graphics.drawable.toDrawable
 
 
 class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
@@ -111,7 +112,7 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private fun showTextPopup(text: String) {
         popup = Dialog(requireActivity())
         val popupBinding = PopupLayoutBinding.inflate(layoutInflater)
-        popup.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popup.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         popup.setContentView(popupBinding.root)
         popupBinding.popupText.text = text
         popupBinding.closeBtn.setOnClickListener { popup.dismiss() }
@@ -126,7 +127,7 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             .child("redeemingReward")
         redeemRef.setValue("0")
         productPopup = Dialog(requireActivity())
-        productPopup.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        productPopup.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
 
         val popupBinding = PopupLayoutBinding.inflate(layoutInflater)
         productPopup.setContentView(popupBinding.root)

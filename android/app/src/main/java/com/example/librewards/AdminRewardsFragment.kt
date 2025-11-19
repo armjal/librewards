@@ -30,6 +30,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.squareup.picasso.Picasso
 import java.io.IOException
+import androidx.core.graphics.drawable.toDrawable
 
 
 class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
@@ -126,7 +127,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 
     private fun showAddProductPopup() {
         popup = Dialog(requireActivity())
-        popup?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         addProductBinding = AddProductPopupBinding.inflate(layoutInflater)
         popup?.setContentView(addProductBinding!!.root)
         addProductBinding!!.chooseButton.setOnClickListener { fileChooser() }
@@ -139,7 +140,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         val dbCurrentProduct = database
             .child(fh.hashFunction(list[position].productname!!))
         popup = Dialog(requireActivity())
-        popup?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         manageProductBinding = ManageProductPopupBinding.inflate(layoutInflater)
         popup?.setContentView(manageProductBinding!!.root)
         Picasso.get().load(list[position].productimage)
