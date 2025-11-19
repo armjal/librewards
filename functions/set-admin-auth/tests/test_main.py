@@ -6,10 +6,13 @@ from firebase_admin.exceptions import FirebaseError
 
 
 @patch("main.set_custom_user_claims")
-def test__handler__given_user_id__successfully_sets_admin_auth_claim(
+@patch("main.get_user_by_email")
+def test__handler__given_user_email__successfully_sets_admin_auth_claim(
+    mock_get_user_by_email: Mock,
     mock_set_custom_user_claims: Mock,
 ):
-    request_data: RequestData = {"user_id": "test-id"}
+    mock_get_user_by_email.return_value = Mock(uid="test-id", email="test-id@test.com")
+    request_data: RequestData = {"email": "test-id@test.com"}
     request: Request = Request.from_values(json=request_data)
 
     response = handler(request)
@@ -19,10 +22,13 @@ def test__handler__given_user_id__successfully_sets_admin_auth_claim(
 
 
 @patch("main.set_custom_user_claims")
+@patch("main.get_user_by_email")
 def test__handler__given_set_claims_failure__raises_exception(
+    mock_get_user_by_email: Mock,
     mock_set_custom_user_claims: Mock,
 ):
-    request_data: RequestData = {"user_id": "test-id"}
+    mock_get_user_by_email.return_value = Mock(uid="test-id", email="test-id@test.com")
+    request_data: RequestData = {"email": "test-id@test.com"}
     request: Request = Request.from_values(json=request_data)
     mock_set_custom_user_claims.side_effect = FirebaseError(
         code="error-code", message="Failed to set claims"

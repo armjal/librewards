@@ -44,7 +44,7 @@ module "api_keys" {
 module "functions" {
   source                      = "./modules/functions"
   project_id                  = module.project.project_id
-  admin_service_account_email = module.iam.service_account_email
+  admin_service_account_email = module.iam.auth_service_account_email
 }
 
 module "iam" {
