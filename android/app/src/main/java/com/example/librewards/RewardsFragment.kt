@@ -3,7 +3,6 @@ package com.example.librewards
 import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -24,10 +23,10 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.squareup.picasso.Picasso
+import androidx.core.graphics.drawable.toDrawable
 
 
 class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
-    private lateinit var popup: Dialog
     private lateinit var fh: FirebaseHandler
     private lateinit var mainActivity: MainActivity
     private lateinit var database: DatabaseReference
@@ -68,7 +67,7 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         "See rewards from ${mainActivity.university}".also { binding.rewardsText.text = it }
         binding.rewardsRecycler.layoutManager = layoutManager
         productsList = mutableListOf()
-        adapter = RecyclerAdapter(requireActivity(), productsList, this)
+        adapter = RecyclerAdapter(productsList, this)
         binding.rewardsRecycler.adapter = adapter
         database = FirebaseDatabase.getInstance().reference
             .child("products")
@@ -96,29 +95,17 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 
     private fun calculatePointsFromPurchase(position: Int) {
         val pointsInt =
-            Integer.parseInt(binding.rewardsPoints.text.toString()) - Integer.parseInt(productsList[position].productcost!!)
+            Integer.parseInt(binding.rewardsPoints.text.toString()) - Integer.parseInt(productsList[position].productCost!!)
 
         if (pointsInt > 0) {
             binding.rewardsPoints.text = pointsInt.toString()
-            minusPointsListener(Integer.parseInt(productsList[position].productcost!!))
+            minusPointsListener(Integer.parseInt(productsList[position].productCost!!))
         } else {
             toastMessage("You do not have sufficient points for this purchase")
         }
 
     }
 
-    //Method that creates a custom popup
-    private fun showTextPopup(text: String) {
-        popup = Dialog(requireActivity())
-        val popupBinding = PopupLayoutBinding.inflate(layoutInflater)
-        popup.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        popup.setContentView(popupBinding.root)
-        popupBinding.popupText.text = text
-        popupBinding.closeBtn.setOnClickListener { popup.dismiss() }
-        popup.show()
-    }
-
-    //Method that creates a popup
     private fun showImagePopup(list: MutableList<Product>, position: Int) {
         val redeemRef = FirebaseDatabase.getInstance()
             .reference.child("users")
@@ -126,7 +113,7 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             .child("redeemingReward")
         redeemRef.setValue("0")
         productPopup = Dialog(requireActivity())
-        productPopup.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        productPopup.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
 
         val popupBinding = PopupLayoutBinding.inflate(layoutInflater)
         productPopup.setContentView(popupBinding.root)
@@ -146,8 +133,8 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 //         popupBinding.popupQr.setImageDrawable(drawableQR)
 
         popupBinding.popupQr.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(50) }
-        popupBinding.popupText.text = list[position].productname
-        "${list[position].productcost} points".also { popupBinding.popupCost.text = it }
+        popupBinding.popupText.text = list[position].productName
+        "${list[position].productCost} points".also { popupBinding.popupCost.text = it }
         popupBinding.popupCost.textSize = 20F
         popupBinding.popupText.textSize = 25F
         popupBinding.popupCost.updateLayoutParams<ViewGroup.MarginLayoutParams> {
@@ -158,7 +145,7 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
                 50
             )
         }
-        Picasso.get().load(list[position].productimage).into(popupBinding.popupImageView)
+        Picasso.get().load(list[position].productImageUrl).into(popupBinding.popupImageView)
 
         var redeemed: String
 
@@ -183,12 +170,6 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         productPopup.setOnDismissListener { redeemRef.removeEventListener(redeemListener) }
         productPopup.show()
 
-    }
-
-    //Creating a preference for activity on first start-up only
-    private fun firstStart(): Boolean {
-        val rewardsPrefs = mainActivity.getSharedPreferences("rewardsPrefs", Context.MODE_PRIVATE)
-        return rewardsPrefs.getBoolean("firstStart", true)
     }
 
     //Method creating a custom Toast message

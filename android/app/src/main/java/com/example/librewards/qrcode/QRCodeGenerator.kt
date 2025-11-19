@@ -13,8 +13,6 @@ import com.google.zxing.common.BitMatrix
 import java.io.IOException
 import java.nio.charset.Charset
 import java.util.Hashtable
-import kotlin.text.get
-
 
 class QRCodeGenerator {
     // Function to create the QR code

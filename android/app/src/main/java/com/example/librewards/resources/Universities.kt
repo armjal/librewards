@@ -1,3 +1,6 @@
+@file:Suppress("SpellCheckingInspection",
+)
+
 package com.example.librewards.resources
 
 val universities = listOf(
