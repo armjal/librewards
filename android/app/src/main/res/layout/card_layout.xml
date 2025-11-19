@@ -29,6 +29,7 @@
                 android:id="@+id/rewardImage"
                 android:layout_width="70dp"
                 android:layout_height="70dp"
+                android:contentDescription="Reward product image"
                 android:background="@drawable/rounded_shape"
                 android:padding="8dp"
                 />

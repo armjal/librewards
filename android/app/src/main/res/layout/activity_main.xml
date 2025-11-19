@@ -10,6 +10,7 @@
             android:id="@+id/blackAppBarShadow"
             android:layout_width="match_parent"
             android:layout_height="50dp"
+            android:importantForAccessibility="no"
             android:foreground="@color/colorBlackText"
             android:background="@color/colorBlackText"
             app:layout_constraintTop_toBottomOf="@+id/userSideBar" />
@@ -77,6 +78,7 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_margin="10dp"
+                android:importantForAccessibility="no"
                 android:background="@color/colorBlackText"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -87,6 +89,7 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_margin="10dp"
+                android:contentDescription="LibRewards logo"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"

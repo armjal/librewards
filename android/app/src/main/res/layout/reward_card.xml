@@ -19,6 +19,7 @@
         <ImageView
             android:id="@+id/homeProductImage"
             android:layout_width="@dimen/_170sdp"
+            android:contentDescription="Reward product image"
             android:layout_height="@dimen/_170sdp"
             android:scaleType="fitXY"
             android:alpha="0.5"

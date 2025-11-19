@@ -43,6 +43,7 @@
             android:id="@+id/manageProductImage"
             android:layout_width="@dimen/_100sdp"
             android:layout_height="@dimen/_100sdp"
+            android:contentDescription="Product image"
             android:layout_gravity="center"
             app:layout_constraintEnd_toEndOf="parent" />
 
