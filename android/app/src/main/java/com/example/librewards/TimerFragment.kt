@@ -5,7 +5,6 @@ import android.app.Dialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -21,7 +20,6 @@ import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import com.example.librewards.databinding.FragmentTimerBinding
 import com.example.librewards.databinding.PopupLayoutBinding
-import com.example.librewards.models.Product
 import com.example.librewards.qrcode.QRCodeGenerator
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -43,7 +41,6 @@ import androidx.core.graphics.drawable.toDrawable
 
 
 class TimerFragment : Fragment(), OnMapReadyCallback {
-    private val PERMISSION_ID = 1010
     private lateinit var markerOptions: MarkerOptions
     private var marker: Marker? = null
     private lateinit var latLngLocTwo: LatLng
@@ -60,7 +57,6 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
     private var pointsListener: ValueEventListener? = null
     private lateinit var database: DatabaseReference
     private var counter: Int? = null
-    private lateinit var v: View
     private var distance: Float? = null
     lateinit var mapFragment: SupportMapFragment
     private var googleMap: GoogleMap? = null
@@ -76,7 +72,8 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
     }
 
     companion object {
-        val TAG: String = TimerFragment::class.java.simpleName
+        private const val PERMISSION_ID = 1010
+        private val TAG: String = TimerFragment::class.java.simpleName
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -169,6 +166,7 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
             }
 
             override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
+                Log.d(TAG, "Status changed")
             }
 
             override fun onProviderEnabled(provider: String) {

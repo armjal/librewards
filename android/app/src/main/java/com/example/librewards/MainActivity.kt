@@ -1,12 +1,8 @@
 package com.example.librewards
 
-import android.app.Dialog
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -26,7 +22,6 @@ import com.squareup.picasso.Picasso
 class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
     private lateinit var timerFragment: TimerFragment
     private lateinit var rewardsFragment: RewardsFragment
-    private lateinit var popup: Dialog
     lateinit var email: String
     lateinit var firstName: String
     lateinit var lastName: String

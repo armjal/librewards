@@ -11,7 +11,6 @@ import com.example.librewards.models.Product
 import com.squareup.picasso.Picasso
 
 class RecyclerAdapter(
-    var context: Context,
     var list: MutableList<Product>,
     var mOnProductListener: OnProductListener
 ) : RecyclerView.Adapter<RecyclerAdapter.ViewHolder>() {
@@ -22,9 +21,9 @@ class RecyclerAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val product: Product = list[position]
-        holder.itemTitle.text = product.productname
-        (product.productcost + " points").also { holder.itemDetail.text = it }
-        Picasso.get().load(product.productimage).into(holder.itemImage)
+        holder.itemTitle.text = product.productName
+        (product.productCost + " points").also { holder.itemDetail.text = it }
+        Picasso.get().load(product.productImageUrl).into(holder.itemImage)
 
     }
 

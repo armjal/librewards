@@ -4,7 +4,6 @@ import android.app.Dialog
 import android.app.ProgressDialog
 import android.content.Intent
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -34,7 +33,6 @@ import androidx.core.graphics.drawable.toDrawable
 
 
 class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
-    private val PICK_IMAGE_REQUEST = 1234
     private lateinit var fh: FirebaseHandler
     private lateinit var database: DatabaseReference
     private lateinit var storageReference: StorageReference
@@ -74,7 +72,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         layoutManager = LinearLayoutManager(context)
         binding.adminRewardsRecycler.layoutManager = layoutManager
         productsList = mutableListOf()
-        adapter = RecyclerAdapter(requireActivity(), productsList, this)
+        adapter = RecyclerAdapter(productsList, this)
         binding.adminRewardsRecycler.adapter = adapter
         database = FirebaseDatabase.getInstance().reference.child("products")
             .child(adminActivity.university)
@@ -138,18 +136,18 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 
     private fun showManageProductPopup(list: MutableList<Product>, position: Int) {
         val dbCurrentProduct = database
-            .child(fh.hashFunction(list[position].productname!!))
+            .child(fh.hashFunction(list[position].productName!!))
         popup = Dialog(requireActivity())
         popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         manageProductBinding = ManageProductPopupBinding.inflate(layoutInflater)
         popup?.setContentView(manageProductBinding!!.root)
-        Picasso.get().load(list[position].productimage)
+        Picasso.get().load(list[position].productImageUrl)
             .into(manageProductBinding!!.manageProductImage)
-        manageProductBinding!!.manageProductName.setText(list[position].productname)
-        manageProductBinding!!.manageProductCost.setText(list[position].productcost)
+        manageProductBinding!!.manageProductName.setText(list[position].productName)
+        manageProductBinding!!.manageProductCost.setText(list[position].productCost)
         manageProductBinding!!.closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
         manageProductBinding!!.updateButton.setOnClickListener {
-            dbCurrentProduct.child("productimage")
+            dbCurrentProduct.child("productImage")
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         val tempImageUrl = snapshot.value.toString()
@@ -205,11 +203,11 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
                     Toast.makeText(context, "File Uploaded", Toast.LENGTH_SHORT).show()
                     imageRef.downloadUrl.addOnSuccessListener { taskSnapshot ->
                         val productImageUrl = taskSnapshot.toString()
-                        refProduct.child("productname")
+                        refProduct.child("productName")
                             .setValue(addProductBinding!!.productName.text.toString())
-                        refProduct.child("productcost")
+                        refProduct.child("productCost")
                             .setValue(addProductBinding!!.productCost.text.toString())
-                        refProduct.child("productimage").setValue(productImageUrl)
+                        refProduct.child("productImage").setValue(productImageUrl)
                         addProductBinding?.let {
                             it.productName.text.clear()
                             it.productCost.text.clear()
@@ -234,7 +232,8 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     }
 
     companion object {
-        val TAG: String = AdminRewardsFragment::class.java.simpleName
+        private const val PICK_IMAGE_REQUEST = 1234
+        private val TAG: String = AdminRewardsFragment::class.java.simpleName
 
     }
 
