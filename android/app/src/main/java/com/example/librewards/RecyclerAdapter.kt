@@ -43,11 +43,13 @@ class RecyclerAdapter(
         }
 
         override fun onClick(v: View?) {
-            onProductListener.onProductClick(adapterPosition)
+            if (bindingAdapterPosition != RecyclerView.NO_POSITION) {
+                onProductListener.onProductClick(bindingAdapterPosition)
+            }
         }
     }
 
-    interface OnProductListener {
+    fun interface OnProductListener {
         fun onProductClick(position: Int)
     }
 
