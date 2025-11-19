@@ -21,7 +21,10 @@ resource "google_project_service" "default" {
     "storage.googleapis.com",
     "firebaserules.googleapis.com",
     "maps-android-backend.googleapis.com",
-    "apikeys.googleapis.com"
+    "apikeys.googleapis.com",
+    "cloudfunctions.googleapis.com",
+    "cloudbuild.googleapis.com",
+    "run.googleapis.com"
   ])
   service = each.key
 }

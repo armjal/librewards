@@ -41,6 +41,17 @@ module "api_keys" {
   app_sha1_fingerprint = var.app_sha1_fingerprint
 }
 
+module "functions" {
+  source                      = "./modules/functions"
+  project_id                  = module.project.project_id
+  admin_service_account_email = module.iam.auth_service_account_email
+}
+
+module "iam" {
+  source     = "./modules/iam"
+  project_id = module.project.project_id
+}
+
 output "android_maps_api_key_string" {
   value     = module.api_keys.android_maps_api_key_string
   sensitive = true
