@@ -56,6 +56,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/_30sdp"
                 android:layout_gravity="center_horizontal"
+                android:importantForAutofill="no"
                 android:paddingStart="@dimen/_10sdp"
                 android:paddingEnd="0dp"
                 android:background="@drawable/rounded_shape_outline"
@@ -66,6 +67,7 @@
                 android:id="@+id/registrationLastName"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/_30sdp"
+                android:importantForAutofill="no"
                 android:paddingStart="@dimen/_10sdp"
                 android:paddingEnd="0dp"
                 android:layout_gravity="center_horizontal"
@@ -78,6 +80,7 @@
                 android:id="@+id/registrationEmail"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/_30sdp"
+                android:importantForAutofill="no"
                 android:paddingStart="@dimen/_10sdp"
                 android:paddingEnd="0dp"
                 android:layout_gravity="center_horizontal"
@@ -90,6 +93,7 @@
                 android:id="@+id/registrationPassword"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/_30sdp"
+                android:importantForAutofill="no"
                 android:paddingStart="@dimen/_10sdp"
                 android:paddingEnd="0dp"
                 android:layout_gravity="center_horizontal"
@@ -122,6 +126,7 @@
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
                     android:layout_gravity="center"
+                    android:contentDescription="@string/click_to_scroll"
                     android:src="@drawable/ic_baseline_arrow_drop_down_24" />
 
             </RelativeLayout>
@@ -148,9 +153,10 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
+        android:contentDescription="@string/go_back"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/abc_vector_test"
+        app:srcCompat="@drawable/baseline_arrow_back_ios_new_24"
         app:tint="@color/colorOrange" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -29,6 +29,7 @@
                 android:id="@+id/rewardImage"
                 android:layout_width="70dp"
                 android:layout_height="70dp"
+                android:contentDescription="@string/reward_product_image"
                 android:background="@drawable/rounded_shape"
                 android:padding="8dp"
                 />
@@ -41,7 +42,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginTop="4dp"
             android:textSize="@dimen/_16ssp"
-            app:layout_constraintLeft_toRightOf="@+id/imageHolder"
+            app:layout_constraintLeft_toRightOf="@id/imageHolder"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
@@ -52,7 +53,7 @@
             android:layout_marginTop="4dp"
             android:textAllCaps="true"
             android:textSize="@dimen/_12ssp"
-            app:layout_constraintLeft_toRightOf="@+id/imageHolder"
+            app:layout_constraintLeft_toRightOf="@id/imageHolder"
             app:layout_constraintTop_toBottomOf="@id/rewardTitle" />
 
         <View
@@ -63,7 +64,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/rewardCost" />
+            app:layout_constraintTop_toBottomOf="@id/rewardCost" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

@@ -108,13 +108,17 @@ class AdminHomeFragment : Fragment() {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 isStudying = dataSnapshot.value.toString()
                 Log.d("TAG", isStudying)
-                if (isStudying == "0" || isStudying == "2") {
-                    refChild.setValue("1")
-                } else if (isStudying == "1") {
-                    refChild.setValue("0")
-                } else {
-                    Toast.makeText(context, "Student ID is not recognised", Toast.LENGTH_SHORT)
-                        .show()
+                when (isStudying) {
+                    "0", "2" -> {
+                        refChild.setValue("1")
+                    }
+                    "1" -> {
+                        refChild.setValue("0")
+                    }
+                    else -> {
+                        Toast.makeText(context, "Student ID is not recognised", Toast.LENGTH_SHORT)
+                            .show()
+                    }
                 }
             }
 

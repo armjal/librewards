@@ -5,7 +5,6 @@ import android.app.Dialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -21,7 +20,6 @@ import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import com.example.librewards.databinding.FragmentTimerBinding
 import com.example.librewards.databinding.PopupLayoutBinding
-import com.example.librewards.models.Product
 import com.example.librewards.qrcode.QRCodeGenerator
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -38,10 +36,11 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
+import androidx.core.graphics.toColorInt
+import androidx.core.graphics.drawable.toDrawable
 
 
 class TimerFragment : Fragment(), OnMapReadyCallback {
-    private val PERMISSION_ID = 1010
     private lateinit var markerOptions: MarkerOptions
     private var marker: Marker? = null
     private lateinit var latLngLocTwo: LatLng
@@ -58,7 +57,6 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
     private var pointsListener: ValueEventListener? = null
     private lateinit var database: DatabaseReference
     private var counter: Int? = null
-    private lateinit var v: View
     private var distance: Float? = null
     lateinit var mapFragment: SupportMapFragment
     private var googleMap: GoogleMap? = null
@@ -74,7 +72,8 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
     }
 
     companion object {
-        val TAG: String = TimerFragment::class.java.simpleName
+        private const val PERMISSION_ID = 1010
+        private val TAG: String = TimerFragment::class.java.simpleName
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -158,15 +157,16 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
                     marker!!.position = latLngLocTwo
                 }
                 if (distance!! > 40) {
-                    circle.fillColor = Color.parseColor("#4dff0000")
+                    circle.fillColor = "#4dff0000".toColorInt()
                 } else {
-                    circle.fillColor = Color.parseColor("#4d318ce7")
+                    circle.fillColor = "#4d318ce7".toColorInt()
 
                 }
 
             }
 
             override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
+                Log.d(TAG, "Status changed")
             }
 
             override fun onProviderEnabled(provider: String) {
@@ -193,7 +193,7 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
         // Border color of the circle
         circleOptions.strokeColor(Color.BLACK)
         // Fill color of the circle
-        circleOptions.fillColor(Color.parseColor("#4d318ce7"))
+        circleOptions.fillColor("#4d318ce7".toColorInt())
         // Border width of the circle
         circleOptions.strokeWidth(2f)
         // Adding the circle to the GoogleMap
@@ -340,7 +340,7 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
     //Method that creates a popup
     private fun showPopup(text: String?) {
         popup = Dialog(requireActivity())
-        popup?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         popupLayoutBinding = PopupLayoutBinding.inflate(layoutInflater)
         popup?.setContentView(popupLayoutBinding!!.root)
         popupLayoutBinding!!.popupText.text = text

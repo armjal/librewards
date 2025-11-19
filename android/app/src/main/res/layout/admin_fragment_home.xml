@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/adminHomeFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -59,7 +58,7 @@
             android:layout_gravity="center"
             android:layout_marginTop="@dimen/_5sdp"
             android:background="@drawable/rounded_shape"
-            android:text="Scan to start timer"
+            android:text="@string/scan_to_start_timer"
             android:textColor="@color/colorWhite"
             android:textSize="@dimen/_12ssp" />
 
@@ -115,7 +114,8 @@
             android:background="@drawable/rounded_shape_outline"
             android:hint="@string/enter_qr"
             android:inputType="text"
-            android:paddingStart="@dimen/_10sdp"/>
+            android:paddingStart="@dimen/_10sdp"
+            android:paddingEnd="@dimen/_10sdp"/>
 
         <LinearLayout
             android:layout_width="wrap_content"
