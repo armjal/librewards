@@ -1,11 +1,13 @@
-from http import HTTPStatus
 import json
-from typing import TypedDict
-from werkzeug.wrappers import Request
-from firebase_admin.auth import set_custom_user_claims, get_user_by_email, UserRecord
 import logging
-from firebase_admin import initialize_app
+from http import HTTPStatus
+from typing import TypedDict
+
 import firebase_admin
+from firebase_admin import initialize_app
+from firebase_admin.auth import UserRecord, get_user_by_email, set_custom_user_claims
+from werkzeug.wrappers import Request
+
 
 class RequestData(TypedDict):
     email: str

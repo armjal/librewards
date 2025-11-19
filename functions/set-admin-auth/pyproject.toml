@@ -35,6 +35,31 @@ pythonpath = [
     "src",
 ]
 
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    "W",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+    # No implicit namespace packages
+    "INP001",
+    # No unused function arguments
+    "ARG001",
+]
+
 
 [project.urls]
 repository = "https://github.com/armjal/librewards"
