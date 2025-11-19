@@ -24,7 +24,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="Edit product"
+        android:text="@string/edit_product"
         android:textSize="@dimen/_13ssp"
         android:textAllCaps="true"
         android:textColor="@color/colorWhite" />
@@ -43,7 +43,7 @@
             android:id="@+id/manageProductImage"
             android:layout_width="@dimen/_100sdp"
             android:layout_height="@dimen/_100sdp"
-            android:contentDescription="Product image"
+            android:contentDescription="@string/image_of_the_product"
             android:layout_gravity="center"
             app:layout_constraintEnd_toEndOf="parent" />
 

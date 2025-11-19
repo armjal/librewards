@@ -12,7 +12,7 @@
         android:layout_width="@dimen/_80sdp"
         android:layout_height="@dimen/_80sdp"
         android:src="@drawable/logo"
-        android:contentDescription="LibRewards logo"
+        android:contentDescription="@string/librewards_logo"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -122,7 +122,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Haven't got an account?" />
+                android:text="@string/havent_got_an_account" />
 
             <TextView
                 android:id="@+id/registerButton"
@@ -130,7 +130,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/_5sdp"
                 android:layout_marginTop="16dp"
-                android:text="Register here"
+                android:text="@string/register_here"
                 android:textColor="@color/colorOrange" />
         </LinearLayout>
 

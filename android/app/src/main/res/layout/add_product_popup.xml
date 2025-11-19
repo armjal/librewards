@@ -32,7 +32,7 @@
         android:id="@+id/chosenImage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription="Chosen image for product upload"
+        android:contentDescription="@string/chosen_image_for_product_upload"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_gravity="center" />
 
