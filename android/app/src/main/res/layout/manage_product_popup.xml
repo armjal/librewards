@@ -65,28 +65,34 @@
             android:inputType="number" />
 
         <LinearLayout
+            style="?android:attr/buttonBarStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
             <Button
                 android:id="@+id/updateButton"
+                style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="@dimen/_85sdp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
+                android:backgroundTint="@color/colorOrange"
                 android:text="@string/updateButton"
+                android:textColor="@color/colorWhite"
                 android:textAllCaps="true"
                 android:layout_marginEnd="@dimen/_5sdp"
                 android:textSize="@dimen/_10ssp" />
 
             <Button
                 android:id="@+id/deleteButton"
+                style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="@dimen/_85sdp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginStart="@dimen/_5sdp"
                 android:backgroundTint="@color/colorOrange"
                 android:text="@string/deleteButton"
+                android:textColor="@color/colorWhite"
                 android:textSize="@dimen/_10ssp" />
         </LinearLayout>
     </LinearLayout>
