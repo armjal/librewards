@@ -36,6 +36,8 @@
     <string name="registrationContainerHeader">Registration Container Header</string>
     <string name="registration">Registration</string>
     <string name="register">Register</string>
+    <string name="go_back">Go back</string>
+    <string name="click_to_scroll">Click to scroll</string>
 
 
 </resources>
