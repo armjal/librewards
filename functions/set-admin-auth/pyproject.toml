@@ -1,0 +1,65 @@
+[project]
+name = "set_admin_auth"
+dynamic = ["version"]
+authors = [
+  { name="Arman Jalilian", email="arman@example.com" },
+]
+description = "A GCP Function to allow a super-user to set another user as an admin through auth claims"
+readme = "README.md"
+requires-python = ">=3.13, <3.14"
+dependencies = [
+    "firebase-admin~=7.1",
+    "google-cloud-functions~=1.21",
+    "functions-framework~=3.0",
+    "werkzeug~=3.1",
+]
+
+[dependency-groups]
+dev = [
+    "ruff~=0.14",
+    "pyright~=1.1"
+]
+test = [
+    "pytest~=9.0",
+]
+
+[tool.uv]
+default-groups = ["dev", "test"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+
+pythonpath = [
+    "src",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    "W",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+    # No implicit namespace packages
+    "INP001",
+    # No unused function arguments
+    "ARG001",
+]
+
+
+[project.urls]
+repository = "https://github.com/armjal/librewards"
