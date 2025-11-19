@@ -3,14 +3,12 @@ package com.example.librewards
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.librewards.databinding.ActivityLoginBinding
 import com.example.librewards.models.User
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -77,27 +75,7 @@ class Login : AppCompatActivity() {
 
     public override fun onStart() {
         super.onStart()
-        val currentUser = auth.currentUser
-        updateUI(currentUser)
-        if (currentUser != null) {
-            var isAdmin: String
-            val refChild = fh.getChild("users", currentUser.email!!, "admin")
-            refChild.addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    isAdmin = dataSnapshot.value.toString()
-                    if (isAdmin == "0") {
-                        getUserLoginInfo(currentUser.email!!, MainActivity())
-                        finish()
-                    } else if (isAdmin == "1") {
-                        getUserLoginInfo(currentUser.email!!, AdminActivity())
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Log.w(TAG, "Failed to read value.", error.toException())
-                }
-            })
-        }
+        openUserApp()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -113,28 +91,7 @@ class Login : AppCompatActivity() {
                 if (task.isSuccessful) {
                     // Sign in success, update UI with the signed-in user's information
                     Log.d(TAG, "signInWithEmail:success")
-                    val user = auth.currentUser
-                    var isAdmin: String
-                    val refChild = fh.getChild("users", binding.loginEmail.text.toString(), "admin")
-                    refChild.addValueEventListener(object : ValueEventListener {
-                        override fun onDataChange(dataSnapshot: DataSnapshot) {
-                            isAdmin = dataSnapshot.value.toString()
-                            if (isAdmin == "0") {
-                                getUserLoginInfo(binding.loginEmail.text.toString(), MainActivity())
-                            } else if (isAdmin == "1") {
-                                getUserLoginInfo(
-                                    binding.loginEmail.text.toString(),
-                                    AdminActivity()
-                                )
-                            }
-                        }
-
-                        override fun onCancelled(error: DatabaseError) {
-                            // Failed to read value
-                            Log.w(TAG, "Failed to read value.", error.toException())
-                        }
-                    })
-                    updateUI(user)
+                    openUserApp()
                 } else {
                     // If sign in fails, display a message to the user.
                     Log.w(TAG, "signInWithEmail:failure", task.exception)
@@ -142,17 +99,23 @@ class Login : AppCompatActivity() {
                         baseContext, "Authentication failed.",
                         Toast.LENGTH_SHORT
                     ).show()
-                    updateUI(null)
                 }
             }
     }
 
-    private fun updateUI(user: FirebaseUser?) {
-
+    private fun openUserApp(){
+        auth.currentUser?.getIdToken(true)?.addOnSuccessListener {
+            val isAdmin = it.claims["admin"]
+            if (isAdmin == true) {
+                getUserLoginInfo(binding.loginEmail.text.toString(), AdminActivity())
+            } else {
+                getUserLoginInfo(binding.loginEmail.text.toString(), MainActivity())
+            }
+        }
     }
 
     companion object {
-        val TAG = Login::class.java.simpleName
+        val TAG: String = Login::class.java.simpleName
     }
 
 }
