@@ -107,9 +107,9 @@ class Login : AppCompatActivity() {
         auth.currentUser?.getIdToken(true)?.addOnSuccessListener {
             val isAdmin = it.claims["admin"]
             if (isAdmin == true) {
-                getUserLoginInfo(binding.loginEmail.text.toString(), AdminActivity())
+                getUserLoginInfo(auth.currentUser?.email.toString(), AdminActivity())
             } else {
-                getUserLoginInfo(binding.loginEmail.text.toString(), MainActivity())
+                getUserLoginInfo(auth.currentUser?.email.toString(), MainActivity())
             }
         }
     }

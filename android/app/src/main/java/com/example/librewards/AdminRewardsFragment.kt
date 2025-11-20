@@ -1,7 +1,6 @@
 package com.example.librewards
 
 import android.app.Dialog
-import android.app.ProgressDialog
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
@@ -13,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -29,8 +29,6 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.squareup.picasso.Picasso
 import java.io.IOException
-import androidx.core.graphics.drawable.toDrawable
-
 
 class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private lateinit var fh: FirebaseHandler
@@ -134,7 +132,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         popup?.show()
     }
 
-    private fun showManageProductPopup(list: MutableList<Product>, position: Int) {
+    private fun showManageProductPopup(list: List<Product>, position: Int) {
         val dbCurrentProduct = database
             .child(fh.hashFunction(list[position].productName!!))
         popup = Dialog(requireActivity())
@@ -147,7 +145,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         manageProductBinding!!.manageProductCost.setText(list[position].productCost)
         manageProductBinding!!.closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
         manageProductBinding!!.updateButton.setOnClickListener {
-            dbCurrentProduct.child("productImage")
+            dbCurrentProduct.child("productImageUrl")
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         val tempImageUrl = snapshot.value.toString()
@@ -163,8 +161,8 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
                     }
 
                     override fun onCancelled(error: DatabaseError) {
+                        Log.e(TAG, "Could not access database $error")
                     }
-
                 })
 
         }
@@ -186,49 +184,65 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     }
 
     private fun fileUploader() {
-        if (filePath != null) {
-            val progressDialog = ProgressDialog(requireActivity())
-            progressDialog.setTitle("Uploading...")
-            progressDialog.show()
-            val refProduct =
-                database.child(fh.hashFunction(addProductBinding!!.productName.text.toString()))
-            val imageRef = storageReference.child(
-                "${adminActivity.university}/images/${fh.hashFunction(filePath.toString())}-${
-                    addProductBinding!!.productName.text.toString().replace(' ', '-')
-                }"
-            )
-            imageRef.putFile(filePath!!)
-                .addOnSuccessListener {
-                    progressDialog.dismiss()
-                    Toast.makeText(context, "File Uploaded", Toast.LENGTH_SHORT).show()
-                    imageRef.downloadUrl.addOnSuccessListener { taskSnapshot ->
-                        val productImageUrl = taskSnapshot.toString()
-                        refProduct.child("productName")
-                            .setValue(addProductBinding!!.productName.text.toString())
-                        refProduct.child("productCost")
-                            .setValue(addProductBinding!!.productCost.text.toString())
-                        refProduct.child("productImage").setValue(productImageUrl)
-                        addProductBinding?.let {
-                            it.productName.text.clear()
-                            it.productCost.text.clear()
-                            it.chosenImage.layoutParams.height = 0
-                            it.chosenImage.layoutParams.width = 0
-                            it.chosenImage.setImageDrawable(null)
-                        }
-
-                    }
-                }
-                .addOnFailureListener {
-                    progressDialog.dismiss()
-                    Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show()
-                }
-                .addOnProgressListener { taskSnapShot ->
-                    val progress =
-                        100.0 * taskSnapShot.bytesTransferred / taskSnapShot.totalByteCount
-                    progressDialog.setMessage("Uploaded " + progress.toInt() + "%...")
-                }
-
+        if (filePath == null) {
+            Toast.makeText(context, "Please choose an image", Toast.LENGTH_SHORT).show()
+            return
         }
+        showProgressBar()
+
+        val imageRef = storageReference.child(
+        "${adminActivity.university}/images/${fh.hashFunction(filePath.toString())}-${
+            addProductBinding!!.productName.text.toString().replace(' ', '-')
+            }"
+        )
+        val uploadImageTask = imageRef.putFile(filePath!!)
+        uploadImageTask.addOnSuccessListener {
+            hideProgressBar()
+            Toast.makeText(context, "File uploaded successfully", Toast.LENGTH_SHORT).show()
+            imageRef.downloadUrl.addOnSuccessListener { taskSnapshot ->
+                setProductInfoInDb(taskSnapshot)
+                resetProductInputFields()
+            }
+        }
+            .addOnFailureListener {
+                hideProgressBar()
+                Toast.makeText(context, "Failed to upload product image", Toast.LENGTH_SHORT).show()
+            }
+            .addOnProgressListener { _ ->
+            }
+    }
+
+    private fun setProductInfoInDb(taskSnapshot: Uri){
+        val refProduct =
+            database.child(fh.hashFunction(addProductBinding!!.productName.text.toString()))
+
+        val productImageUrl = taskSnapshot.toString()
+        refProduct.child("productName")
+            .setValue(addProductBinding!!.productName.text.toString())
+        refProduct.child("productCost")
+            .setValue(addProductBinding!!.productCost.text.toString())
+        refProduct.child("productImageUrl").setValue(productImageUrl)
+    }
+
+    private fun showProgressBar(){
+        addProductBinding?.uploadProgressBar?.visibility = View.VISIBLE
+        addProductBinding?.uploadButton?.isEnabled = false
+    }
+
+    private fun hideProgressBar(){
+        addProductBinding?.uploadProgressBar?.visibility = View.GONE
+        addProductBinding?.uploadButton?.isEnabled = true
+    }
+
+    private fun resetProductInputFields(){
+        addProductBinding?.let {
+            it.productName.text.clear()
+            it.productCost.text.clear()
+            it.chosenImage.layoutParams.height = 0
+            it.chosenImage.layoutParams.width = 0
+            it.chosenImage.setImageDrawable(null)
+        }
+        filePath = null
     }
 
     companion object {
