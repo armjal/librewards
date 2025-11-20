@@ -30,7 +30,6 @@ import com.squareup.picasso.Picasso
 import java.io.IOException
 import androidx.core.graphics.drawable.toDrawable
 
-
 class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private lateinit var fh: FirebaseHandler
     private lateinit var database: DatabaseReference
@@ -146,7 +145,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         manageProductBinding!!.manageProductCost.setText(list[position].productCost)
         manageProductBinding!!.closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
         manageProductBinding!!.updateButton.setOnClickListener {
-            dbCurrentProduct.child("productImage")
+            dbCurrentProduct.child("productImageUrl")
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         val tempImageUrl = snapshot.value.toString()
@@ -207,7 +206,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
                             .setValue(addProductBinding!!.productName.text.toString())
                         refProduct.child("productCost")
                             .setValue(addProductBinding!!.productCost.text.toString())
-                        refProduct.child("productImage").setValue(productImageUrl)
+                        refProduct.child("productImageUrl").setValue(productImageUrl)
                         addProductBinding?.let {
                             it.productName.text.clear()
                             it.productCost.text.clear()
