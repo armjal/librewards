@@ -3,8 +3,17 @@
         "users": {
             "$customHashKey": {
                 ".read": "auth != null && data.child('email').val() == auth.token.email",
-                ".write": "auth != null && ((data.exists() && data.child('email').val() == auth.token.email) || (!data.exists() && newData.child('email').val() == auth.token.email))"
+                ".write": "auth != null && ((data.exists() && data.child('email').val() == auth.token.email) || (!data.exists() && newData.child('email').val() == auth.token.email))",
             }
+        },
+      	"products": {
+            ".read": "auth != null && auth.token.admin == true",
+          	"$university": {
+				"$customProductHashKey": {
+                    ".read": "auth != null",
+                    ".write": "auth != null && auth.token.admin == true"
+                }
+          	}
         }
     }
 }

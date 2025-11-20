@@ -14,6 +14,7 @@ import com.example.librewards.databinding.PopupLayoutBinding
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.auth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -44,6 +45,7 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
         //Sets the layout to the XML file associated with it
         _binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        FirebaseApp.initializeApp(this)
 
         //Assigns the field to the view's specified in the fragment_timer XML file file
         timerFragment = TimerFragment()
