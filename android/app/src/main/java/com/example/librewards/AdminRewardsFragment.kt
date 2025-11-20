@@ -1,7 +1,6 @@
 package com.example.librewards
 
 import android.app.Dialog
-import android.app.ProgressDialog
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
@@ -187,9 +186,9 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 
     private fun fileUploader() {
         if (filePath != null) {
-            val progressDialog = ProgressDialog(requireActivity())
-            progressDialog.setTitle("Uploading...")
-            progressDialog.show()
+            addProductBinding?.uploadProgressBar?.visibility = View.VISIBLE
+            addProductBinding?.uploadButton?.isEnabled = false
+
             val refProduct =
                 database.child(fh.hashFunction(addProductBinding!!.productName.text.toString()))
             val imageRef = storageReference.child(
@@ -199,7 +198,8 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             )
             imageRef.putFile(filePath!!)
                 .addOnSuccessListener {
-                    progressDialog.dismiss()
+                    addProductBinding?.uploadProgressBar?.visibility = View.GONE
+                    addProductBinding?.uploadButton?.isEnabled = true
                     Toast.makeText(context, "File Uploaded", Toast.LENGTH_SHORT).show()
                     imageRef.downloadUrl.addOnSuccessListener { taskSnapshot ->
                         val productImageUrl = taskSnapshot.toString()
@@ -219,13 +219,12 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
                     }
                 }
                 .addOnFailureListener {
-                    progressDialog.dismiss()
-                    Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show()
+                    addProductBinding?.uploadProgressBar?.visibility = View.GONE
+                    addProductBinding?.uploadButton?.isEnabled = true
+                    Toast.makeText(context, "Failed to upload product image", Toast.LENGTH_SHORT).show()
                 }
-                .addOnProgressListener { taskSnapShot ->
-                    val progress =
-                        100.0 * taskSnapShot.bytesTransferred / taskSnapShot.totalByteCount
-                    progressDialog.setMessage("Uploaded " + progress.toInt() + "%...")
+                .addOnProgressListener { _ ->
+
                 }
 
         }
