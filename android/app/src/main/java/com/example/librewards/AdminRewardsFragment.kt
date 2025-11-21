@@ -151,6 +151,10 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             it.manageProductCost.setText(list[position].productCost)
             it.closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
             it.updateButton.setOnClickListener {
+                val chosenProduct = Product(
+                    manageProductBinding!!.manageProductName.text.toString(),
+                    manageProductBinding!!.manageProductCost.text.toString()
+                )
                 updateProduct(chosenProduct)
             }
             it.deleteButton.setOnClickListener {
@@ -160,27 +164,26 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         popup?.show()
     }
 
-    private fun deleteProduct(chosenProduct: DatabaseReference){
+    private fun updateProduct(chosenProduct: Product) {
+        productRepo.updateProduct(chosenProduct).addOnSuccessListener {
+            popup?.dismiss()
+            Toast.makeText(
+                requireActivity(),
+                "Product successfully updated",
+                Toast.LENGTH_SHORT
+            ).show()
+        }.addOnFailureListener { error ->
+            Log.e(TAG, "Failed to update product: $error")
+            Toast.makeText(requireActivity(), "Update failed", Toast.LENGTH_SHORT).show()
+
+        }
+    }
+
+    private fun deleteProduct(chosenProduct: DatabaseReference) {
         chosenProduct.removeValue()
         popup?.dismiss()
         Toast.makeText(requireActivity(), "Product successfully deleted", Toast.LENGTH_SHORT)
             .show()
-    }
-
-    private fun updateProduct(chosenProduct: DatabaseReference) {
-        val updatedValues = mapOf<String, Any>(
-            "productName" to manageProductBinding!!.manageProductName.text.toString(),
-            "productCost" to manageProductBinding!!.manageProductCost.text.toString()
-        )
-        chosenProduct.updateChildren(updatedValues)
-            .addOnSuccessListener {
-                popup?.dismiss()
-                Toast.makeText(requireActivity(), "Product successfully updated", Toast.LENGTH_SHORT).show()
-            }
-            .addOnFailureListener { error ->
-                Log.e(TAG, "Failed to update product: $error")
-                Toast.makeText(requireActivity(), "Update failed", Toast.LENGTH_SHORT).show()
-            }
     }
 
     private fun fileChooser() {
