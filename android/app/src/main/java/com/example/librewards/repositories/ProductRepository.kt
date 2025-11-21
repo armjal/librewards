@@ -1,14 +1,15 @@
 package com.example.librewards.repositories
 
-import com.example.librewards.clients.Firebase
+import com.example.librewards.hashFunction
 import com.example.librewards.models.Product
+import com.google.firebase.database.DatabaseReference
 
-class ProductRepository(database: Firebase.RealtimeDatabase, storage: Firebase.Storage) {
-    val database = Firebase.RealtimeDatabase()
-    val storage = Firebase.Storage()
+class ProductRepository(val database: DatabaseReference) {
 
 
-    fun addProduct(product: Product?) {
+    fun addProductToDb(product: Product) {
+        val productRef = database.child(hashFunction(product.productName))
+        productRef.setValue(product)
     }
 
     fun updateProduct(product: Product?) {}

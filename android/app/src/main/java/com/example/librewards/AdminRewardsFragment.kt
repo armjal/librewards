@@ -20,6 +20,7 @@ import com.example.librewards.databinding.AddProductPopupBinding
 import com.example.librewards.databinding.AdminFragmentRewardsBinding
 import com.example.librewards.databinding.ManageProductPopupBinding
 import com.example.librewards.models.Product
+import com.example.librewards.repositories.ProductRepository
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -47,13 +48,15 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 
     private var addProductBinding: AddProductPopupBinding? = null
     private var manageProductBinding: ManageProductPopupBinding? = null
-
+    private lateinit var productRepo: ProductRepository
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         adminActivity = activity as AdminActivity
         fh = FirebaseHandler()
-        database = FirebaseDatabase.getInstance().reference
-        storageReference = FirebaseStorage.getInstance().reference
+        database = FirebaseDatabase.getInstance().reference.child("products").child(adminActivity.university)
+        storageReference = FirebaseStorage.getInstance().reference.child("products")
+
+        productRepo = ProductRepository(database)
     }
 
     override fun onCreateView(
@@ -72,8 +75,6 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         productsList = mutableListOf()
         adapter = RecyclerAdapter(productsList, this)
         binding.adminRewardsRecycler.adapter = adapter
-        database = FirebaseDatabase.getInstance().reference.child("products")
-            .child(adminActivity.university)
         database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 productsList.clear()
@@ -205,7 +206,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             Toast.makeText(context, "File uploaded successfully", Toast.LENGTH_SHORT).show()
             imageRef.downloadUrl.addOnSuccessListener { uri ->
                 product.productImageUrl = uri.toString()
-                setProductInfoInDb(product)
+                productRepo.addProductToDb(product)
                 resetProductInputFields()
             }
         }
@@ -215,12 +216,6 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             }
             .addOnProgressListener { _ ->
             }
-    }
-
-    private fun setProductInfoInDb(product: Product) {
-        val refProduct = database.child(hashFunction(product.productName))
-
-        refProduct.setValue(product)
     }
 
     private fun showProgressBar() {
