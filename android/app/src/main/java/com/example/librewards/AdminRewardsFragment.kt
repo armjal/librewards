@@ -32,13 +32,12 @@ import com.squareup.picasso.Picasso
 import java.io.IOException
 
 class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
-    private lateinit var fh: FirebaseHandler
     private lateinit var database: DatabaseReference
     private lateinit var storageReference: StorageReference
     private lateinit var adminActivity: AdminActivity
     private var popup: Dialog? = null
 
-    private var filePath: Uri? = null
+    private var imageLocalFilePath: Uri? = null
     private lateinit var productsList: MutableList<Product>
     private var layoutManager: RecyclerView.LayoutManager? = null
     private var adapter: RecyclerView.Adapter<RecyclerAdapter.ViewHolder>? = null
@@ -52,9 +51,11 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         adminActivity = activity as AdminActivity
-        fh = FirebaseHandler()
-        database = FirebaseDatabase.getInstance().reference.child("products").child(adminActivity.university)
-        storageReference = FirebaseStorage.getInstance().reference.child("products")
+        database = FirebaseDatabase.getInstance().reference.child("products")
+            .child(adminActivity.university)
+        storageReference = FirebaseStorage.getInstance().reference.child("products").child(
+            "${adminActivity.university}/images/"
+        )
 
         productRepo = ProductRepository(database)
     }
@@ -106,10 +107,13 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             data != null &&
             data.data != null
         ) {
-            filePath = data.data!!
+            imageLocalFilePath = data.data!!
             try {
                 val bitmap =
-                    MediaStore.Images.Media.getBitmap(requireActivity().contentResolver, filePath)
+                    MediaStore.Images.Media.getBitmap(
+                        requireActivity().contentResolver,
+                        imageLocalFilePath
+                    )
                 addProductBinding?.chosenImage?.let {
                     it.layoutParams.height = 300
                     it.layoutParams.width = 300
@@ -134,7 +138,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     }
 
     private fun showManageProductPopup(list: List<Product>, position: Int) {
-        val dbCurrentProduct = database
+        val chosenProduct = database
             .child(hashFunction(list[position].productName))
         popup = Dialog(requireActivity())
         popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
@@ -142,39 +146,47 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         popup?.setContentView(manageProductBinding!!.root)
         Picasso.get().load(list[position].productImageUrl)
             .into(manageProductBinding!!.manageProductImage)
-        manageProductBinding!!.manageProductName.setText(list[position].productName)
-        manageProductBinding!!.manageProductCost.setText(list[position].productCost)
-        manageProductBinding!!.closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
-        manageProductBinding!!.updateButton.setOnClickListener {
-            dbCurrentProduct.child("productImageUrl")
-                .addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        val tempImageUrl = snapshot.value.toString()
-                        val updatedProduct = Product(
-                            manageProductBinding!!.manageProductName.text.toString(),
-                            manageProductBinding!!.manageProductCost.text.toString(),
-                            tempImageUrl
-                        )
-                        dbCurrentProduct.removeValue()
-                        val updatedProductDb = database
-                            .child(hashFunction(manageProductBinding!!.manageProductName.text.toString()))
-                        updatedProductDb.setValue(updatedProduct)
-                    }
-
-                    override fun onCancelled(error: DatabaseError) {
-                        Log.e(TAG, "Could not access database $error")
-                    }
-                })
-
+        manageProductBinding!!.let {
+            it.manageProductName.setText(list[position].productName)
+            it.manageProductCost.setText(list[position].productCost)
+            it.closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
+            it.updateButton.setOnClickListener {
+                updateProduct(chosenProduct)
+            }
+            it.deleteButton.setOnClickListener {
+                deleteProduct(chosenProduct)
+            }
         }
-        manageProductBinding!!.deleteButton.setOnClickListener {
-            dbCurrentProduct.removeValue()
-            popup?.dismiss()
-            Toast.makeText(requireActivity(), "Product successfully deleted", Toast.LENGTH_SHORT)
-                .show()
-        }
-
         popup?.show()
+    }
+
+    private fun deleteProduct(chosenProduct: DatabaseReference){
+        chosenProduct.removeValue()
+        popup?.dismiss()
+        Toast.makeText(requireActivity(), "Product successfully deleted", Toast.LENGTH_SHORT)
+            .show()
+    }
+
+    private fun updateProduct(chosenProduct: DatabaseReference){
+        chosenProduct.child("productImageUrl")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val tempImageUrl = snapshot.value.toString()
+                    val updatedProduct = Product(
+                        manageProductBinding!!.manageProductName.text.toString(),
+                        manageProductBinding!!.manageProductCost.text.toString(),
+                        tempImageUrl
+                    )
+                    chosenProduct.removeValue()
+                    val updatedProductDb = database
+                        .child(hashFunction(manageProductBinding!!.manageProductName.text.toString()))
+                    updatedProductDb.setValue(updatedProduct)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e(TAG, "Could not access database $error")
+                }
+            })
     }
 
     private fun fileChooser() {
@@ -185,7 +197,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     }
 
     private fun fileUploader() {
-        if (filePath == null) {
+        if (imageLocalFilePath == null) {
             Toast.makeText(context, "Please choose an image", Toast.LENGTH_SHORT).show()
             return
         }
@@ -196,11 +208,11 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         )
 
         val imageRef = storageReference.child(
-            "${adminActivity.university}/images/${hashFunction(filePath.toString())}-${
+            "${hashFunction(imageLocalFilePath.toString())}-${
                 product.productName.replace(' ', '-')
             }"
         )
-        val uploadImageTask = imageRef.putFile(filePath!!)
+        val uploadImageTask = imageRef.putFile(imageLocalFilePath!!)
         uploadImageTask.addOnSuccessListener {
             hideProgressBar()
             Toast.makeText(context, "File uploaded successfully", Toast.LENGTH_SHORT).show()
@@ -236,7 +248,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             it.chosenImage.layoutParams.width = 0
             it.chosenImage.setImageDrawable(null)
         }
-        filePath = null
+        imageLocalFilePath = null
     }
 
     companion object {
