@@ -189,18 +189,23 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             return
         }
         showProgressBar()
+        val product = Product(
+            addProductBinding!!.productName.text.toString(),
+            addProductBinding!!.productCost.text.toString()
+        )
 
         val imageRef = storageReference.child(
-        "${adminActivity.university}/images/${fh.hashFunction(filePath.toString())}-${
-            addProductBinding!!.productName.text.toString().replace(' ', '-')
+            "${adminActivity.university}/images/${fh.hashFunction(filePath.toString())}-${
+                product.productName.replace(' ', '-')
             }"
         )
         val uploadImageTask = imageRef.putFile(filePath!!)
         uploadImageTask.addOnSuccessListener {
             hideProgressBar()
             Toast.makeText(context, "File uploaded successfully", Toast.LENGTH_SHORT).show()
-            imageRef.downloadUrl.addOnSuccessListener { taskSnapshot ->
-                setProductInfoInDb(taskSnapshot)
+            imageRef.downloadUrl.addOnSuccessListener { uri ->
+                product.productImageUrl = uri.toString()
+                setProductInfoInDb(product)
                 resetProductInputFields()
             }
         }
@@ -212,29 +217,23 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             }
     }
 
-    private fun setProductInfoInDb(taskSnapshot: Uri){
-        val refProduct =
-            database.child(fh.hashFunction(addProductBinding!!.productName.text.toString()))
+    private fun setProductInfoInDb(product: Product) {
+        val refProduct = database.child(fh.hashFunction(product.productName))
 
-        val productImageUrl = taskSnapshot.toString()
-        refProduct.child("productName")
-            .setValue(addProductBinding!!.productName.text.toString())
-        refProduct.child("productCost")
-            .setValue(addProductBinding!!.productCost.text.toString())
-        refProduct.child("productImageUrl").setValue(productImageUrl)
+        refProduct.setValue(product)
     }
 
-    private fun showProgressBar(){
+    private fun showProgressBar() {
         addProductBinding?.uploadProgressBar?.visibility = View.VISIBLE
         addProductBinding?.uploadButton?.isEnabled = false
     }
 
-    private fun hideProgressBar(){
+    private fun hideProgressBar() {
         addProductBinding?.uploadProgressBar?.visibility = View.GONE
         addProductBinding?.uploadButton?.isEnabled = true
     }
 
-    private fun resetProductInputFields(){
+    private fun resetProductInputFields() {
         addProductBinding?.let {
             it.productName.text.clear()
             it.productCost.text.clear()
