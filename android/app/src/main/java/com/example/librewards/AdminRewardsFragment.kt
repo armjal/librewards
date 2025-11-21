@@ -167,26 +167,20 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             .show()
     }
 
-    private fun updateProduct(chosenProduct: DatabaseReference){
-        chosenProduct.child("productImageUrl")
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val tempImageUrl = snapshot.value.toString()
-                    val updatedProduct = Product(
-                        manageProductBinding!!.manageProductName.text.toString(),
-                        manageProductBinding!!.manageProductCost.text.toString(),
-                        tempImageUrl
-                    )
-                    chosenProduct.removeValue()
-                    val updatedProductDb = database
-                        .child(hashFunction(manageProductBinding!!.manageProductName.text.toString()))
-                    updatedProductDb.setValue(updatedProduct)
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Log.e(TAG, "Could not access database $error")
-                }
-            })
+    private fun updateProduct(chosenProduct: DatabaseReference) {
+        val updatedValues = mapOf<String, Any>(
+            "productName" to manageProductBinding!!.manageProductName.text.toString(),
+            "productCost" to manageProductBinding!!.manageProductCost.text.toString()
+        )
+        chosenProduct.updateChildren(updatedValues)
+            .addOnSuccessListener {
+                popup?.dismiss()
+                Toast.makeText(requireActivity(), "Product successfully updated", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { error ->
+                Log.e(TAG, "Failed to update product: $error")
+                Toast.makeText(requireActivity(), "Update failed", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun fileChooser() {
