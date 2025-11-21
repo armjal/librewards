@@ -134,7 +134,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 
     private fun showManageProductPopup(list: List<Product>, position: Int) {
         val dbCurrentProduct = database
-            .child(fh.hashFunction(list[position].productName!!))
+            .child(hashFunction(list[position].productName))
         popup = Dialog(requireActivity())
         popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         manageProductBinding = ManageProductPopupBinding.inflate(layoutInflater)
@@ -156,7 +156,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
                         )
                         dbCurrentProduct.removeValue()
                         val updatedProductDb = database
-                            .child(fh.hashFunction(manageProductBinding!!.manageProductName.text.toString()))
+                            .child(hashFunction(manageProductBinding!!.manageProductName.text.toString()))
                         updatedProductDb.setValue(updatedProduct)
                     }
 
@@ -195,7 +195,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         )
 
         val imageRef = storageReference.child(
-            "${adminActivity.university}/images/${fh.hashFunction(filePath.toString())}-${
+            "${adminActivity.university}/images/${hashFunction(filePath.toString())}-${
                 product.productName.replace(' ', '-')
             }"
         )
@@ -218,7 +218,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     }
 
     private fun setProductInfoInDb(product: Product) {
-        val refProduct = database.child(fh.hashFunction(product.productName))
+        val refProduct = database.child(hashFunction(product.productName))
 
         refProduct.setValue(product)
     }

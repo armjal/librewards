@@ -109,7 +109,7 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private fun showImagePopup(list: MutableList<Product>, position: Int) {
         val redeemRef = FirebaseDatabase.getInstance()
             .reference.child("users")
-            .child(fh.hashFunction(mainActivity.email))
+            .child(hashFunction(mainActivity.email))
             .child("redeemingReward")
         redeemRef.setValue("0")
         productPopup = Dialog(requireActivity())

@@ -104,8 +104,8 @@ class TimerFragment : Fragment(), OnMapReadyCallback {
 
         addTimerEventListener()
         val qrGen = QRCodeGenerator()
-        binding.qrCode.setImageBitmap(qrGen.createQR(fh.hashFunction(mainActivity.email), 400, 400))
-        binding.qrCodeNumber.text = fh.hashFunction(mainActivity.email)
+        binding.qrCode.setImageBitmap(qrGen.createQR(hashFunction(mainActivity.email), 400, 400))
+        binding.qrCodeNumber.text = hashFunction(mainActivity.email)
 
         val touchableList: ArrayList<View?> = mainActivity.tabLayout.touchables
         binding.slidingPanel.addPanelSlideListener(object :
