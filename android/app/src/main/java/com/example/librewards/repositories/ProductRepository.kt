@@ -28,9 +28,9 @@ class ProductRepository(val database: DatabaseReference) {
         database.removeEventListener(productsValueEventListener)
     }
 
-    fun addProductToDb(productEntry: ProductEntry) {
+    fun addProductToDb(productEntry: ProductEntry): Task<Void> {
         val productRef = database.child(productEntry.id)
-        productRef.setValue(productEntry.product)
+        return productRef.setValue(productEntry.product)
     }
 
     fun updateProduct(productEntry: ProductEntry): Task<Void> {

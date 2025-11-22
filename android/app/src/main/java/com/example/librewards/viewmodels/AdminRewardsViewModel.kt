@@ -21,6 +21,15 @@ class AdminRewardsViewModel(val productRepo: ProductRepository): ViewModel() {
         productRepo.stopListeningForProducts()
     }
 
+    fun addProductEntry(productEntry: ProductEntry): Flow<UiEvent> = flow {
+        try {
+            productRepo.addProductToDb(productEntry).await()
+            emit(UiEvent.Success("Product successfully added"))
+
+        } catch (e : Exception) {
+            emit(UiEvent.Failure("Failed to add product: ${e.message}"))
+        }
+    }
     fun updateProductEntry(productEntry: ProductEntry): Flow<UiEvent> = flow {
         try {
             productRepo.updateProduct(productEntry).await()

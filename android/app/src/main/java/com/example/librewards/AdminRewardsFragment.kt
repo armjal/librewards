@@ -229,19 +229,31 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         val uploadImageTask = imageRef.putFile(imageLocalFilePath!!)
         uploadImageTask.addOnSuccessListener {
             hideProgressBar()
-            toastMessage(requireActivity(),"File uploaded successfully")
+            toastMessage(requireActivity(), "File uploaded successfully")
             imageRef.downloadUrl.addOnSuccessListener { uri ->
                 productEntry.product.productImageUrl = uri.toString()
-                productRepo.addProductToDb(productEntry)
-                resetProductInputFields()
+                addProduct(productEntry)
             }
         }
-            .addOnFailureListener {
-                hideProgressBar()
-                toastMessage(requireActivity(), "Failed to upload product image")
+    }
+
+    private fun addProduct(productEntry: ProductEntry){
+        lifecycleScope.launch {
+            viewModel.addProductEntry(productEntry).collect {
+                when (it) {
+                    is UiEvent.Success -> {
+                        toastMessage(requireActivity(), it.message)
+                        resetProductInputFields()
+                    }
+
+                    is UiEvent.Failure -> {
+                        Log.e(TAG, it.message)
+                        hideProgressBar()
+                        toastMessage(requireActivity(), "Product upload failed")
+                    }
+                }
             }
-            .addOnProgressListener { _ ->
-            }
+        }
     }
 
     private fun generateProductId(): String {
