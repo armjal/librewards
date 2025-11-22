@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.librewards.models.ProductEntry
 import com.example.librewards.repositories.ProductRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.tasks.await
 
 class AdminRewardsViewModel(val productRepo: ProductRepository): ViewModel() {
     val productEntries: LiveData<List<ProductEntry>> = productRepo.productEntriesLiveData
@@ -18,16 +21,25 @@ class AdminRewardsViewModel(val productRepo: ProductRepository): ViewModel() {
         productRepo.stopListeningForProducts()
     }
 
+    fun updateProductEntry(productEntry: ProductEntry): Flow<UiEvent> = flow {
+        try {
+            productRepo.updateProduct(productEntry).await()
+            emit(UiEvent.Success("Product successfully updated"))
 
-    class AdminRewardsViewModelFactory(private val repository: ProductRepository): ViewModelProvider.Factory {
+        } catch (e : Exception) {
+            emit(UiEvent.Failure("Failed to update product: ${e.message}"))
+        }
+    }
+}
 
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return if (modelClass.isAssignableFrom(AdminRewardsViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                AdminRewardsViewModel(this.repository) as T
-            } else {
-                throw IllegalArgumentException("ViewModel Not Found")
-            }
+class AdminRewardsViewModelFactory(private val repository: ProductRepository): ViewModelProvider.Factory {
+
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return if (modelClass.isAssignableFrom(AdminRewardsViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            AdminRewardsViewModel(this.repository) as T
+        } else {
+            throw IllegalArgumentException("ViewModel Not Found")
         }
     }
 }

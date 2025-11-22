@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.librewards.databinding.AddProductPopupBinding
@@ -23,21 +24,22 @@ import com.example.librewards.databinding.ManageProductPopupBinding
 import com.example.librewards.models.Product
 import com.example.librewards.models.ProductEntry
 import com.example.librewards.repositories.ProductRepository
+import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.AdminRewardsViewModel
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
+import com.example.librewards.viewmodels.AdminRewardsViewModelFactory
+import com.example.librewards.viewmodels.UiEvent
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.squareup.picasso.Picasso
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.UUID
 
 class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private val viewModel: AdminRewardsViewModel by viewModels {
-        AdminRewardsViewModel.AdminRewardsViewModelFactory(productRepo)
+        AdminRewardsViewModelFactory(productRepo)
     }
     private lateinit var database: DatabaseReference
     private lateinit var storageReference: StorageReference
@@ -147,7 +149,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             it.manageProductName.setText(list[position].product.productName)
             it.manageProductCost.setText(list[position].product.productCost)
             it.closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
-            it.updateButton.setOnClickListener { its ->
+            it.updateButton.setOnClickListener {
                 chosenProductEntry.product.productName =
                     manageProductBinding!!.manageProductName.text.toString()
                 chosenProductEntry.product.productCost =
@@ -163,17 +165,20 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     }
 
     private fun updateProduct(chosenProductEntry: ProductEntry) {
-        productRepo.updateProduct(chosenProductEntry).addOnSuccessListener {
-            popup?.dismiss()
-            Toast.makeText(
-                requireActivity(),
-                "Product successfully updated",
-                Toast.LENGTH_SHORT
-            ).show()
-        }.addOnFailureListener { error ->
-            Log.e(TAG, "Failed to update product: $error")
-            Toast.makeText(requireActivity(), "Update failed", Toast.LENGTH_SHORT).show()
+        lifecycleScope.launch {
+            viewModel.updateProductEntry(chosenProductEntry).collect {
+                when (it) {
+                    is UiEvent.Success -> {
+                        popup?.dismiss()
+                        toastMessage(requireActivity(), it.message)
+                    }
 
+                    is UiEvent.Failure -> {
+                        Log.e(TAG, it.message)
+                        toastMessage(requireActivity(), "Product update failed")
+                    }
+                }
+            }
         }
     }
 
