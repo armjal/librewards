@@ -1,5 +1,10 @@
 package com.example.librewards.models
 
+data class ProductEntry(
+    var id: String = "",
+    var product: Product = Product()
+)
+
 data class Product(
     var productName: String = "",
     var productCost: String = "",
@@ -12,5 +17,3 @@ data class Product(
             "productImageUrl" to productImageUrl)
     }
 }
-
-

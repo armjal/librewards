@@ -7,10 +7,11 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.librewards.models.Product
+import com.example.librewards.models.ProductEntry
 import com.squareup.picasso.Picasso
 
 class RecyclerAdapter(
-    var list: MutableList<Product>,
+    var list: MutableList<ProductEntry>,
     var mOnProductListener: OnProductListener
 ) : RecyclerView.Adapter<RecyclerAdapter.ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -19,7 +20,7 @@ class RecyclerAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val product: Product = list[position]
+        val product: Product = list[position].product
         holder.itemTitle.text = product.productName
         (product.productCost + " points").also { holder.itemDetail.text = it }
         Picasso.get().load(product.productImageUrl).into(holder.itemImage)

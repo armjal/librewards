@@ -20,6 +20,7 @@ import com.example.librewards.databinding.AddProductPopupBinding
 import com.example.librewards.databinding.AdminFragmentRewardsBinding
 import com.example.librewards.databinding.ManageProductPopupBinding
 import com.example.librewards.models.Product
+import com.example.librewards.models.ProductEntry
 import com.example.librewards.repositories.ProductRepository
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -30,6 +31,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.squareup.picasso.Picasso
 import java.io.IOException
+import java.util.UUID
 
 class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private lateinit var database: DatabaseReference
@@ -38,7 +40,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private var popup: Dialog? = null
 
     private var imageLocalFilePath: Uri? = null
-    private lateinit var productsList: MutableList<Product>
+    private lateinit var productEntries: MutableList<ProductEntry>
     private var layoutManager: RecyclerView.LayoutManager? = null
     private var adapter: RecyclerView.Adapter<RecyclerAdapter.ViewHolder>? = null
 
@@ -73,16 +75,17 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         binding.addAProduct.setOnClickListener { showAddProductPopup() }
         layoutManager = LinearLayoutManager(context)
         binding.adminRewardsRecycler.layoutManager = layoutManager
-        productsList = mutableListOf()
-        adapter = RecyclerAdapter(productsList, this)
+        productEntries = mutableListOf()
+        adapter = RecyclerAdapter(productEntries, this)
         binding.adminRewardsRecycler.adapter = adapter
         database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                productsList.clear()
+                productEntries.clear()
                 for (dataSnapshot in snapshot.children) {
-                    val product = dataSnapshot.getValue(Product::class.java)
-                    productsList.add(product!!)
-
+                    val productEntry = ProductEntry()
+                    productEntry.id = dataSnapshot.key!!
+                    productEntry.product = dataSnapshot.getValue(Product::class.java)!!
+                    productEntries.add(productEntry)
                 }
                 (adapter as RecyclerAdapter).notifyDataSetChanged()
             }
@@ -137,35 +140,35 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         popup?.show()
     }
 
-    private fun showManageProductPopup(list: List<Product>, position: Int) {
-        val chosenProduct = database
-            .child(hashFunction(list[position].productName))
+    private fun showManageProductPopup(list: List<ProductEntry>, position: Int) {
+        val chosenProductEntry = list[position]
         popup = Dialog(requireActivity())
         popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         manageProductBinding = ManageProductPopupBinding.inflate(layoutInflater)
         popup?.setContentView(manageProductBinding!!.root)
-        Picasso.get().load(list[position].productImageUrl)
+        Picasso.get().load(list[position].product.productImageUrl)
             .into(manageProductBinding!!.manageProductImage)
         manageProductBinding!!.let {
-            it.manageProductName.setText(list[position].productName)
-            it.manageProductCost.setText(list[position].productCost)
+            it.manageProductName.setText(list[position].product.productName)
+            it.manageProductCost.setText(list[position].product.productCost)
             it.closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
-            it.updateButton.setOnClickListener {
-                val chosenProduct = Product(
-                    manageProductBinding!!.manageProductName.text.toString(),
+            it.updateButton.setOnClickListener { its ->
+                chosenProductEntry.product.productName =
+                    manageProductBinding!!.manageProductName.text.toString()
+                chosenProductEntry.product.productCost =
                     manageProductBinding!!.manageProductCost.text.toString()
-                )
-                updateProduct(chosenProduct)
+
+                updateProduct(chosenProductEntry)
             }
             it.deleteButton.setOnClickListener {
-                deleteProduct(chosenProduct)
+                deleteProduct(list[position])
             }
         }
         popup?.show()
     }
 
-    private fun updateProduct(chosenProduct: Product) {
-        productRepo.updateProduct(chosenProduct).addOnSuccessListener {
+    private fun updateProduct(chosenProductEntry: ProductEntry) {
+        productRepo.updateProduct(chosenProductEntry).addOnSuccessListener {
             popup?.dismiss()
             Toast.makeText(
                 requireActivity(),
@@ -179,8 +182,8 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         }
     }
 
-    private fun deleteProduct(chosenProduct: DatabaseReference) {
-        chosenProduct.removeValue()
+    private fun deleteProduct(chosenProductEntry: ProductEntry) {
+        productRepo.deleteProduct(chosenProductEntry)
         popup?.dismiss()
         Toast.makeText(requireActivity(), "Product successfully deleted", Toast.LENGTH_SHORT)
             .show()
@@ -199,14 +202,17 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             return
         }
         showProgressBar()
-        val product = Product(
-            addProductBinding!!.productName.text.toString(),
-            addProductBinding!!.productCost.text.toString()
+        val productEntry = ProductEntry(
+            generateProductId(),
+            Product(
+                addProductBinding!!.productName.text.toString(),
+                addProductBinding!!.productCost.text.toString()
+            )
         )
 
         val imageRef = storageReference.child(
             "${hashFunction(imageLocalFilePath.toString())}-${
-                product.productName.replace(' ', '-')
+                productEntry.id
             }"
         )
         val uploadImageTask = imageRef.putFile(imageLocalFilePath!!)
@@ -214,8 +220,8 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             hideProgressBar()
             Toast.makeText(context, "File uploaded successfully", Toast.LENGTH_SHORT).show()
             imageRef.downloadUrl.addOnSuccessListener { uri ->
-                product.productImageUrl = uri.toString()
-                productRepo.addProductToDb(product)
+                productEntry.product.productImageUrl = uri.toString()
+                productRepo.addProductToDb(productEntry)
                 resetProductInputFields()
             }
         }
@@ -225,6 +231,10 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             }
             .addOnProgressListener { _ ->
             }
+    }
+
+    private fun generateProductId(): String {
+        return "PROD-" + UUID.randomUUID().toString()
     }
 
     private fun showProgressBar() {
@@ -255,7 +265,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     }
 
     override fun onProductClick(position: Int) {
-        showManageProductPopup(productsList, position)
+        showManageProductPopup(productEntries, position)
     }
 
 
