@@ -14,6 +14,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.librewards.databinding.AddProductPopupBinding
@@ -22,18 +24,23 @@ import com.example.librewards.databinding.ManageProductPopupBinding
 import com.example.librewards.models.Product
 import com.example.librewards.models.ProductEntry
 import com.example.librewards.repositories.ProductRepository
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
+import com.example.librewards.utils.toastMessage
+import com.example.librewards.viewmodels.AdminRewardsViewModel
+import com.example.librewards.viewmodels.AdminRewardsViewModelFactory
+import com.example.librewards.viewmodels.UiEvent
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.squareup.picasso.Picasso
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.UUID
 
 class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
+    private val viewModel: AdminRewardsViewModel by viewModels {
+        AdminRewardsViewModelFactory(productRepo)
+    }
     private lateinit var database: DatabaseReference
     private lateinit var storageReference: StorageReference
     private lateinit var adminActivity: AdminActivity
@@ -78,22 +85,12 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         productEntries = mutableListOf()
         adapter = RecyclerAdapter(productEntries, this)
         binding.adminRewardsRecycler.adapter = adapter
-        database.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                productEntries.clear()
-                for (dataSnapshot in snapshot.children) {
-                    val productEntry = ProductEntry()
-                    productEntry.id = dataSnapshot.key!!
-                    productEntry.product = dataSnapshot.getValue(Product::class.java)!!
-                    productEntries.add(productEntry)
-                }
-                (adapter as RecyclerAdapter).notifyDataSetChanged()
-            }
 
-            override fun onCancelled(error: DatabaseError) {
-                Log.e(TAG, "Could not access database")
-            }
-        })
+        viewModel.productEntries.observe(viewLifecycleOwner) {
+            productEntries.clear()
+            productEntries.addAll(it)
+            (adapter as RecyclerAdapter).notifyDataSetChanged()
+        }
     }
 
     override fun onDestroyView() {
@@ -152,7 +149,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             it.manageProductName.setText(list[position].product.productName)
             it.manageProductCost.setText(list[position].product.productCost)
             it.closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
-            it.updateButton.setOnClickListener { its ->
+            it.updateButton.setOnClickListener {
                 chosenProductEntry.product.productName =
                     manageProductBinding!!.manageProductName.text.toString()
                 chosenProductEntry.product.productCost =
@@ -168,25 +165,39 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     }
 
     private fun updateProduct(chosenProductEntry: ProductEntry) {
-        productRepo.updateProduct(chosenProductEntry).addOnSuccessListener {
-            popup?.dismiss()
-            Toast.makeText(
-                requireActivity(),
-                "Product successfully updated",
-                Toast.LENGTH_SHORT
-            ).show()
-        }.addOnFailureListener { error ->
-            Log.e(TAG, "Failed to update product: $error")
-            Toast.makeText(requireActivity(), "Update failed", Toast.LENGTH_SHORT).show()
+        lifecycleScope.launch {
+            viewModel.updateProductEntry(chosenProductEntry).collect {
+                when (it) {
+                    is UiEvent.Success -> {
+                        popup?.dismiss()
+                        toastMessage(requireActivity(), it.message)
+                    }
 
+                    is UiEvent.Failure -> {
+                        Log.e(TAG, it.message)
+                        toastMessage(requireActivity(), "Product update failed")
+                    }
+                }
+            }
         }
     }
 
     private fun deleteProduct(chosenProductEntry: ProductEntry) {
-        productRepo.deleteProduct(chosenProductEntry)
-        popup?.dismiss()
-        Toast.makeText(requireActivity(), "Product successfully deleted", Toast.LENGTH_SHORT)
-            .show()
+        lifecycleScope.launch {
+            viewModel.deleteProductEntry(chosenProductEntry.id).collect {
+                when (it) {
+                    is UiEvent.Success -> {
+                        popup?.dismiss()
+                        toastMessage(requireActivity(), it.message)
+                    }
+
+                    is UiEvent.Failure -> {
+                        Log.e(TAG, it.message)
+                        toastMessage(requireActivity(), "Product deletion failed")
+                    }
+                }
+            }
+        }
     }
 
     private fun fileChooser() {
@@ -198,7 +209,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 
     private fun fileUploader() {
         if (imageLocalFilePath == null) {
-            Toast.makeText(context, "Please choose an image", Toast.LENGTH_SHORT).show()
+            toastMessage(requireActivity(), "Please choose an image")
             return
         }
         showProgressBar()
@@ -218,19 +229,31 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         val uploadImageTask = imageRef.putFile(imageLocalFilePath!!)
         uploadImageTask.addOnSuccessListener {
             hideProgressBar()
-            Toast.makeText(context, "File uploaded successfully", Toast.LENGTH_SHORT).show()
+            toastMessage(requireActivity(), "File uploaded successfully")
             imageRef.downloadUrl.addOnSuccessListener { uri ->
                 productEntry.product.productImageUrl = uri.toString()
-                productRepo.addProductToDb(productEntry)
-                resetProductInputFields()
+                addProduct(productEntry)
             }
         }
-            .addOnFailureListener {
-                hideProgressBar()
-                Toast.makeText(context, "Failed to upload product image", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun addProduct(productEntry: ProductEntry){
+        lifecycleScope.launch {
+            viewModel.addProductEntry(productEntry).collect {
+                when (it) {
+                    is UiEvent.Success -> {
+                        toastMessage(requireActivity(), it.message)
+                        resetProductInputFields()
+                    }
+
+                    is UiEvent.Failure -> {
+                        Log.e(TAG, it.message)
+                        hideProgressBar()
+                        toastMessage(requireActivity(), "Product upload failed")
+                    }
+                }
             }
-            .addOnProgressListener { _ ->
-            }
+        }
     }
 
     private fun generateProductId(): String {
