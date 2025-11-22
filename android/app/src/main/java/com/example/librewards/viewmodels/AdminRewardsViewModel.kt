@@ -1,5 +1,6 @@
 package com.example.librewards.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -8,6 +9,7 @@ import com.example.librewards.models.Product
 import com.example.librewards.models.ProductEntry
 import com.example.librewards.repositories.ProductRepository
 import com.example.librewards.repositories.StorageRepository
+import com.google.firebase.database.DatabaseException
 import com.google.firebase.storage.StorageException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -29,30 +31,33 @@ class AdminRewardsViewModel(
         productRepo.stopListeningForProducts()
     }
 
-    fun uploadImage(imageFile: ImageFile): Flow<UiEvent> = flow {
+    fun addProductEntry(product: Product, imageFile: ImageFile): Flow<UiEvent> = flow {
+        val productEntry = ProductEntry(generateProductId(), product)
         try {
-            val uploadedImageData = storageRepo.uploadImage(imageFile).await()
-            imageFile.downloadUrl = uploadedImageData.storage.downloadUrl.await()
-
+            val uploadedImageDownloadUrl = uploadImage(imageFile)
             emit(UiEvent.Success("Image successfully uploaded"))
 
-        } catch (e: StorageException) {
-            emit(UiEvent.Failure("Failed to upload image: ${e.message}"))
-        }
-    }
+            product.productImageUrl = uploadedImageDownloadUrl
 
-    fun addProductEntry(product: Product): Flow<UiEvent> = flow {
-        val productEntry = ProductEntry(
-            generateProductId(),
-            product
-        )
-        try {
             productRepo.addProductToDb(productEntry).await()
             emit(UiEvent.Success("Product successfully added"))
 
+        } catch (e: StorageException) {
+            Log.e(TAG, "Failed to upload image: ${e.message}")
+            emit(UiEvent.Failure("Failed to upload image"))
+        } catch (e: DatabaseException) {
+            Log.e(TAG, "Failed to add product to the database: ${e.message}")
+            emit(UiEvent.Failure("Failed to add product to the database"))
+
         } catch (e: Exception) {
-            emit(UiEvent.Failure("Failed to add product: ${e.message}"))
+            Log.e(TAG, "Failed to add product: ${e.message}")
+            emit(UiEvent.Failure("Failed to add product"))
         }
+    }
+
+    private suspend fun uploadImage(imageFile: ImageFile): String {
+        val uploadedImageData = storageRepo.uploadImage(imageFile).await()
+        return uploadedImageData.storage.downloadUrl.await().toString()
     }
 
     fun updateProductEntry(productEntry: ProductEntry): Flow<UiEvent> = flow {
@@ -61,7 +66,8 @@ class AdminRewardsViewModel(
             emit(UiEvent.Success("Product successfully updated"))
 
         } catch (e: Exception) {
-            emit(UiEvent.Failure("Failed to update product: ${e.message}"))
+            Log.e(TAG, "Failed to update product: ${e.message}")
+            emit(UiEvent.Failure("Failed to update product"))
         }
     }
 
@@ -71,8 +77,13 @@ class AdminRewardsViewModel(
             emit(UiEvent.Success("Product successfully deleted"))
 
         } catch (e: Exception) {
-            emit(UiEvent.Failure("Failed to delete product: ${e.message}"))
+            Log.e(TAG, "Failed to delete product: ${e.message}")
+            emit(UiEvent.Failure("Failed to delete product"))
         }
+    }
+
+    companion object {
+        private val TAG: String = AdminRewardsViewModel::class.java.simpleName
     }
 }
 

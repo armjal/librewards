@@ -202,28 +202,9 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         )
         val imageFile =
             ImageFile(name = hashFunction(product.productName), uri = imageLocalFilePath)
-        lifecycleScope.launch {
-            viewModel.uploadImage(imageFile).collect {
-                when (it) {
-                    is UiEvent.Success -> {
-                        toastMessage(requireActivity(), it.message)
-                        product.productImageUrl = imageFile.downloadUrl.toString()
-                        addProduct(product)
-                    }
 
-                    is UiEvent.Failure -> {
-                        Log.e(TAG, it.message)
-                        hideProgressBar()
-                        toastMessage(requireActivity(), "Image upload failed")
-                    }
-                }
-            }
-        }
-    }
-
-    private fun addProduct(product: Product) {
         lifecycleScope.launch {
-            viewModel.addProductEntry(product).collect {
+            viewModel.addProductEntry(product, imageFile).collect {
                 when (it) {
                     is UiEvent.Success -> {
                         toastMessage(requireActivity(), it.message)
