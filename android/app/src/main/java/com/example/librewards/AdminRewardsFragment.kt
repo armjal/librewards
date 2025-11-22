@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.librewards.databinding.AddProductPopupBinding
@@ -22,6 +23,7 @@ import com.example.librewards.databinding.ManageProductPopupBinding
 import com.example.librewards.models.Product
 import com.example.librewards.models.ProductEntry
 import com.example.librewards.repositories.ProductRepository
+import com.example.librewards.viewmodels.AdminRewardsViewModel
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -34,6 +36,9 @@ import java.io.IOException
 import java.util.UUID
 
 class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
+    private val viewModel: AdminRewardsViewModel by viewModels {
+        AdminRewardsViewModel.AdminRewardsViewModelFactory(productRepo)
+    }
     private lateinit var database: DatabaseReference
     private lateinit var storageReference: StorageReference
     private lateinit var adminActivity: AdminActivity
@@ -78,22 +83,12 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         productEntries = mutableListOf()
         adapter = RecyclerAdapter(productEntries, this)
         binding.adminRewardsRecycler.adapter = adapter
-        database.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                productEntries.clear()
-                for (dataSnapshot in snapshot.children) {
-                    val productEntry = ProductEntry()
-                    productEntry.id = dataSnapshot.key!!
-                    productEntry.product = dataSnapshot.getValue(Product::class.java)!!
-                    productEntries.add(productEntry)
-                }
-                (adapter as RecyclerAdapter).notifyDataSetChanged()
-            }
 
-            override fun onCancelled(error: DatabaseError) {
-                Log.e(TAG, "Could not access database")
-            }
-        })
+        viewModel.productEntries.observe(viewLifecycleOwner) {
+            productEntries.clear()
+            productEntries.addAll(it)
+            (adapter as RecyclerAdapter).notifyDataSetChanged()
+        }
     }
 
     override fun onDestroyView() {
