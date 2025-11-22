@@ -22,9 +22,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.librewards.databinding.AddProductPopupBinding
 import com.example.librewards.databinding.AdminFragmentRewardsBinding
 import com.example.librewards.databinding.ManageProductPopupBinding
+import com.example.librewards.models.ImageFile
 import com.example.librewards.models.Product
 import com.example.librewards.models.ProductEntry
 import com.example.librewards.repositories.ProductRepository
+import com.example.librewards.repositories.StorageRepository
 import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.AdminRewardsViewModel
 import com.example.librewards.viewmodels.AdminRewardsViewModelFactory
@@ -36,11 +38,10 @@ import com.google.firebase.storage.StorageReference
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.launch
 import java.io.IOException
-import java.util.UUID
 
 class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private val viewModel: AdminRewardsViewModel by viewModels {
-        AdminRewardsViewModelFactory(productRepo)
+        AdminRewardsViewModelFactory(productRepo, storageRepo)
     }
     private lateinit var database: DatabaseReference
     private lateinit var storageReference: StorageReference
@@ -58,6 +59,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private var addProductBinding: AddProductPopupBinding? = null
     private var manageProductBinding: ManageProductPopupBinding? = null
     private lateinit var productRepo: ProductRepository
+    private lateinit var storageRepo: StorageRepository
 
     private val imagePickerLauncher = registerImagePickerLauncher()
 
@@ -71,6 +73,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         )
 
         productRepo = ProductRepository(database)
+        storageRepo = StorageRepository(storageReference)
     }
 
     override fun onCreateView(
@@ -109,9 +112,11 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         addProductBinding = AddProductPopupBinding.inflate(layoutInflater)
         popup?.setContentView(addProductBinding!!.root)
-        addProductBinding!!.chooseButton.setOnClickListener { fileChooser() }
-        addProductBinding!!.uploadButton.setOnClickListener { fileUploader() }
-        addProductBinding!!.closeBtnAdmin.setOnClickListener { popup?.dismiss() }
+        addProductBinding!!.let {
+            it.chooseButton.setOnClickListener { fileChooser() }
+            it.uploadButton.setOnClickListener { fileUploader() }
+            it.closeBtnAdmin.setOnClickListener { popup?.dismiss() }
+        }
         popup?.show()
     }
 
@@ -191,37 +196,39 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             return
         }
         showProgressBar()
-        val productEntry = ProductEntry(
-            generateProductId(),
-            Product(
-                addProductBinding!!.productName.text.toString(),
-                addProductBinding!!.productCost.text.toString()
-            )
+        val product = Product(
+            addProductBinding!!.productName.text.toString(),
+            addProductBinding!!.productCost.text.toString()
         )
+        val imageFile =
+            ImageFile(name = hashFunction(product.productName), uri = imageLocalFilePath)
+        lifecycleScope.launch {
+            viewModel.uploadImage(imageFile).collect {
+                when (it) {
+                    is UiEvent.Success -> {
+                        toastMessage(requireActivity(), it.message)
+                        product.productImageUrl = imageFile.downloadUrl.toString()
+                        addProduct(product)
+                    }
 
-        val imageRef = storageReference.child(
-            "${hashFunction(imageLocalFilePath.toString())}-${
-                productEntry.id
-            }"
-        )
-        val uploadImageTask = imageRef.putFile(imageLocalFilePath!!)
-        uploadImageTask.addOnSuccessListener {
-            hideProgressBar()
-            toastMessage(requireActivity(), "File uploaded successfully")
-            imageRef.downloadUrl.addOnSuccessListener { uri ->
-                productEntry.product.productImageUrl = uri.toString()
-                addProduct(productEntry)
+                    is UiEvent.Failure -> {
+                        Log.e(TAG, it.message)
+                        hideProgressBar()
+                        toastMessage(requireActivity(), "Image upload failed")
+                    }
+                }
             }
         }
     }
 
-    private fun addProduct(productEntry: ProductEntry){
+    private fun addProduct(product: Product) {
         lifecycleScope.launch {
-            viewModel.addProductEntry(productEntry).collect {
+            viewModel.addProductEntry(product).collect {
                 when (it) {
                     is UiEvent.Success -> {
                         toastMessage(requireActivity(), it.message)
                         resetProductInputFields()
+                        hideProgressBar()
                     }
 
                     is UiEvent.Failure -> {
@@ -232,10 +239,6 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
                 }
             }
         }
-    }
-
-    private fun generateProductId(): String {
-        return "PROD-" + UUID.randomUUID().toString()
     }
 
     private fun showProgressBar() {
@@ -264,7 +267,10 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             if (it.resultCode == AppCompatActivity.RESULT_OK) {
                 imageLocalFilePath = it.data?.data
                 try {
-                    val source = ImageDecoder.createSource(requireActivity().contentResolver, imageLocalFilePath!!)
+                    val source = ImageDecoder.createSource(
+                        requireActivity().contentResolver,
+                        imageLocalFilePath!!
+                    )
                     val bitmap = ImageDecoder.decodeBitmap(source)
                     addProductBinding?.chosenImage?.let { img ->
                         img.layoutParams.height = 300
