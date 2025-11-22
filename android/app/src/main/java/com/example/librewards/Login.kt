@@ -51,7 +51,7 @@ class Login : AppCompatActivity() {
     }
 
     private fun getUserLoginInfo(email: String, activity: AppCompatActivity) {
-        val id = fh.hashFunction(email)
+        val id = hashFunction(email)
         val refChild = database.child("users").child(id)
         refChild.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
