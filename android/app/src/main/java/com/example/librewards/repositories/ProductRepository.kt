@@ -38,9 +38,9 @@ class ProductRepository(val database: DatabaseReference) {
         return productRef.updateChildren(productEntry.product.toMap())
     }
 
-    fun deleteProduct(productEntry: ProductEntry) {
-        val productRef = database.child(productEntry.id)
-        productRef.removeValue()
+    fun deleteProduct(productId: String): Task<Void> {
+        val productRef = database.child(productId)
+        return productRef.removeValue()
     }
 
     private fun createProductsValueEventListener(): ValueEventListener {

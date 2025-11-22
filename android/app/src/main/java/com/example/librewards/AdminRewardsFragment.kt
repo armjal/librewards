@@ -183,10 +183,21 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     }
 
     private fun deleteProduct(chosenProductEntry: ProductEntry) {
-        productRepo.deleteProduct(chosenProductEntry)
-        popup?.dismiss()
-        Toast.makeText(requireActivity(), "Product successfully deleted", Toast.LENGTH_SHORT)
-            .show()
+        lifecycleScope.launch {
+            viewModel.deleteProductEntry(chosenProductEntry.id).collect {
+                when (it) {
+                    is UiEvent.Success -> {
+                        popup?.dismiss()
+                        toastMessage(requireActivity(), it.message)
+                    }
+
+                    is UiEvent.Failure -> {
+                        Log.e(TAG, it.message)
+                        toastMessage(requireActivity(), "Product deletion failed")
+                    }
+                }
+            }
+        }
     }
 
     private fun fileChooser() {
@@ -198,7 +209,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 
     private fun fileUploader() {
         if (imageLocalFilePath == null) {
-            Toast.makeText(context, "Please choose an image", Toast.LENGTH_SHORT).show()
+            toastMessage(requireActivity(), "Please choose an image")
             return
         }
         showProgressBar()
@@ -218,7 +229,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         val uploadImageTask = imageRef.putFile(imageLocalFilePath!!)
         uploadImageTask.addOnSuccessListener {
             hideProgressBar()
-            Toast.makeText(context, "File uploaded successfully", Toast.LENGTH_SHORT).show()
+            toastMessage(requireActivity(),"File uploaded successfully")
             imageRef.downloadUrl.addOnSuccessListener { uri ->
                 productEntry.product.productImageUrl = uri.toString()
                 productRepo.addProductToDb(productEntry)
@@ -227,7 +238,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         }
             .addOnFailureListener {
                 hideProgressBar()
-                Toast.makeText(context, "Failed to upload product image", Toast.LENGTH_SHORT).show()
+                toastMessage(requireActivity(), "Failed to upload product image")
             }
             .addOnProgressListener { _ ->
             }

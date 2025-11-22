@@ -30,6 +30,16 @@ class AdminRewardsViewModel(val productRepo: ProductRepository): ViewModel() {
             emit(UiEvent.Failure("Failed to update product: ${e.message}"))
         }
     }
+
+    fun deleteProductEntry(productId: String): Flow<UiEvent> = flow {
+        try {
+            productRepo.deleteProduct(productId).await()
+            emit(UiEvent.Success("Product successfully deleted"))
+
+        } catch (e : Exception) {
+            emit(UiEvent.Failure("Failed to delete product: ${e.message}"))
+        }
+    }
 }
 
 class AdminRewardsViewModelFactory(private val repository: ProductRepository): ViewModelProvider.Factory {
