@@ -28,10 +28,8 @@ class FirebaseHandler {
             .toString()
         return database.child(document).child(id).child(path)
     }
-
-    fun hashFunction(email: String): String {
-        return Hashing.sipHash24().hashString(email, StandardCharsets.UTF_8)
-            .toString()
-    }
-
+}
+fun hashFunction(email: String): String {
+    return Hashing.sipHash24().hashString(email, StandardCharsets.UTF_8)
+        .toString()
 }

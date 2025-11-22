@@ -24,13 +24,14 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.squareup.picasso.Picasso
 import androidx.core.graphics.drawable.toDrawable
+import com.example.librewards.models.ProductEntry
 
 
 class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private lateinit var fh: FirebaseHandler
     private lateinit var mainActivity: MainActivity
     private lateinit var database: DatabaseReference
-    private lateinit var productsList: MutableList<Product>
+    private lateinit var productEntries: MutableList<ProductEntry>
     private var layoutManager: RecyclerView.LayoutManager? = null
     private var adapter: RecyclerView.Adapter<RecyclerAdapter.ViewHolder>? = null
     private var listener: RewardsListener? = null
@@ -66,19 +67,20 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         layoutManager = LinearLayoutManager(context)
         "See rewards from ${mainActivity.university}".also { binding.rewardsText.text = it }
         binding.rewardsRecycler.layoutManager = layoutManager
-        productsList = mutableListOf()
-        adapter = RecyclerAdapter(productsList, this)
+        productEntries = mutableListOf()
+        adapter = RecyclerAdapter(productEntries, this)
         binding.rewardsRecycler.adapter = adapter
         database = FirebaseDatabase.getInstance().reference
             .child("products")
             .child(mainActivity.university)
         database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                productsList.clear()
+                productEntries.clear()
                 for (dataSnapshot in snapshot.children) {
-                    val product = dataSnapshot.getValue(Product::class.java)
-                    productsList.add(product!!)
-
+                    val productEntry = ProductEntry()
+                    productEntry.id = dataSnapshot.key!!
+                    productEntry.product = dataSnapshot.getValue(Product::class.java)!!
+                    productEntries.add(productEntry)
                 }
                 (adapter as RecyclerAdapter).notifyDataSetChanged()
             }
@@ -95,21 +97,21 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 
     private fun calculatePointsFromPurchase(position: Int) {
         val pointsInt =
-            Integer.parseInt(binding.rewardsPoints.text.toString()) - Integer.parseInt(productsList[position].productCost!!)
+            Integer.parseInt(binding.rewardsPoints.text.toString()) - Integer.parseInt(productEntries[position].product.productCost)
 
         if (pointsInt > 0) {
             binding.rewardsPoints.text = pointsInt.toString()
-            minusPointsListener(Integer.parseInt(productsList[position].productCost!!))
+            minusPointsListener(Integer.parseInt(productEntries[position].product.productCost))
         } else {
             toastMessage("You do not have sufficient points for this purchase")
         }
 
     }
 
-    private fun showImagePopup(list: MutableList<Product>, position: Int) {
+    private fun showImagePopup(list: MutableList<ProductEntry>, position: Int) {
         val redeemRef = FirebaseDatabase.getInstance()
             .reference.child("users")
-            .child(fh.hashFunction(mainActivity.email))
+            .child(hashFunction(mainActivity.email))
             .child("redeemingReward")
         redeemRef.setValue("0")
         productPopup = Dialog(requireActivity())
@@ -133,8 +135,8 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 //         popupBinding.popupQr.setImageDrawable(drawableQR)
 
         popupBinding.popupQr.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(50) }
-        popupBinding.popupText.text = list[position].productName
-        "${list[position].productCost} points".also { popupBinding.popupCost.text = it }
+        popupBinding.popupText.text = list[position].product.productName
+        "${list[position].product.productCost} points".also { popupBinding.popupCost.text = it }
         popupBinding.popupCost.textSize = 20F
         popupBinding.popupText.textSize = 25F
         popupBinding.popupCost.updateLayoutParams<ViewGroup.MarginLayoutParams> {
@@ -145,7 +147,7 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
                 50
             )
         }
-        Picasso.get().load(list[position].productImageUrl).into(popupBinding.popupImageView)
+        Picasso.get().load(list[position].product.productImageUrl).into(popupBinding.popupImageView)
 
         var redeemed: String
 
@@ -221,7 +223,7 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     }
 
     override fun onProductClick(position: Int) {
-        showImagePopup(productsList, position)
+        showImagePopup(productEntries, position)
     }
 
 }
