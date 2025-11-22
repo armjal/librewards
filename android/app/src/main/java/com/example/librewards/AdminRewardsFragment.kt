@@ -3,14 +3,15 @@ package com.example.librewards
 import android.app.Dialog
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
@@ -21,9 +22,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.librewards.databinding.AddProductPopupBinding
 import com.example.librewards.databinding.AdminFragmentRewardsBinding
 import com.example.librewards.databinding.ManageProductPopupBinding
+import com.example.librewards.models.ImageFile
 import com.example.librewards.models.Product
 import com.example.librewards.models.ProductEntry
 import com.example.librewards.repositories.ProductRepository
+import com.example.librewards.repositories.StorageRepository
 import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.AdminRewardsViewModel
 import com.example.librewards.viewmodels.AdminRewardsViewModelFactory
@@ -35,11 +38,10 @@ import com.google.firebase.storage.StorageReference
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.launch
 import java.io.IOException
-import java.util.UUID
 
 class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private val viewModel: AdminRewardsViewModel by viewModels {
-        AdminRewardsViewModelFactory(productRepo)
+        AdminRewardsViewModelFactory(productRepo, storageRepo)
     }
     private lateinit var database: DatabaseReference
     private lateinit var storageReference: StorageReference
@@ -57,6 +59,10 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
     private var addProductBinding: AddProductPopupBinding? = null
     private var manageProductBinding: ManageProductPopupBinding? = null
     private lateinit var productRepo: ProductRepository
+    private lateinit var storageRepo: StorageRepository
+
+    private val imagePickerLauncher = registerImagePickerLauncher()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         adminActivity = activity as AdminActivity
@@ -67,6 +73,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         )
 
         productRepo = ProductRepository(database)
+        storageRepo = StorageRepository(storageReference)
     }
 
     override fun onCreateView(
@@ -100,40 +107,16 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         manageProductBinding = null
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == PICK_IMAGE_REQUEST &&
-            resultCode == AppCompatActivity.RESULT_OK &&
-            data != null &&
-            data.data != null
-        ) {
-            imageLocalFilePath = data.data!!
-            try {
-                val bitmap =
-                    MediaStore.Images.Media.getBitmap(
-                        requireActivity().contentResolver,
-                        imageLocalFilePath
-                    )
-                addProductBinding?.chosenImage?.let {
-                    it.layoutParams.height = 300
-                    it.layoutParams.width = 300
-                    it.setImageBitmap(bitmap)
-                }
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-
-        }
-    }
-
     private fun showAddProductPopup() {
         popup = Dialog(requireActivity())
         popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         addProductBinding = AddProductPopupBinding.inflate(layoutInflater)
         popup?.setContentView(addProductBinding!!.root)
-        addProductBinding!!.chooseButton.setOnClickListener { fileChooser() }
-        addProductBinding!!.uploadButton.setOnClickListener { fileUploader() }
-        addProductBinding!!.closeBtnAdmin.setOnClickListener { popup?.dismiss() }
+        addProductBinding!!.let {
+            it.chooseButton.setOnClickListener { fileChooser() }
+            it.uploadButton.setOnClickListener { fileUploader() }
+            it.closeBtnAdmin.setOnClickListener { popup?.dismiss() }
+        }
         popup?.show()
     }
 
@@ -204,7 +187,7 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         val intent = Intent()
         intent.type = "image/*"
         intent.action = Intent.ACTION_GET_CONTENT
-        startActivityForResult(intent, PICK_IMAGE_REQUEST)
+        imagePickerLauncher.launch(intent)
     }
 
     private fun fileUploader() {
@@ -213,37 +196,20 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
             return
         }
         showProgressBar()
-        val productEntry = ProductEntry(
-            generateProductId(),
-            Product(
-                addProductBinding!!.productName.text.toString(),
-                addProductBinding!!.productCost.text.toString()
-            )
+        val product = Product(
+            addProductBinding!!.productName.text.toString(),
+            addProductBinding!!.productCost.text.toString()
         )
+        val imageFile =
+            ImageFile(name = hashFunction(product.productName), uri = imageLocalFilePath)
 
-        val imageRef = storageReference.child(
-            "${hashFunction(imageLocalFilePath.toString())}-${
-                productEntry.id
-            }"
-        )
-        val uploadImageTask = imageRef.putFile(imageLocalFilePath!!)
-        uploadImageTask.addOnSuccessListener {
-            hideProgressBar()
-            toastMessage(requireActivity(), "File uploaded successfully")
-            imageRef.downloadUrl.addOnSuccessListener { uri ->
-                productEntry.product.productImageUrl = uri.toString()
-                addProduct(productEntry)
-            }
-        }
-    }
-
-    private fun addProduct(productEntry: ProductEntry){
         lifecycleScope.launch {
-            viewModel.addProductEntry(productEntry).collect {
+            viewModel.addProductEntry(product, imageFile).collect {
                 when (it) {
                     is UiEvent.Success -> {
                         toastMessage(requireActivity(), it.message)
                         resetProductInputFields()
+                        hideProgressBar()
                     }
 
                     is UiEvent.Failure -> {
@@ -254,10 +220,6 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
                 }
             }
         }
-    }
-
-    private fun generateProductId(): String {
-        return "PROD-" + UUID.randomUUID().toString()
     }
 
     private fun showProgressBar() {
@@ -281,8 +243,29 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         imageLocalFilePath = null
     }
 
+    private fun registerImagePickerLauncher(): ActivityResultLauncher<Intent?> {
+        return registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            if (it.resultCode == AppCompatActivity.RESULT_OK) {
+                imageLocalFilePath = it.data?.data
+                try {
+                    val source = ImageDecoder.createSource(
+                        requireActivity().contentResolver,
+                        imageLocalFilePath!!
+                    )
+                    val bitmap = ImageDecoder.decodeBitmap(source)
+                    addProductBinding?.chosenImage?.let { img ->
+                        img.layoutParams.height = 300
+                        img.layoutParams.width = 300
+                        img.setImageBitmap(bitmap)
+                    }
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
     companion object {
-        private const val PICK_IMAGE_REQUEST = 1234
         private val TAG: String = AdminRewardsFragment::class.java.simpleName
 
     }
