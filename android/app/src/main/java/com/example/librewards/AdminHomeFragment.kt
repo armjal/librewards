@@ -2,6 +2,7 @@ package com.example.librewards
 
 import android.Manifest
 import android.content.pm.PackageManager.PERMISSION_GRANTED
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -11,8 +12,10 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat.checkSelfPermission
+import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import com.example.librewards.databinding.AdminFragmentHomeBinding
+import com.example.librewards.utils.FragmentExtended
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -22,7 +25,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 
-class AdminHomeFragment : Fragment() {
+class AdminHomeFragment(override val title: String = TITLE, override val icon: Int = R.drawable.home) : FragmentExtended() {
     private lateinit var requestCameraPermissionLauncher: ActivityResultLauncher<String>
     private lateinit var database: DatabaseReference
     private var _binding: AdminFragmentHomeBinding? = null
@@ -171,7 +174,7 @@ class AdminHomeFragment : Fragment() {
     }
 
     companion object {
-        val TAG: String = AdminHomeFragment::class.java.simpleName
-
+        private val TAG: String = AdminHomeFragment::class.java.simpleName
+        private const val TITLE: String = "Home"
     }
 }
