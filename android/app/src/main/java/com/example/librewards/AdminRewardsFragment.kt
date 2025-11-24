@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.ImageDecoder
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -27,6 +28,7 @@ import com.example.librewards.models.Product
 import com.example.librewards.models.ProductEntry
 import com.example.librewards.repositories.ProductRepository
 import com.example.librewards.repositories.StorageRepository
+import com.example.librewards.utils.FragmentExtended
 import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.AdminRewardsViewModel
 import com.example.librewards.viewmodels.AdminRewardsViewModelFactory
@@ -39,7 +41,7 @@ import com.squareup.picasso.Picasso
 import kotlinx.coroutines.launch
 import java.io.IOException
 
-class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
+class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExtended(), RecyclerAdapter.OnProductListener {
     private val viewModel: AdminRewardsViewModel by viewModels {
         AdminRewardsViewModelFactory(productRepo, storageRepo)
     }
@@ -270,7 +272,6 @@ class AdminRewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 
     companion object {
         private val TAG: String = AdminRewardsFragment::class.java.simpleName
-
     }
 
     override fun onProductClick(position: Int) {

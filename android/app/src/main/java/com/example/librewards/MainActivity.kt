@@ -4,15 +4,15 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
+import androidx.core.content.ContextCompat
 import com.example.librewards.RewardsFragment.RewardsListener
 import com.example.librewards.TimerFragment.TimerListener
+import com.example.librewards.adapters.ViewPagerAdapter
 import com.example.librewards.databinding.ActivityMainBinding
 import com.example.librewards.databinding.PopupLayoutBinding
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.auth
@@ -47,7 +47,6 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
         setContentView(binding.root)
         FirebaseApp.initializeApp(this)
 
-        //Assigns the field to the view's specified in the fragment_timer XML file file
         timerFragment = TimerFragment()
         rewardsFragment = RewardsFragment()
         fh = FirebaseHandler()
@@ -56,18 +55,17 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
 
         initialiseVariables()
 
-        //val navLayout = setContentView(R.layout.nav_header)
         Picasso.get().load(photoURL).into(binding.profileImage)
 
         "$firstName $lastName".also { binding.username.text = it }
 
-        binding.tabLayout.setupWithViewPager(binding.viewPager)
-        val viewPagerAdapter = ViewPagerAdapter(supportFragmentManager, 0)
-        viewPagerAdapter.addFragment(timerFragment, "")
-        viewPagerAdapter.addFragment(rewardsFragment, "")
+        val viewPagerAdapter = ViewPagerAdapter(this)
         binding.viewPager.adapter = viewPagerAdapter
-        binding.tabLayout.getTabAt(0)?.setIcon(R.drawable.timer)
-        binding.tabLayout.getTabAt(1)?.setIcon(R.drawable.reward)
+        val fragments = listOf(timerFragment, rewardsFragment)
+        viewPagerAdapter.addFragments(fragments)
+        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
+            tab.icon = ContextCompat.getDrawable(this, fragments[position].icon)
+        }.attach()
 
         binding.profileImage.setOnClickListener {
             logoutApp()
@@ -111,30 +109,4 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
     override fun onPointsTimerSent(points: Int) {
         rewardsFragment.updatedPoints(points)
     }
-
-    //Using a tab layout tutorial from YouTube user @Coding In Flow, I was able to create a tab layout and customise it so it fit my theme.
-    private class ViewPagerAdapter(fm: FragmentManager, behavior: Int) :
-        FragmentPagerAdapter(fm, behavior) {
-        private val fragments: MutableList<Fragment> = ArrayList()
-        private val fragmentTitle: MutableList<String> = ArrayList()
-        fun addFragment(fragment: Fragment, title: String) {
-            fragments.add(fragment)
-            fragmentTitle.add(title)
-        }
-
-        override fun getItem(position: Int): Fragment {
-            return fragments[position]
-        }
-
-        override fun getCount(): Int {
-            return fragments.size
-        }
-
-        override fun getPageTitle(position: Int): CharSequence {
-            return fragmentTitle[position]
-        }
-
-
-    }
-
 }

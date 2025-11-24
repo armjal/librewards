@@ -3,10 +3,15 @@ package com.example.librewards
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import com.example.librewards.adapters.ViewPagerAdapter
 import com.example.librewards.databinding.ActivityAdminBinding
+import com.example.librewards.utils.FragmentExtended
+import com.google.android.material.tabs.TabLayoutMediator
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
@@ -16,9 +21,7 @@ class AdminActivity : AppCompatActivity() {
     private lateinit var lastName: String
     lateinit var university: String
 
-    private lateinit var timerFragment: TimerFragment
-    private lateinit var adminHomeFragment: AdminHomeFragment
-    private lateinit var adminRewardsFragment: AdminRewardsFragment
+
     private lateinit var binding: ActivityAdminBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,17 +32,14 @@ class AdminActivity : AppCompatActivity() {
         initialiseVariables()
         binding.adminProfileImage.setOnClickListener { logoutApp() }
         ("$firstName $lastName").also { binding.adminUsername.text = it }
-        timerFragment = TimerFragment()
-        adminHomeFragment = AdminHomeFragment()
-        adminRewardsFragment = AdminRewardsFragment()
-        binding.adminTabLayout.setupWithViewPager(binding.adminViewPager)
-        val viewPagerAdapter = ViewPagerAdapter(supportFragmentManager, 0)
-        viewPagerAdapter.addFragment(adminHomeFragment, "")
-        viewPagerAdapter.addFragment(adminRewardsFragment, "")
-        binding.adminViewPager.adapter = viewPagerAdapter
-        binding.adminTabLayout.getTabAt(0)?.setIcon(R.drawable.home)
-        binding.adminTabLayout.getTabAt(1)?.setIcon(R.drawable.reward)
 
+        val viewPagerAdapter = ViewPagerAdapter(this)
+        binding.adminViewPager.adapter = viewPagerAdapter
+        val fragments = listOf(AdminHomeFragment(), AdminRewardsFragment());
+        viewPagerAdapter.addFragments(fragments)
+        TabLayoutMediator(binding.adminTabLayout, binding.adminViewPager) { tab, position ->
+            tab.icon = ContextCompat.getDrawable(this, fragments[position].icon)
+        }.attach()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -75,30 +75,4 @@ class AdminActivity : AppCompatActivity() {
     companion object {
         val TAG: String = AdminActivity::class.java.simpleName
     }
-
-    private class ViewPagerAdapter(fm: FragmentManager, behavior: Int) :
-        FragmentPagerAdapter(fm, behavior) {
-        private val fragments: MutableList<Fragment> = ArrayList()
-        private val fragmentTitle: MutableList<String> = ArrayList()
-        fun addFragment(fragment: Fragment, title: String) {
-            fragments.add(fragment)
-            fragmentTitle.add(title)
-        }
-
-        override fun getItem(position: Int): Fragment {
-            return fragments[position]
-        }
-
-        override fun getCount(): Int {
-            return fragments.size
-        }
-
-        override fun getPageTitle(position: Int): CharSequence {
-            return fragmentTitle[position]
-        }
-
-
-    }
-
-
 }
