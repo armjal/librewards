@@ -17,7 +17,6 @@ import android.view.ViewGroup
 import android.widget.Chronometer.OnChronometerTickListener
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
-import androidx.fragment.app.Fragment
 import com.example.librewards.databinding.FragmentTimerBinding
 import com.example.librewards.databinding.PopupLayoutBinding
 import com.example.librewards.qrcode.QRCodeGenerator
@@ -38,9 +37,12 @@ import com.google.firebase.database.ValueEventListener
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import androidx.core.graphics.toColorInt
 import androidx.core.graphics.drawable.toDrawable
+import com.example.librewards.utils.FragmentExtended
 
 
-class TimerFragment : Fragment(), OnMapReadyCallback {
+class TimerFragment(
+                    override val icon: Int = R.drawable.timer
+) : FragmentExtended(), OnMapReadyCallback {
     private lateinit var markerOptions: MarkerOptions
     private var marker: Marker? = null
     private lateinit var latLngLocTwo: LatLng
