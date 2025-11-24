@@ -25,7 +25,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 
-class AdminHomeFragment(override val title: String = TITLE, override val icon: Int = R.drawable.home) : FragmentExtended() {
+class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExtended() {
     private lateinit var requestCameraPermissionLauncher: ActivityResultLauncher<String>
     private lateinit var database: DatabaseReference
     private var _binding: AdminFragmentHomeBinding? = null
@@ -175,6 +175,5 @@ class AdminHomeFragment(override val title: String = TITLE, override val icon: I
 
     companion object {
         private val TAG: String = AdminHomeFragment::class.java.simpleName
-        private const val TITLE: String = "Home"
     }
 }

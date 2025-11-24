@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.setMargins
 import androidx.core.view.updateLayoutParams
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.librewards.databinding.FragmentRewardsBinding
@@ -25,9 +24,10 @@ import com.google.firebase.database.ValueEventListener
 import com.squareup.picasso.Picasso
 import androidx.core.graphics.drawable.toDrawable
 import com.example.librewards.models.ProductEntry
+import com.example.librewards.utils.FragmentExtended
 
 
-class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
+class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExtended(), RecyclerAdapter.OnProductListener {
     private lateinit var fh: FirebaseHandler
     private lateinit var mainActivity: MainActivity
     private lateinit var database: DatabaseReference
@@ -57,13 +57,13 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        mainActivity = activity as MainActivity
         _binding = FragmentRewardsBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        mainActivity = activity as MainActivity
         layoutManager = LinearLayoutManager(context)
         "See rewards from ${mainActivity.university}".also { binding.rewardsText.text = it }
         binding.rewardsRecycler.layoutManager = layoutManager
@@ -201,6 +201,9 @@ class RewardsFragment : Fragment(), RecyclerAdapter.OnProductListener {
 
     //Method that is used between fragments to update each other's points
     fun updatedPoints(newPoints: Int) {
+        if (view == null) {
+            return
+        }
         binding.rewardsPoints.text = newPoints.toString()
     }
 

@@ -41,7 +41,7 @@ import com.squareup.picasso.Picasso
 import kotlinx.coroutines.launch
 import java.io.IOException
 
-class AdminRewardsFragment(override val title: String? = TITLE, override val icon: Int = R.drawable.reward) : FragmentExtended(), RecyclerAdapter.OnProductListener {
+class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExtended(), RecyclerAdapter.OnProductListener {
     private val viewModel: AdminRewardsViewModel by viewModels {
         AdminRewardsViewModelFactory(productRepo, storageRepo)
     }
@@ -272,8 +272,6 @@ class AdminRewardsFragment(override val title: String? = TITLE, override val ico
 
     companion object {
         private val TAG: String = AdminRewardsFragment::class.java.simpleName
-        private const val TITLE = "Admin Rewards"
-
     }
 
     override fun onProductClick(position: Int) {
