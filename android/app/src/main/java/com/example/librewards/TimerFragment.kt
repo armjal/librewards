@@ -1,7 +1,6 @@
 package com.example.librewards
 
 import android.Manifest
-import android.app.Dialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -18,7 +17,6 @@ import android.widget.Chronometer.OnChronometerTickListener
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import com.example.librewards.databinding.FragmentTimerBinding
-import com.example.librewards.databinding.PopupLayoutBinding
 import com.example.librewards.qrcode.QRCodeGenerator
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -36,8 +34,8 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import androidx.core.graphics.toColorInt
-import androidx.core.graphics.drawable.toDrawable
 import com.example.librewards.utils.FragmentExtended
+import com.example.librewards.utils.showPopup
 
 
 class TimerFragment(
@@ -48,7 +46,6 @@ class TimerFragment(
     private lateinit var latLngLocTwo: LatLng
     private lateinit var latLngLocOne: LatLng
     private lateinit var circle: Circle
-    private var popup: Dialog? = null
     private var totalTime: Long? = null
     var listener: TimerListener? = null
     private lateinit var fh: FirebaseHandler
@@ -65,8 +62,6 @@ class TimerFragment(
     private lateinit var circleOptions: CircleOptions
     private var _binding: FragmentTimerBinding? = null
     private val binding get() = _binding!!
-
-    private var popupLayoutBinding: PopupLayoutBinding? = null
 
     //Interface that consists of a method that will update the points in "RewardsFragment"
     interface TimerListener {
@@ -255,7 +250,7 @@ class TimerFragment(
                         if (SystemClock.elapsedRealtime() - binding.stopwatch.base >= 800000) {
                             binding.stopwatch.base = SystemClock.elapsedRealtime()
                             binding.stopwatch.stop()
-                            showPopup("No stop code was entered for 24 hours. The timer has been reset")
+                            showPopup(requireActivity(),"No stop code was entered for 24 hours. The timer has been reset")
                         }
                         if (distance != null && distance!! > 50) {
                             binding.stopwatch.base = SystemClock.elapsedRealtime()
@@ -329,25 +324,14 @@ class TimerFragment(
         val newPoints = pointsEarned + Integer.parseInt(binding.usersPoints.text.toString())
 
         if (minutes == 1) {
-            showPopup("Well done, you spent $minutes minute at the library and have earned $pointsEarned points! Your new points balance is: $newPoints")
+            showPopup(requireActivity(),"Well done, you spent $minutes minute at the library and have earned $pointsEarned points! Your new points balance is: $newPoints")
         } else {
-            showPopup("Well done, you spent $minutes minutes at the library and have earned $pointsEarned points! Your new points balance is:  $newPoints")
+            showPopup(requireActivity(),"Well done, you spent $minutes minutes at the library and have earned $pointsEarned points! Your new points balance is:  $newPoints")
         }
     }
 
     fun updatePoints(newPoints: Int) {
         binding.usersPoints.text = newPoints.toString()
-    }
-
-    //Method that creates a popup
-    private fun showPopup(text: String?) {
-        popup = Dialog(requireActivity())
-        popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
-        popupLayoutBinding = PopupLayoutBinding.inflate(layoutInflater)
-        popup?.setContentView(popupLayoutBinding!!.root)
-        popupLayoutBinding!!.popupText.text = text
-        popupLayoutBinding!!.closeBtn.setOnClickListener { popup?.dismiss() }
-        popup?.show()
     }
 
     override fun onAttach(context: Context) {
