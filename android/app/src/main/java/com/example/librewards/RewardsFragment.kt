@@ -1,7 +1,6 @@
 package com.example.librewards
 
 import android.app.Dialog
-import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -44,17 +43,11 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
     private lateinit var productEntries: MutableList<ProductEntry>
     private var layoutManager: RecyclerView.LayoutManager? = null
     private var adapter: RecyclerView.Adapter<RecyclerAdapter.ViewHolder>? = null
-    private var listener: RewardsListener? = null
     private var counter: Int? = null
     private lateinit var productPopup: Dialog
 
     private var _binding: FragmentRewardsBinding? = null
     private val binding get() = _binding!!
-
-    //Interface that consists of a method that will update the points in "TimerFragment"
-    interface RewardsListener {
-        fun onPointsRewardsSent(points: Int)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -205,7 +198,6 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
                 val finalPoints = Integer.parseInt(dbPoints) - minusValue
                 refChild.setValue(finalPoints.toString())
                 binding.rewardsPoints.text = finalPoints.toString()
-                listener?.onPointsRewardsSent(finalPoints)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -214,28 +206,6 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
             }
         }
         refChild.addListenerForSingleValueEvent(pointsListener)
-    }
-
-    //Method that is used between fragments to update each other's points
-//    fun updatedPoints(newPoints: Int) {
-//        if (view == null) {
-//            return
-//        }
-//        binding.rewardsPoints.text = newPoints.toString()
-//    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        listener = if (context is RewardsListener) {
-            context
-        } else {
-            throw RuntimeException(context.toString() + "must implement TimerListener")
-        }
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
     }
 
     companion object {

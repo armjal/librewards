@@ -56,7 +56,6 @@ class TimerFragment(
     private lateinit var latLngLocOne: LatLng
     private lateinit var circle: Circle
     private var totalTime: Long? = null
-    var listener: TimerListener? = null
     private lateinit var fh: FirebaseHandler
     private lateinit var mainActivity: MainActivity
     private lateinit var adminActivity: AdminActivity
@@ -71,11 +70,6 @@ class TimerFragment(
     private lateinit var circleOptions: CircleOptions
     private var _binding: FragmentTimerBinding? = null
     private val binding get() = _binding!!
-
-    //Interface that consists of a method that will update the points in "RewardsFragment"
-    interface TimerListener {
-        fun onPointsTimerSent(points: Int)
-    }
 
     companion object {
         private const val PERMISSION_ID = 1010
@@ -276,7 +270,6 @@ class TimerFragment(
                     googleMap?.stopAnimation()
                     googleMap?.clear()
                     //Listener to communicate with Rewards Fragment and give the points to display in there
-                    listener?.onPointsTimerSent(Integer.parseInt(binding.usersPoints.text.toString()))
                     refChild.setValue("2")
                 }
 
@@ -301,7 +294,6 @@ class TimerFragment(
                     finalPoints = Integer.parseInt(dbPoints) + addValue
                     refChild.setValue(finalPoints.toString())
                     binding.usersPoints.text = finalPoints.toString()
-                    listener?.onPointsTimerSent(finalPoints)
                 }
             }
 
@@ -343,24 +335,6 @@ class TimerFragment(
                 "Well done, you spent $minutes minutes at the library and have earned $pointsEarned points! Your new points balance is:  $newPoints"
             )
         }
-    }
-
-//    fun updatePoints(newPoints: Int) {
-//        binding.usersPoints.text = newPoints.toString()
-//    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        listener = if (context is TimerListener) {
-            context
-        } else {
-            throw RuntimeException(context.toString() + "must implement TimerListener")
-        }
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
     }
 
     override fun onMapReady(p0: GoogleMap) {

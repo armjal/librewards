@@ -6,8 +6,6 @@ import android.widget.ImageView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.example.librewards.RewardsFragment.RewardsListener
-import com.example.librewards.TimerFragment.TimerListener
 import com.example.librewards.adapters.ViewPagerAdapter
 import com.example.librewards.databinding.ActivityMainBinding
 import com.example.librewards.databinding.PopupLayoutBinding
@@ -24,7 +22,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.squareup.picasso.Picasso
 
-class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
+class MainActivity : AppCompatActivity() {
     private lateinit var timerFragment: TimerFragment
     private lateinit var rewardsFragment: RewardsFragment
     lateinit var email: String
@@ -105,15 +103,5 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
             startActivity(intent)
             finish()
         }
-    }
-
-    //Using the interface in both fragments, the main activity is able to facilitate communication between the two fragments. Here, it sets the points in each fragment each time
-    //it's updated
-    override fun onPointsRewardsSent(points: Int) {
-//        timerFragment.updatePoints(points)
-    }
-
-    override fun onPointsTimerSent(points: Int) {
-//        rewardsFragment.updatedPoints(points)
     }
 }
