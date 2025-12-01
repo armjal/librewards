@@ -9,28 +9,33 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.librewards.databinding.FragmentFacebookUniversityBinding
+import com.example.librewards.models.User
+import com.example.librewards.repositories.UserRepository
 import com.example.librewards.resources.universities
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 
 class FacebookUniversity : AppCompatActivity() {
     private var spinnerPos: Int? = null
     private lateinit var uniSelected: String
     private lateinit var login: Login
-    private lateinit var fh: FirebaseHandler
     private var _binding: FragmentFacebookUniversityBinding? = null
     private val binding get() = _binding!!
+    private lateinit var database: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = FragmentFacebookUniversityBinding.inflate(layoutInflater)
         setContentView(binding.root)
         login = Login()
-        fh = FirebaseHandler()
+        database = FirebaseDatabase.getInstance().reference
 
         binding.fbUniversitySpinner.onItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
                 override fun onNothingSelected(parent: AdapterView<*>?) {
                     Log.d("FacebookUniversity", "Unselected")
                 }
+
                 override fun onItemSelected(
                     parent: AdapterView<*>?,
                     view: View?,
@@ -61,14 +66,15 @@ class FacebookUniversity : AppCompatActivity() {
                 val firstName = extras?.getString("first_name")
                 val lastName = extras?.getString("last_name")
                 val photoUrl = extras?.getString("photo")
-                fh.getChild("users", email!!, "university").setValue(uniSelected)
                 val intent = Intent(this@FacebookUniversity, MainActivity::class.java)
                 intent.putExtra("university", uniSelected)
                 intent.putExtra("email", email)
                 intent.putExtra("photo", photoUrl)
                 intent.putExtra("last_name", lastName)
                 intent.putExtra("first_name", firstName)
-                fh.writeNewUser(email, firstName!!, lastName!!, email, uniSelected)
+                val userRepo = UserRepository(database)
+                val user = User(firstName!!, lastName!!, email!!, uniSelected)
+                userRepo.addUser(user)
 
                 startActivity(intent)
             } else {
