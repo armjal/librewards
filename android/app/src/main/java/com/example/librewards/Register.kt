@@ -9,6 +9,8 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.librewards.databinding.ActivityRegisterBinding
+import com.example.librewards.models.User
+import com.example.librewards.repositories.UserRepository
 import com.example.librewards.resources.universities
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -21,7 +23,7 @@ class Register : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var uniSelected: String
     private var spinnerPos: Int? = null
-    private lateinit var fh: FirebaseHandler
+    private lateinit var userRepo: UserRepository
     private lateinit var binding: ActivityRegisterBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,8 +31,8 @@ class Register : AppCompatActivity() {
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
         auth = Firebase.auth
-        fh = FirebaseHandler()
         database = FirebaseDatabase.getInstance().reference
+        userRepo = UserRepository(database)
         //storeUniversities()
 
         binding.backToLogin.setOnClickListener {
@@ -90,13 +92,13 @@ class Register : AppCompatActivity() {
         )
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    fh.writeNewUser(
-                        binding.registrationEmail.text.toString(),
+                    val user = User(
                         binding.registrationFirstName.text.toString(),
                         binding.registrationLastName.text.toString(),
                         binding.registrationEmail.text.toString(),
                         uniSelected
                     )
+                    userRepo.addUser(user)
                     // Sign in success, update UI with the signed-in user's information
                     Log.d(TAG, "createUserWithEmail:success")
                     val intent = Intent(this, Login::class.java)

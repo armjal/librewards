@@ -1,12 +1,11 @@
 package com.example.librewards.models
 
 data class User(
-    var firstname: String? = null,
-    var surname: String? = null,
-    var email: String? = null,
-    var university: String? = null,
-    var admin: String? = null,
-    var studying: String? = null,
-    var redeemingReward: String? = null,
-    var points: String? = null
+    var firstname: String = "",
+    var surname: String = "",
+    var email: String = "",
+    var university: String = "",
+    var studying: String = "2",
+    var redeemingReward: String = "2",
+    var points: String = "0"
 )
