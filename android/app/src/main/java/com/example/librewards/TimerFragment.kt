@@ -14,7 +14,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Chronometer.OnChronometerTickListener
-import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.graphics.toColorInt
 import androidx.fragment.app.activityViewModels
@@ -24,6 +25,7 @@ import com.example.librewards.repositories.UserRepository
 import com.example.librewards.utils.FragmentExtended
 import com.example.librewards.utils.calculatePointsFromTime
 import com.example.librewards.utils.showPopup
+import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.MainSharedViewModel
 import com.example.librewards.viewmodels.MainViewModelFactory
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -71,9 +73,9 @@ class TimerFragment(
     private lateinit var circleOptions: CircleOptions
     private var _binding: FragmentTimerBinding? = null
     private val binding get() = _binding!!
+    private val locationPermissionsLauncher = registerLocationPermissionLauncher()
 
     companion object {
-        private const val PERMISSION_ID = 1010
         private val TAG: String = TimerFragment::class.java.simpleName
     }
 
@@ -174,10 +176,10 @@ class TimerFragment(
             }
 
         }
-        if (checkPermission()) {
+        if (checkLocationServicesPermissions()) {
             locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0f, locListener)
         } else {
-            requestPermission()
+            requestLocationServicesPermissions()
         }
     }
 
@@ -198,7 +200,7 @@ class TimerFragment(
         circle = googleMap.addCircle(circleOptions)
     }
 
-    private fun checkPermission(): Boolean {
+    private fun checkLocationServicesPermissions(): Boolean {
         //check if location permissions have been granted by user
         return ActivityCompat.checkSelfPermission(
             mainActivity,
@@ -211,26 +213,30 @@ class TimerFragment(
 
     }
 
-    private fun requestPermission() {
-        //this function will allow us to tell the user to request the necessary permission if they are not granted
-        ActivityCompat.requestPermissions(
-            mainActivity,
-            arrayOf(
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ),
-            PERMISSION_ID
+    private fun requestLocationServicesPermissions() {
+        val permissionsToRequest = arrayOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
         )
+        locationPermissionsLauncher.launch(permissionsToRequest)
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        if (requestCode == PERMISSION_ID) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d("Debug:", "You have the Permission")
+    private fun registerLocationPermissionLauncher(): ActivityResultLauncher<Array<String>?> {
+        return registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            if (permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
+                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
+            ) {
+                Log.d(TAG, "Location permission granted.")
+                if (googleMap != null) {
+                    onMapReady(googleMap!!)
+                } else {
+                    toastMessage(
+                        requireActivity(),
+                        "Location permission is required to use the timer feature."
+                    )
+                }
             }
         }
     }
@@ -329,28 +335,27 @@ class TimerFragment(
 
     override fun onMapReady(p0: GoogleMap) {
         googleMap = p0
-        if (checkPermission()) {
-            val locManager =
-                mainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            val lastKnownLocation =
-                locManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-            if (lastKnownLocation != null) {
-                locationOne = lastKnownLocation // The crucial initialization
-                latLngLocOne = LatLng(locationOne.latitude, locationOne.longitude)
-                markerOptions = MarkerOptions().position(latLngLocOne).title("I am here.")
-                p0.animateCamera(CameraUpdateFactory.newLatLng(latLngLocOne))
-                p0.animateCamera(CameraUpdateFactory.newLatLngZoom(latLngLocOne, 17F))
-                marker = p0.addMarker(markerOptions)!!
-                drawCircle(latLngLocOne, p0)
-            } else {
-                Toast.makeText(
-                    requireContext(),
-                    "Could not determine location. Please ensure location services are enabled.",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
+        if (!checkLocationServicesPermissions()) {
+            requestLocationServicesPermissions()
+            return
+        }
+        val locManager =
+            mainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val lastKnownLocation =
+            locManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+        if (lastKnownLocation != null) {
+            locationOne = lastKnownLocation // The crucial initialization
+            latLngLocOne = LatLng(locationOne.latitude, locationOne.longitude)
+            markerOptions = MarkerOptions().position(latLngLocOne).title("I am here.")
+            p0.animateCamera(CameraUpdateFactory.newLatLng(latLngLocOne))
+            p0.animateCamera(CameraUpdateFactory.newLatLngZoom(latLngLocOne, 17F))
+            marker = p0.addMarker(markerOptions)!!
+            drawCircle(latLngLocOne, p0)
         } else {
-            requestPermission()
+            toastMessage(
+                requireActivity(),
+                "Could not determine location. Please ensure location services are enabled."
+            )
         }
     }
 }
