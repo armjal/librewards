@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.librewards.models.User
 import com.example.librewards.repositories.UserRepository
 
-class MainViewModel(val userRepo: UserRepository): ViewModel() {
+class MainSharedViewModel(val userRepo: UserRepository): ViewModel() {
     private var _updatedUser = MutableLiveData<User>()
     val updatedUser: LiveData<User> get() = _updatedUser
 
@@ -29,9 +29,9 @@ class MainViewModelFactory(
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
+        return if (modelClass.isAssignableFrom(MainSharedViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            MainViewModel(userRepo) as T
+            MainSharedViewModel(userRepo) as T
         } else {
             throw IllegalArgumentException("ViewModel Not Found")
         }

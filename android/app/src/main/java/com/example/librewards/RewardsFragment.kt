@@ -20,7 +20,7 @@ import com.example.librewards.models.Product
 import com.example.librewards.models.ProductEntry
 import com.example.librewards.repositories.UserRepository
 import com.example.librewards.utils.FragmentExtended
-import com.example.librewards.viewmodels.MainViewModel
+import com.example.librewards.viewmodels.MainSharedViewModel
 import com.example.librewards.viewmodels.MainViewModelFactory
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -34,7 +34,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
     RecyclerAdapter.OnProductListener {
     private lateinit var userRepo: UserRepository
 
-    private val mainViewModel: MainViewModel by activityViewModels {
+    private val mainSharedViewModel: MainSharedViewModel by activityViewModels {
         MainViewModelFactory(userRepo)
     }
     private lateinit var fh: FirebaseHandler
@@ -75,7 +75,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
         productEntries = mutableListOf()
         adapter = RecyclerAdapter(productEntries, this)
         binding.rewardsRecycler.adapter = adapter
-        mainViewModel.updatedUser.observe(viewLifecycleOwner) { user ->
+        mainSharedViewModel.updatedUser.observe(viewLifecycleOwner) { user ->
             binding.rewardsPoints.text = user.points
         }
         val productDb = FirebaseDatabase.getInstance().reference
@@ -198,7 +198,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
                 val finalPoints = Integer.parseInt(dbPoints) - minusValue
                 refChild.setValue(finalPoints.toString())
                 binding.rewardsPoints.text = finalPoints.toString()
-                mainViewModel.updatePoints(finalPoints.toString())
+                mainSharedViewModel.updatePoints(finalPoints.toString())
             }
 
             override fun onCancelled(error: DatabaseError) {

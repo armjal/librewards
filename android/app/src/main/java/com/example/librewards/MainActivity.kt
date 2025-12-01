@@ -10,7 +10,7 @@ import com.example.librewards.adapters.ViewPagerAdapter
 import com.example.librewards.databinding.ActivityMainBinding
 import com.example.librewards.databinding.PopupLayoutBinding
 import com.example.librewards.repositories.UserRepository
-import com.example.librewards.viewmodels.MainViewModel
+import com.example.librewards.viewmodels.MainSharedViewModel
 import com.example.librewards.viewmodels.MainViewModelFactory
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
         Picasso.get().load(photoURL).into(binding.profileImage)
 
         "$firstName $lastName".also { binding.username.text = it }
-        val mainViewModel: MainViewModel by viewModels {
+        val mainSharedViewModel: MainSharedViewModel by viewModels {
             MainViewModelFactory(UserRepository(database))
         }
         val viewPagerAdapter = ViewPagerAdapter(this)
@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
         binding.profileImage.setOnClickListener {
             logoutApp()
         }
-        mainViewModel.getUser(email)
+        mainSharedViewModel.getUser(email)
     }
 
     override fun onDestroy() {

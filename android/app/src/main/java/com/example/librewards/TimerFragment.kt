@@ -23,7 +23,7 @@ import com.example.librewards.qrcode.QRCodeGenerator
 import com.example.librewards.repositories.UserRepository
 import com.example.librewards.utils.FragmentExtended
 import com.example.librewards.utils.showPopup
-import com.example.librewards.viewmodels.MainViewModel
+import com.example.librewards.viewmodels.MainSharedViewModel
 import com.example.librewards.viewmodels.MainViewModelFactory
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -47,7 +47,7 @@ class TimerFragment(
 ) : FragmentExtended(), OnMapReadyCallback {
     private lateinit var userRepo: UserRepository
 
-    private val mainViewModel: MainViewModel by activityViewModels {
+    private val mainSharedViewModel: MainSharedViewModel by activityViewModels {
         MainViewModelFactory(userRepo)
     }
     private lateinit var markerOptions: MarkerOptions
@@ -107,7 +107,7 @@ class TimerFragment(
         val qrGen = QRCodeGenerator()
         binding.qrCode.setImageBitmap(qrGen.createQR(hashFunction(mainActivity.email), 400, 400))
         binding.qrCodeNumber.text = hashFunction(mainActivity.email)
-        mainViewModel.updatedUser.observe(viewLifecycleOwner) { user ->
+        mainSharedViewModel.updatedUser.observe(viewLifecycleOwner) { user ->
             binding.usersPoints.text = user.points
         }
         val touchableList: ArrayList<View?> = mainActivity.tabLayout.touchables
@@ -292,7 +292,7 @@ class TimerFragment(
                 if (dbPoints != "null") {
                     finalPoints = Integer.parseInt(dbPoints) + addValue
                     binding.usersPoints.text = finalPoints.toString()
-                    mainViewModel.updatePoints(finalPoints.toString())
+                    mainSharedViewModel.updatePoints(finalPoints.toString())
                 }
             }
 
