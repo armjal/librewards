@@ -22,6 +22,7 @@ import com.example.librewards.databinding.FragmentTimerBinding
 import com.example.librewards.qrcode.QRCodeGenerator
 import com.example.librewards.repositories.UserRepository
 import com.example.librewards.utils.FragmentExtended
+import com.example.librewards.utils.calculatePointsFromTime
 import com.example.librewards.utils.showPopup
 import com.example.librewards.viewmodels.MainSharedViewModel
 import com.example.librewards.viewmodels.MainViewModelFactory
@@ -305,19 +306,9 @@ class TimerFragment(
         return finalPoints
     }
 
-    //Method that converts the duration spent at the library into points
     private fun setPointsFromTime(totalTime: Long) {
+        val pointsEarned = calculatePointsFromTime(totalTime)
         val minutes = (totalTime / 1000 / 60).toInt()
-        val pointsEarned: Int = when (totalTime) {
-            in 0..10000 -> 0
-            in 10001..29999 -> 10
-            in 30000..59999 -> 50
-            in 60000..119999 -> 75
-            in 120000..179999 -> 125
-            in 180000..259999 -> 225
-            in 260000..399999 -> 400
-            else -> 700
-        }
 
         addPointsListener(pointsEarned)
 
@@ -326,12 +317,12 @@ class TimerFragment(
         if (minutes == 1) {
             showPopup(
                 requireActivity(),
-                "Well done, you spent $minutes minute at the library and have earned $pointsEarned points! Your new points balance is: $newPoints"
+                getString(R.string.congrats_message, "minute", minutes, pointsEarned, newPoints)
             )
         } else {
             showPopup(
                 requireActivity(),
-                "Well done, you spent $minutes minutes at the library and have earned $pointsEarned points! Your new points balance is:  $newPoints"
+                getString(R.string.congrats_message, "minutes", minutes, pointsEarned, newPoints)
             )
         }
     }
