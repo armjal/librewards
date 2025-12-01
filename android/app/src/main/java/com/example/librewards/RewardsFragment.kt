@@ -1,7 +1,6 @@
 package com.example.librewards
 
 import android.app.Dialog
-import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -9,42 +8,46 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.setMargins
 import androidx.core.view.updateLayoutParams
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.librewards.databinding.FragmentRewardsBinding
 import com.example.librewards.databinding.PopupLayoutBinding
 import com.example.librewards.models.Product
+import com.example.librewards.models.ProductEntry
+import com.example.librewards.repositories.UserRepository
+import com.example.librewards.utils.FragmentExtended
+import com.example.librewards.viewmodels.MainSharedViewModel
+import com.example.librewards.viewmodels.MainViewModelFactory
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.squareup.picasso.Picasso
-import androidx.core.graphics.drawable.toDrawable
-import com.example.librewards.models.ProductEntry
-import com.example.librewards.utils.FragmentExtended
 
 
-class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExtended(), RecyclerAdapter.OnProductListener {
+class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExtended(),
+    RecyclerAdapter.OnProductListener {
+    private lateinit var userRepo: UserRepository
+
+    private val mainSharedViewModel: MainSharedViewModel by activityViewModels {
+        MainViewModelFactory(userRepo)
+    }
     private lateinit var fh: FirebaseHandler
     private lateinit var mainActivity: MainActivity
     private lateinit var database: DatabaseReference
     private lateinit var productEntries: MutableList<ProductEntry>
     private var layoutManager: RecyclerView.LayoutManager? = null
     private var adapter: RecyclerView.Adapter<RecyclerAdapter.ViewHolder>? = null
-    private var listener: RewardsListener? = null
     private var counter: Int? = null
     private lateinit var productPopup: Dialog
 
     private var _binding: FragmentRewardsBinding? = null
     private val binding get() = _binding!!
-
-    //Interface that consists of a method that will update the points in "TimerFragment"
-    interface RewardsListener {
-        fun onPointsRewardsSent(points: Int)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +61,8 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
         savedInstanceState: Bundle?
     ): View {
         mainActivity = activity as MainActivity
+        database = FirebaseDatabase.getInstance().reference
+        userRepo = UserRepository(database)
         _binding = FragmentRewardsBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -70,10 +75,13 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
         productEntries = mutableListOf()
         adapter = RecyclerAdapter(productEntries, this)
         binding.rewardsRecycler.adapter = adapter
-        database = FirebaseDatabase.getInstance().reference
+        mainSharedViewModel.updatedUser.observe(viewLifecycleOwner) { user ->
+            binding.rewardsPoints.text = user.points
+        }
+        val productDb = FirebaseDatabase.getInstance().reference
             .child("products")
             .child(mainActivity.university)
-        database.addValueEventListener(object : ValueEventListener {
+        productDb.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 productEntries.clear()
                 for (dataSnapshot in snapshot.children) {
@@ -97,7 +105,9 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
 
     private fun calculatePointsFromPurchase(position: Int) {
         val pointsInt =
-            Integer.parseInt(binding.rewardsPoints.text.toString()) - Integer.parseInt(productEntries[position].product.productCost)
+            Integer.parseInt(binding.rewardsPoints.text.toString()) - Integer.parseInt(
+                productEntries[position].product.productCost
+            )
 
         if (pointsInt > 0) {
             binding.rewardsPoints.text = pointsInt.toString()
@@ -188,7 +198,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
                 val finalPoints = Integer.parseInt(dbPoints) - minusValue
                 refChild.setValue(finalPoints.toString())
                 binding.rewardsPoints.text = finalPoints.toString()
-                listener?.onPointsRewardsSent(finalPoints)
+                mainSharedViewModel.updatePoints(finalPoints.toString())
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -197,28 +207,6 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
             }
         }
         refChild.addListenerForSingleValueEvent(pointsListener)
-    }
-
-    //Method that is used between fragments to update each other's points
-    fun updatedPoints(newPoints: Int) {
-        if (view == null) {
-            return
-        }
-        binding.rewardsPoints.text = newPoints.toString()
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        listener = if (context is RewardsListener) {
-            context
-        } else {
-            throw RuntimeException(context.toString() + "must implement TimerListener")
-        }
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
     }
 
     companion object {

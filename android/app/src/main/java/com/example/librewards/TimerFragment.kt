@@ -16,8 +16,15 @@ import android.view.ViewGroup
 import android.widget.Chronometer.OnChronometerTickListener
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.core.graphics.toColorInt
+import androidx.fragment.app.activityViewModels
 import com.example.librewards.databinding.FragmentTimerBinding
 import com.example.librewards.qrcode.QRCodeGenerator
+import com.example.librewards.repositories.UserRepository
+import com.example.librewards.utils.FragmentExtended
+import com.example.librewards.utils.showPopup
+import com.example.librewards.viewmodels.MainSharedViewModel
+import com.example.librewards.viewmodels.MainViewModelFactory
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -33,21 +40,22 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
-import androidx.core.graphics.toColorInt
-import com.example.librewards.utils.FragmentExtended
-import com.example.librewards.utils.showPopup
 
 
 class TimerFragment(
-                    override val icon: Int = R.drawable.timer
+    override val icon: Int = R.drawable.timer
 ) : FragmentExtended(), OnMapReadyCallback {
+    private lateinit var userRepo: UserRepository
+
+    private val mainSharedViewModel: MainSharedViewModel by activityViewModels {
+        MainViewModelFactory(userRepo)
+    }
     private lateinit var markerOptions: MarkerOptions
     private var marker: Marker? = null
     private lateinit var latLngLocTwo: LatLng
     private lateinit var latLngLocOne: LatLng
     private lateinit var circle: Circle
     private var totalTime: Long? = null
-    var listener: TimerListener? = null
     private lateinit var fh: FirebaseHandler
     private lateinit var mainActivity: MainActivity
     private lateinit var adminActivity: AdminActivity
@@ -62,11 +70,6 @@ class TimerFragment(
     private lateinit var circleOptions: CircleOptions
     private var _binding: FragmentTimerBinding? = null
     private val binding get() = _binding!!
-
-    //Interface that consists of a method that will update the points in "RewardsFragment"
-    interface TimerListener {
-        fun onPointsTimerSent(points: Int)
-    }
 
     companion object {
         private const val PERMISSION_ID = 1010
@@ -86,8 +89,9 @@ class TimerFragment(
         // Inflate the layout for this fragment
         mainActivity = activity as MainActivity
         adminActivity = AdminActivity()
-        fh = FirebaseHandler()
         database = FirebaseDatabase.getInstance().reference
+        userRepo = UserRepository(database)
+        fh = FirebaseHandler()
 
         _binding = FragmentTimerBinding.inflate(inflater, container, false)
         return binding.root
@@ -103,7 +107,9 @@ class TimerFragment(
         val qrGen = QRCodeGenerator()
         binding.qrCode.setImageBitmap(qrGen.createQR(hashFunction(mainActivity.email), 400, 400))
         binding.qrCodeNumber.text = hashFunction(mainActivity.email)
-
+        mainSharedViewModel.updatedUser.observe(viewLifecycleOwner) { user ->
+            binding.usersPoints.text = user.points
+        }
         val touchableList: ArrayList<View?> = mainActivity.tabLayout.touchables
         binding.slidingPanel.addPanelSlideListener(object :
             SlidingUpPanelLayout.PanelSlideListener {
@@ -134,12 +140,6 @@ class TimerFragment(
             }
 
         })
-
-    }
-
-    override fun onStart() {
-        super.onStart()
-        addPointsListener(0)
     }
 
     private fun getLocationDistance() {
@@ -250,7 +250,10 @@ class TimerFragment(
                         if (SystemClock.elapsedRealtime() - binding.stopwatch.base >= 800000) {
                             binding.stopwatch.base = SystemClock.elapsedRealtime()
                             binding.stopwatch.stop()
-                            showPopup(requireActivity(),"No stop code was entered for 24 hours. The timer has been reset")
+                            showPopup(
+                                requireActivity(),
+                                "No stop code was entered for 24 hours. The timer has been reset"
+                            )
                         }
                         if (distance != null && distance!! > 50) {
                             binding.stopwatch.base = SystemClock.elapsedRealtime()
@@ -266,8 +269,6 @@ class TimerFragment(
                     binding.stopwatch.stop()
                     googleMap?.stopAnimation()
                     googleMap?.clear()
-                    //Listener to communicate with Rewards Fragment and give the points to display in there
-                    listener?.onPointsTimerSent(Integer.parseInt(binding.usersPoints.text.toString()))
                     refChild.setValue("2")
                 }
 
@@ -290,9 +291,8 @@ class TimerFragment(
                 dbPoints = dataSnapshot.value.toString()
                 if (dbPoints != "null") {
                     finalPoints = Integer.parseInt(dbPoints) + addValue
-                    refChild.setValue(finalPoints.toString())
                     binding.usersPoints.text = finalPoints.toString()
-                    listener?.onPointsTimerSent(finalPoints)
+                    mainSharedViewModel.updatePoints(finalPoints.toString())
                 }
             }
 
@@ -324,28 +324,16 @@ class TimerFragment(
         val newPoints = pointsEarned + Integer.parseInt(binding.usersPoints.text.toString())
 
         if (minutes == 1) {
-            showPopup(requireActivity(),"Well done, you spent $minutes minute at the library and have earned $pointsEarned points! Your new points balance is: $newPoints")
+            showPopup(
+                requireActivity(),
+                "Well done, you spent $minutes minute at the library and have earned $pointsEarned points! Your new points balance is: $newPoints"
+            )
         } else {
-            showPopup(requireActivity(),"Well done, you spent $minutes minutes at the library and have earned $pointsEarned points! Your new points balance is:  $newPoints")
+            showPopup(
+                requireActivity(),
+                "Well done, you spent $minutes minutes at the library and have earned $pointsEarned points! Your new points balance is:  $newPoints"
+            )
         }
-    }
-
-    fun updatePoints(newPoints: Int) {
-        binding.usersPoints.text = newPoints.toString()
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        listener = if (context is TimerListener) {
-            context
-        } else {
-            throw RuntimeException(context.toString() + "must implement TimerListener")
-        }
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
     }
 
     override fun onMapReady(p0: GoogleMap) {

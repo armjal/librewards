@@ -8,4 +8,15 @@ data class User(
     var studying: String = "2",
     var redeemingReward: String = "2",
     var points: String = "0"
-)
+){
+    fun toMap(): Map<String, Any> {
+        return mapOf(
+            "firstname" to firstname,
+            "surname" to surname,
+            "email" to email,
+            "university" to university,
+            "studying" to studying,
+            "redeemingReward" to redeemingReward,
+            "points" to points)
+    }
+}

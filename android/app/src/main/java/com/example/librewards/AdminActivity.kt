@@ -4,13 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.toDrawable
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
 import com.example.librewards.adapters.ViewPagerAdapter
 import com.example.librewards.databinding.ActivityAdminBinding
-import com.example.librewards.utils.FragmentExtended
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -35,7 +30,7 @@ class AdminActivity : AppCompatActivity() {
 
         val viewPagerAdapter = ViewPagerAdapter(this)
         binding.adminViewPager.adapter = viewPagerAdapter
-        val fragments = listOf(AdminHomeFragment(), AdminRewardsFragment());
+        val fragments = listOf(AdminHomeFragment(), AdminRewardsFragment())
         viewPagerAdapter.addFragments(fragments)
         TabLayoutMediator(binding.adminTabLayout, binding.adminViewPager) { tab, position ->
             tab.icon = ContextCompat.getDrawable(this, fragments[position].icon)

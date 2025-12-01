@@ -3,13 +3,15 @@ package com.example.librewards
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.example.librewards.RewardsFragment.RewardsListener
-import com.example.librewards.TimerFragment.TimerListener
 import com.example.librewards.adapters.ViewPagerAdapter
 import com.example.librewards.databinding.ActivityMainBinding
 import com.example.librewards.databinding.PopupLayoutBinding
+import com.example.librewards.repositories.UserRepository
+import com.example.librewards.viewmodels.MainSharedViewModel
+import com.example.librewards.viewmodels.MainViewModelFactory
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -20,7 +22,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.squareup.picasso.Picasso
 
-class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
+class MainActivity : AppCompatActivity() {
     private lateinit var timerFragment: TimerFragment
     private lateinit var rewardsFragment: RewardsFragment
     lateinit var email: String
@@ -58,7 +60,9 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
         Picasso.get().load(photoURL).into(binding.profileImage)
 
         "$firstName $lastName".also { binding.username.text = it }
-
+        val mainSharedViewModel: MainSharedViewModel by viewModels {
+            MainViewModelFactory(UserRepository(database))
+        }
         val viewPagerAdapter = ViewPagerAdapter(this)
         binding.viewPager.adapter = viewPagerAdapter
         val fragments = listOf(timerFragment, rewardsFragment)
@@ -70,6 +74,7 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
         binding.profileImage.setOnClickListener {
             logoutApp()
         }
+        mainSharedViewModel.getUser(email)
     }
 
     override fun onDestroy() {
@@ -98,15 +103,5 @@ class MainActivity : AppCompatActivity(), TimerListener, RewardsListener {
             startActivity(intent)
             finish()
         }
-    }
-
-    //Using the interface in both fragments, the main activity is able to facilitate communication between the two fragments. Here, it sets the points in each fragment each time
-    //it's updated
-    override fun onPointsRewardsSent(points: Int) {
-        timerFragment.updatePoints(points)
-    }
-
-    override fun onPointsTimerSent(points: Int) {
-        rewardsFragment.updatedPoints(points)
     }
 }

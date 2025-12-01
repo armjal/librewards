@@ -20,14 +20,12 @@ import com.google.firebase.database.database
 class Login : AppCompatActivity() {
     private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
-    private lateinit var fh: FirebaseHandler
     private lateinit var binding: ActivityLoginBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        fh = FirebaseHandler()
         auth = Firebase.auth
 
         database = Firebase.database.reference
