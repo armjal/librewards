@@ -11,6 +11,12 @@ class MainViewModel(val userRepo: UserRepository): ViewModel() {
     private var _updatedUser = MutableLiveData<User>()
     val updatedUser: LiveData<User> get() = _updatedUser
 
+    fun updatePoints(points: String){
+        val user = _updatedUser.value
+        user?.points = points
+        userRepo.updateUser(user!!)
+    }
+
     fun getUser(email: String){
         userRepo.getUser(email).addOnSuccessListener {
             _updatedUser.value = it?.getValue(User::class.java)

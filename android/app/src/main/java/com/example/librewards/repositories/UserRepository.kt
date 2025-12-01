@@ -16,4 +16,9 @@ class UserRepository(val database: DatabaseReference) {
         val id = hashFunction(email)
         return database.child("users").child(id).get()
     }
+
+    fun updateUser(user: User): Task<Void?> {
+        val id = hashFunction(user.email)
+        return database.child("users").child(id).updateChildren(user.toMap())
+    }
 }

@@ -269,7 +269,6 @@ class TimerFragment(
                     binding.stopwatch.stop()
                     googleMap?.stopAnimation()
                     googleMap?.clear()
-                    //Listener to communicate with Rewards Fragment and give the points to display in there
                     refChild.setValue("2")
                 }
 
@@ -292,8 +291,8 @@ class TimerFragment(
                 dbPoints = dataSnapshot.value.toString()
                 if (dbPoints != "null") {
                     finalPoints = Integer.parseInt(dbPoints) + addValue
-                    refChild.setValue(finalPoints.toString())
                     binding.usersPoints.text = finalPoints.toString()
+                    mainViewModel.updatePoints(finalPoints.toString())
                 }
             }
 
