@@ -3,10 +3,10 @@ package com.example.librewards
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.librewards.databinding.ActivityLoginBinding
 import com.example.librewards.models.User
+import com.example.librewards.utils.toastMessage
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -21,6 +21,10 @@ class Login : AppCompatActivity() {
     private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
     private lateinit var binding: ActivityLoginBinding
+
+    companion object {
+        val TAG: String = Login::class.java.simpleName
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,11 +41,7 @@ class Login : AppCompatActivity() {
 
         binding.loginButton.setOnClickListener {
             if (binding.loginEmail.text.toString() == "" || binding.loginPassword.text.toString() == "") {
-                Toast.makeText(
-                    baseContext,
-                    "Please ensure all fields are correctly filled out.",
-                    Toast.LENGTH_SHORT
-                ).show()
+                toastMessage(this, "Please ensure all fields are correctly filled out.")
             } else {
                 signIn()
             }
@@ -65,7 +65,6 @@ class Login : AppCompatActivity() {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // Failed to read value
                 Log.w(TAG, "Failed to read value.", error.toException())
             }
         })
@@ -74,10 +73,6 @@ class Login : AppCompatActivity() {
     public override fun onStart() {
         super.onStart()
         openUserApp()
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
     }
 
     private fun signIn() {
@@ -93,15 +88,12 @@ class Login : AppCompatActivity() {
                 } else {
                     // If sign in fails, display a message to the user.
                     Log.w(TAG, "signInWithEmail:failure", task.exception)
-                    Toast.makeText(
-                        baseContext, "Authentication failed.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    toastMessage(this, "Authentication failed.")
                 }
             }
     }
 
-    private fun openUserApp(){
+    private fun openUserApp() {
         auth.currentUser?.getIdToken(true)?.addOnSuccessListener {
             val isAdmin = it.claims["admin"]
             if (isAdmin == true) {
@@ -111,9 +103,4 @@ class Login : AppCompatActivity() {
             }
         }
     }
-
-    companion object {
-        val TAG: String = Login::class.java.simpleName
-    }
-
 }

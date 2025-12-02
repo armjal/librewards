@@ -6,20 +6,18 @@ import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.librewards.databinding.ActivityRegisterBinding
 import com.example.librewards.models.User
 import com.example.librewards.repositories.UserRepository
 import com.example.librewards.resources.universities
+import com.example.librewards.utils.toastMessage
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 
 class Register : AppCompatActivity() {
-    private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
     private lateinit var uniSelected: String
     private var spinnerPos: Int? = null
@@ -31,9 +29,8 @@ class Register : AppCompatActivity() {
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
         auth = Firebase.auth
-        database = FirebaseDatabase.getInstance().reference
+        val database = FirebaseDatabase.getInstance().reference
         userRepo = UserRepository(database)
-        //storeUniversities()
 
         binding.backToLogin.setOnClickListener {
             val intent = Intent(this, Login::class.java)
@@ -56,15 +53,8 @@ class Register : AppCompatActivity() {
                     if (position == 0) {
                         Log.d(TAG, "First element in spinner")
                     } else {
-                        // On selecting a spinner item
                         uniSelected = parent?.getItemAtPosition(position).toString()
-
-                        // Showing selected spinner item
-                        Toast.makeText(
-                            parent?.context, "You selected: $uniSelected",
-                            Toast.LENGTH_LONG
-                        ).show()
-
+                        toastMessage(this@Register, "You selected: $uniSelected")
                     }
                 }
             }
@@ -73,11 +63,7 @@ class Register : AppCompatActivity() {
 
         binding.registerHereButton.setOnClickListener {
             if (binding.registrationEmail.text.toString() == "" || binding.registrationPassword.text.toString() == "" || binding.registrationFirstName.text.toString() == "" || binding.registrationLastName.text.toString() == "" || spinnerPos == 0) {
-                Toast.makeText(
-                    baseContext,
-                    "Please ensure all fields are correctly filled out.",
-                    Toast.LENGTH_SHORT
-                ).show()
+                toastMessage(this, "Please ensure all fields are correctly filled out.")
             } else {
                 signUp()
             }
@@ -108,10 +94,7 @@ class Register : AppCompatActivity() {
                     // If sign in fails, display a message to the user.
                     Log.w(TAG, "createUserWithEmail:failure", task.exception)
 
-                    Toast.makeText(
-                        baseContext, "Authentication failed.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    toastMessage(this, "Authentication failed.")
                 }
             }
     }

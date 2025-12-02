@@ -7,24 +7,22 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.setMargins
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.librewards.databinding.FragmentRewardsBinding
 import com.example.librewards.databinding.PopupLayoutBinding
 import com.example.librewards.models.Product
 import com.example.librewards.models.ProductEntry
 import com.example.librewards.repositories.UserRepository
 import com.example.librewards.utils.FragmentExtended
+import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.MainSharedViewModel
 import com.example.librewards.viewmodels.MainViewModelFactory
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.squareup.picasso.Picasso
@@ -39,29 +37,18 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
     }
     private lateinit var fh: FirebaseHandler
     private lateinit var mainActivity: MainActivity
-    private lateinit var database: DatabaseReference
     private lateinit var productEntries: MutableList<ProductEntry>
-    private var layoutManager: RecyclerView.LayoutManager? = null
-    private var adapter: RecyclerView.Adapter<RecyclerAdapter.ViewHolder>? = null
-    private var counter: Int? = null
     private lateinit var productPopup: Dialog
 
     private var _binding: FragmentRewardsBinding? = null
     private val binding get() = _binding!!
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        if (arguments != null) {
-            counter = requireArguments().getInt("param2")
-        }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         mainActivity = activity as MainActivity
-        database = FirebaseDatabase.getInstance().reference
+        val database = FirebaseDatabase.getInstance().reference
         userRepo = UserRepository(database)
         _binding = FragmentRewardsBinding.inflate(inflater, container, false)
         return binding.root
@@ -69,11 +56,11 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        layoutManager = LinearLayoutManager(context)
+        val layoutManager = LinearLayoutManager(context)
         "See rewards from ${mainActivity.university}".also { binding.rewardsText.text = it }
         binding.rewardsRecycler.layoutManager = layoutManager
         productEntries = mutableListOf()
-        adapter = RecyclerAdapter(productEntries, this)
+        val adapter = RecyclerAdapter(productEntries, this)
         binding.rewardsRecycler.adapter = adapter
         mainSharedViewModel.updatedUser.observe(viewLifecycleOwner) { user ->
             binding.rewardsPoints.text = user.points
@@ -90,7 +77,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
                     productEntry.product = dataSnapshot.getValue(Product::class.java)!!
                     productEntries.add(productEntry)
                 }
-                (adapter as RecyclerAdapter).notifyDataSetChanged()
+                adapter.notifyDataSetChanged()
             }
 
             override fun onCancelled(error: DatabaseError) {}
@@ -113,7 +100,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
             binding.rewardsPoints.text = pointsInt.toString()
             minusPointsListener(Integer.parseInt(productEntries[position].product.productCost))
         } else {
-            toastMessage("You do not have sufficient points for this purchase")
+            toastMessage(requireActivity(), "You do not have sufficient points for this purchase")
         }
 
     }
@@ -182,11 +169,6 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
         productPopup.setOnDismissListener { redeemRef.removeEventListener(redeemListener) }
         productPopup.show()
 
-    }
-
-    //Method creating a custom Toast message
-    private fun toastMessage(message: String) {
-        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
 
     private fun minusPointsListener(minusValue: Int) {

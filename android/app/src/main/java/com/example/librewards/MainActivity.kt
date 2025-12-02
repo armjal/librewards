@@ -8,7 +8,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.example.librewards.adapters.ViewPagerAdapter
 import com.example.librewards.databinding.ActivityMainBinding
-import com.example.librewards.databinding.PopupLayoutBinding
 import com.example.librewards.repositories.UserRepository
 import com.example.librewards.viewmodels.MainSharedViewModel
 import com.example.librewards.viewmodels.MainViewModelFactory
@@ -18,21 +17,15 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.auth
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.squareup.picasso.Picasso
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var timerFragment: TimerFragment
-    private lateinit var rewardsFragment: RewardsFragment
     lateinit var email: String
     lateinit var firstName: String
     lateinit var lastName: String
     lateinit var photoURL: String
     lateinit var university: String
-    private lateinit var database: DatabaseReference
-    private lateinit var fh: FirebaseHandler
-    private var popupLayoutBinding: PopupLayoutBinding? = null
     private var _binding: ActivityMainBinding? = null
     private val binding get() = _binding!!
 
@@ -49,10 +42,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         FirebaseApp.initializeApp(this)
 
-        timerFragment = TimerFragment()
-        rewardsFragment = RewardsFragment()
-        fh = FirebaseHandler()
-        database = FirebaseDatabase.getInstance().reference
+        val timerFragment = TimerFragment()
+        val rewardsFragment = RewardsFragment()
+        val database = FirebaseDatabase.getInstance().reference
 
 
         initialiseVariables()
@@ -80,7 +72,6 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
-        popupLayoutBinding = null
     }
 
     private fun initialiseVariables() {
