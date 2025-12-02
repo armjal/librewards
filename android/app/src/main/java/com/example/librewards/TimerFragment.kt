@@ -39,7 +39,6 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
@@ -49,24 +48,18 @@ class TimerFragment(
     override val icon: Int = R.drawable.timer
 ) : FragmentExtended(), OnMapReadyCallback {
     private lateinit var userRepo: UserRepository
-
     private val mainSharedViewModel: MainSharedViewModel by activityViewModels {
         MainViewModelFactory(userRepo)
     }
-    private lateinit var markerOptions: MarkerOptions
     private var marker: Marker? = null
     private lateinit var latLngLocTwo: LatLng
     private lateinit var latLngLocOne: LatLng
     private lateinit var circle: Circle
-    private var totalTime: Long? = null
     private lateinit var fh: FirebaseHandler
     private lateinit var mainActivity: MainActivity
-    private lateinit var adminActivity: AdminActivity
     private lateinit var locationOne: Location
     private lateinit var locationTwo: Location
     private var pointsListener: ValueEventListener? = null
-    private lateinit var database: DatabaseReference
-    private var counter: Int? = null
     private var distance: Float? = null
     lateinit var mapFragment: SupportMapFragment
     private var googleMap: GoogleMap? = null
@@ -79,20 +72,12 @@ class TimerFragment(
         private val TAG: String = TimerFragment::class.java.simpleName
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        if (arguments != null) {
-            counter = requireArguments().getInt("param1")
-        }
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         // Inflate the layout for this fragment
         mainActivity = activity as MainActivity
-        adminActivity = AdminActivity()
-        database = FirebaseDatabase.getInstance().reference
+        val database = FirebaseDatabase.getInstance().reference
         userRepo = UserRepository(database)
         fh = FirebaseHandler()
 
@@ -270,8 +255,8 @@ class TimerFragment(
                     }
 
                 } else if (isStudying == "0") {
-                    totalTime = SystemClock.elapsedRealtime() - binding.stopwatch.base
-                    setPointsFromTime(totalTime!!)
+                    val totalTime = SystemClock.elapsedRealtime() - binding.stopwatch.base
+                    setPointsFromTime(totalTime)
                     binding.stopwatch.base = SystemClock.elapsedRealtime()
                     binding.stopwatch.stop()
                     googleMap?.stopAnimation()
@@ -346,7 +331,7 @@ class TimerFragment(
         if (lastKnownLocation != null) {
             locationOne = lastKnownLocation // The crucial initialization
             latLngLocOne = LatLng(locationOne.latitude, locationOne.longitude)
-            markerOptions = MarkerOptions().position(latLngLocOne).title("I am here.")
+            val markerOptions = MarkerOptions().position(latLngLocOne).title("I am here.")
             p0.animateCamera(CameraUpdateFactory.newLatLng(latLngLocOne))
             p0.animateCamera(CameraUpdateFactory.newLatLngZoom(latLngLocOne, 17F))
             marker = p0.addMarker(markerOptions)!!
