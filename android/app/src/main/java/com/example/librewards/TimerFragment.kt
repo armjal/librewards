@@ -66,7 +66,6 @@ class TimerFragment(
     private var distance: Float? = null
     lateinit var mapFragment: SupportMapFragment
     private var googleMap: GoogleMap? = null
-    private lateinit var circleOptions: CircleOptions
     private var _binding: FragmentTimerBinding? = null
     private val binding get() = _binding!!
     private val locationPermissionsLauncher = registerLocationPermissionLauncher()
@@ -90,7 +89,8 @@ class TimerFragment(
         mapFragment = childFragmentManager.findFragmentById(R.id.googleMap) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        addTimerEventListener()
+        handleStudyingChanges()
+        handleStopwatchChanges()
         val qrGen = QRCodeGenerator()
         binding.qrCode.setImageBitmap(qrGen.createQR(hashFunction(mainActivity.email), 400, 400))
         binding.qrCodeNumber.text = hashFunction(mainActivity.email)
@@ -169,38 +169,29 @@ class TimerFragment(
 
     private fun drawCircle(point: LatLng, googleMap: GoogleMap) {
         // Instantiating CircleOptions to draw a circle around the marker
-        circleOptions = CircleOptions()
-        // Specifying the center of the circle
-        circleOptions.center(point)
-        // Radius of the circle
-        circleOptions.radius(50.0)
-        // Border color of the circle
-        circleOptions.strokeColor(Color.BLACK)
-        // Fill color of the circle
-        circleOptions.fillColor("#4d318ce7".toColorInt())
-        // Border width of the circle
-        circleOptions.strokeWidth(2f)
-        // Adding the circle to the GoogleMap
-        circle = googleMap.addCircle(circleOptions)
+        CircleOptions().let {
+            it.center(point)
+            it.radius(50.0)
+            it.strokeColor(Color.BLACK)
+            it.fillColor("#4d318ce7".toColorInt())
+            it.strokeWidth(2f)
+            circle = googleMap.addCircle(it)
+        }
     }
 
     private fun checkLocationServicesPermissions(): Boolean {
         //check if location permissions have been granted by user
         return ActivityCompat.checkSelfPermission(
-            mainActivity,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED ||
-                ActivityCompat.checkSelfPermission(
-                    mainActivity,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
+            mainActivity, Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
+            mainActivity, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
 
     }
 
     private fun requestLocationServicesPermissions() {
         val permissionsToRequest = arrayOf(
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION
         )
         locationPermissionsLauncher.launch(permissionsToRequest)
     }
@@ -209,8 +200,10 @@ class TimerFragment(
         return registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions ->
-            if (permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
-                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
+            if (permissions.getOrDefault(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    false
+                ) || permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
             ) {
                 Log.d(TAG, "Location permission granted.")
                 if (googleMap != null) {
@@ -225,55 +218,57 @@ class TimerFragment(
         }
     }
 
-    private fun addTimerEventListener() {
+    private fun handleStudyingChanges() {
         mainSharedViewModel.updatedUser.observe(viewLifecycleOwner) { user ->
-            if (user?.studying == "1") {
-                stopwatchViewModel.start()
-
-            } else if (user?.studying == "0") {
-                stopwatchViewModel.stop()
+            when (user?.studying) {
+                "0" -> stopwatchViewModel.stop()
+                "1" -> stopwatchViewModel.start()
             }
         }
+    }
+
+    private fun handleStopwatchChanges() {
         stopwatchViewModel.state.observe(viewLifecycleOwner) { state ->
             when (state) {
                 StopwatchState.Started -> {
                     binding.stopwatch.base = SystemClock.elapsedRealtime()
                     binding.stopwatch.start()
-                    getLocationDistance()
-                    binding.stopwatch.onChronometerTickListener = OnChronometerTickListener {
-                        //Checks if the stopwatch has gone over 24 hours. If so, the stopwatch resets back to its original state
-                        if (SystemClock.elapsedRealtime() - binding.stopwatch.base >= 800000) {
-                            binding.stopwatch.base = SystemClock.elapsedRealtime()
-                            binding.stopwatch.stop()
-                            showPopup(
-                                requireActivity(),
-                                getString(R.string.no_stop_code_entered)
-                            )
-                        }
-                        if (distance != null && distance!! > 50) {
-                            binding.stopwatch.base = SystemClock.elapsedRealtime()
-                            binding.stopwatch.stop()
-                            timerViewModel.updateStudying(
-                                mainSharedViewModel.updatedUser.value!!,
-                                "2"
-                            )
-                        }
-                    }
+                    validateUserWithinTimerBoundaries()
                 }
 
                 StopwatchState.Stopped -> {
-                    binding.stopwatch.stop()
                     setPointsFromTime(stopwatchViewModel.elapsedTime)
-                    binding.stopwatch.base = SystemClock.elapsedRealtime()
-                    googleMap?.stopAnimation()
-                    googleMap?.clear()
+                    resetTimerState()
                     timerViewModel.updateStudying(mainSharedViewModel.updatedUser.value!!, "2")
                 }
 
                 else -> {
-                    binding.stopwatch.base = SystemClock.elapsedRealtime()
-                    binding.stopwatch.stop()
+                    resetTimerState()
                 }
+            }
+        }
+    }
+
+    fun resetTimerState() {
+        binding.stopwatch.stop()
+        binding.stopwatch.base = SystemClock.elapsedRealtime()
+        googleMap?.stopAnimation()
+        googleMap?.clear()
+    }
+
+    fun validateUserWithinTimerBoundaries() {
+        getLocationDistance()
+        binding.stopwatch.onChronometerTickListener = OnChronometerTickListener {
+            //Checks if the stopwatch has gone over 24 hours. If so, the stopwatch resets back to its original state
+            if (SystemClock.elapsedRealtime() - binding.stopwatch.base >= 800000) {
+                resetTimerState()
+                showPopup(
+                    requireActivity(), getString(R.string.no_stop_code_entered)
+                )
+            }
+            if (distance != null && distance!! > 50) {
+                resetTimerState()
+                timerViewModel.updateStudying(mainSharedViewModel.updatedUser.value!!, "2")
             }
         }
     }
@@ -305,10 +300,8 @@ class TimerFragment(
             requestLocationServicesPermissions()
             return
         }
-        val locManager =
-            mainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val lastKnownLocation =
-            locManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+        val locManager = mainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val lastKnownLocation = locManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
         if (lastKnownLocation != null) {
             locationOne = lastKnownLocation // The crucial initialization
             latLngLocOne = LatLng(locationOne.latitude, locationOne.longitude)
