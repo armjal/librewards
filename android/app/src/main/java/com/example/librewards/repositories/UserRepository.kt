@@ -16,6 +16,7 @@ class UserRepository(val database: DatabaseReference) {
     companion object {
         val TAG: String = UserRepository::class.java.simpleName
     }
+
     fun addUser(user: User): Task<Void?> {
         val id = hashFunction(user.email)
         return database.child("users").child(id).setValue(user)

@@ -16,12 +16,11 @@ class AdminActivity : AppCompatActivity() {
     private lateinit var lastName: String
     lateinit var university: String
 
-
     private lateinit var binding: ActivityAdminBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //Sets the layout to the XML file associated with it
+        // Sets the layout to the XML file associated with it
         binding = ActivityAdminBinding.inflate(layoutInflater)
         setContentView(binding.root)
         initialiseVariables()

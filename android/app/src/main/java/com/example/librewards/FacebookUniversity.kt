@@ -40,7 +40,7 @@ class FacebookUniversity : AppCompatActivity() {
                     parent: AdapterView<*>?,
                     view: View?,
                     position: Int,
-                    id: Long
+                    id: Long,
                 ) {
                     spinnerPos = position
                     if (position == 0) {
@@ -52,9 +52,8 @@ class FacebookUniversity : AppCompatActivity() {
                         // Showing selected spinner item
                         Toast.makeText(
                             parent?.context, "You selected: $uniSelected",
-                            Toast.LENGTH_LONG
+                            Toast.LENGTH_LONG,
                         ).show()
-
                     }
                 }
             }
@@ -81,7 +80,7 @@ class FacebookUniversity : AppCompatActivity() {
                 Toast.makeText(
                     baseContext,
                     "Please ensure you have selected a University",
-                    Toast.LENGTH_SHORT
+                    Toast.LENGTH_SHORT,
                 ).show()
             }
         }
@@ -94,7 +93,7 @@ class FacebookUniversity : AppCompatActivity() {
         // Creating adapter for spinner
         val dataAdapter = ArrayAdapter(
             this,
-            android.R.layout.simple_spinner_item, universities
+            android.R.layout.simple_spinner_item, universities,
         )
 
         // Drop down layout style - list view with radio button
@@ -103,5 +102,4 @@ class FacebookUniversity : AppCompatActivity() {
         // attaching data adapter to spinner
         binding.fbUniversitySpinner.adapter = dataAdapter
     }
-
 }

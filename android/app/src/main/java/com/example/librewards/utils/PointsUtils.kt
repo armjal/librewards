@@ -2,7 +2,6 @@ package com.example.librewards.utils
 
 import kotlin.ranges.contains
 
-
 fun calculatePointsFromTime(totalTime: Long): Int {
     val pointsEarned: Int = when (totalTime) {
         in 0..10000 -> 0

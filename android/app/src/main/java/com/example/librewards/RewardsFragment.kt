@@ -27,8 +27,8 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.squareup.picasso.Picasso
 
-
-class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExtended(),
+class RewardsFragment(override val icon: Int = R.drawable.reward) :
+    FragmentExtended(),
     RecyclerAdapter.OnProductListener {
     private lateinit var userRepo: UserRepository
 
@@ -45,7 +45,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         mainActivity = activity as MainActivity
         val database = FirebaseDatabase.getInstance().reference
@@ -93,7 +93,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
     private fun calculatePointsFromPurchase(position: Int) {
         val pointsInt =
             Integer.parseInt(binding.rewardsPoints.text.toString()) - Integer.parseInt(
-                productEntries[position].product.productCost
+                productEntries[position].product.productCost,
             )
 
         if (pointsInt > 0) {
@@ -102,7 +102,6 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
         } else {
             toastMessage(requireActivity(), "You do not have sufficient points for this purchase")
         }
-
     }
 
     private fun showImagePopup(list: MutableList<ProductEntry>, position: Int) {
@@ -124,7 +123,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
                 30,
                 0,
                 0,
-                0
+                0,
             )
         }
 
@@ -141,7 +140,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
                 0,
                 0,
                 0,
-                50
+                50,
             )
         }
         Picasso.get().load(list[position].product.productImageUrl).into(popupBinding.popupImageView)
@@ -160,7 +159,6 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
             override fun onCancelled(error: DatabaseError) {
                 Log.e(TAG, "Could not access database")
             }
-
         })
 
         popupBinding.closeBtn.setOnClickListener {
@@ -168,7 +166,6 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
         }
         productPopup.setOnDismissListener { redeemRef.removeEventListener(redeemListener) }
         productPopup.show()
-
     }
 
     private fun minusPointsListener(minusValue: Int) {
@@ -198,5 +195,4 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
     override fun onProductClick(position: Int) {
         showImagePopup(productEntries, position)
     }
-
 }

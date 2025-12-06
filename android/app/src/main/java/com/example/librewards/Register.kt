@@ -47,7 +47,7 @@ class Register : AppCompatActivity() {
                     parent: AdapterView<*>?,
                     view: View?,
                     position: Int,
-                    id: Long
+                    id: Long,
                 ) {
                     spinnerPos = position
                     if (position == 0) {
@@ -62,19 +62,23 @@ class Register : AppCompatActivity() {
         loadSpinnerData()
 
         binding.registerHereButton.setOnClickListener {
-            if (binding.registrationEmail.text.toString() == "" || binding.registrationPassword.text.toString() == "" || binding.registrationFirstName.text.toString() == "" || binding.registrationLastName.text.toString() == "" || spinnerPos == 0) {
+            if (binding.registrationEmail.text.toString() == "" ||
+                binding.registrationPassword.text.toString() == "" ||
+                binding.registrationFirstName.text.toString() == "" ||
+                binding.registrationLastName.text.toString() == "" ||
+                spinnerPos == 0
+            ) {
                 toastMessage(this, "Please ensure all fields are correctly filled out.")
             } else {
                 signUp()
             }
         }
-
     }
 
     private fun signUp() {
         auth.createUserWithEmailAndPassword(
             binding.registrationEmail.text.toString(),
-            binding.registrationPassword.text.toString()
+            binding.registrationPassword.text.toString(),
         )
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
@@ -82,14 +86,13 @@ class Register : AppCompatActivity() {
                         binding.registrationFirstName.text.toString(),
                         binding.registrationLastName.text.toString(),
                         binding.registrationEmail.text.toString(),
-                        uniSelected
+                        uniSelected,
                     )
                     userRepo.addUser(user)
                     // Sign in success, update UI with the signed-in user's information
                     Log.d(TAG, "createUserWithEmail:success")
                     val intent = Intent(this, Login::class.java)
                     startActivity(intent)
-
                 } else {
                     // If sign in fails, display a message to the user.
                     Log.w(TAG, "createUserWithEmail:failure", task.exception)
@@ -106,7 +109,7 @@ class Register : AppCompatActivity() {
         // Creating adapter for spinner
         val dataAdapter = ArrayAdapter(
             this,
-            R.layout.spinner_text, uniList
+            R.layout.spinner_text, uniList,
         )
         // Drop down layout style - list view with radio button
         dataAdapter

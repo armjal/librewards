@@ -16,7 +16,6 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
 
-
 class Login : AppCompatActivity() {
     private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
@@ -61,7 +60,6 @@ class Login : AppCompatActivity() {
                 intent.putExtra("university", user?.university)
                 startActivity(intent)
                 finish()
-
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -78,7 +76,7 @@ class Login : AppCompatActivity() {
     private fun signIn() {
         auth.signInWithEmailAndPassword(
             binding.loginEmail.text.toString(),
-            binding.loginPassword.text.toString()
+            binding.loginPassword.text.toString(),
         )
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {

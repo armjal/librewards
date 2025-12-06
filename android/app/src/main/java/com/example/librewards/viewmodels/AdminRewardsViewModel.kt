@@ -18,7 +18,7 @@ import java.util.UUID
 
 class AdminRewardsViewModel(
     val productRepo: ProductRepository,
-    val storageRepo: StorageRepository
+    val storageRepo: StorageRepository,
 ) : ViewModel() {
     val productEntries: LiveData<List<ProductEntry>> = productRepo.productEntriesLiveData
 
@@ -41,14 +41,12 @@ class AdminRewardsViewModel(
 
             productRepo.addProductToDb(productEntry).await()
             emit(UiEvent.Success("Product successfully added"))
-
         } catch (e: StorageException) {
             Log.e(TAG, "Failed to upload image: ${e.message}")
             emit(UiEvent.Failure("Failed to upload image"))
         } catch (e: DatabaseException) {
             Log.e(TAG, "Failed to add product to the database: ${e.message}")
             emit(UiEvent.Failure("Failed to add product to the database"))
-
         } catch (e: Exception) {
             Log.e(TAG, "Failed to add product: ${e.message}")
             emit(UiEvent.Failure("Failed to add product"))
@@ -64,7 +62,6 @@ class AdminRewardsViewModel(
         try {
             productRepo.updateProduct(productEntry).await()
             emit(UiEvent.Success("Product successfully updated"))
-
         } catch (e: Exception) {
             Log.e(TAG, "Failed to update product: ${e.message}")
             emit(UiEvent.Failure("Failed to update product"))
@@ -75,7 +72,6 @@ class AdminRewardsViewModel(
         try {
             productRepo.deleteProduct(productId).await()
             emit(UiEvent.Success("Product successfully deleted"))
-
         } catch (e: Exception) {
             Log.e(TAG, "Failed to delete product: ${e.message}")
             emit(UiEvent.Failure("Failed to delete product"))
@@ -87,21 +83,16 @@ class AdminRewardsViewModel(
     }
 }
 
-private fun generateProductId(): String {
-    return "PROD-" + UUID.randomUUID().toString()
-}
+private fun generateProductId(): String = "PROD-" + UUID.randomUUID().toString()
 
 class AdminRewardsViewModelFactory(
     private val productRepo: ProductRepository,
-    private val storageRepo: StorageRepository
+    private val storageRepo: StorageRepository,
 ) : ViewModelProvider.Factory {
-
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return if (modelClass.isAssignableFrom(AdminRewardsViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            AdminRewardsViewModel(productRepo, storageRepo) as T
-        } else {
-            throw IllegalArgumentException("ViewModel Not Found")
-        }
+    override fun <T : ViewModel> create(modelClass: Class<T>): T = if (modelClass.isAssignableFrom(AdminRewardsViewModel::class.java)) {
+        @Suppress("UNCHECKED_CAST")
+        AdminRewardsViewModel(productRepo, storageRepo) as T
+    } else {
+        throw IllegalArgumentException("ViewModel Not Found")
     }
 }

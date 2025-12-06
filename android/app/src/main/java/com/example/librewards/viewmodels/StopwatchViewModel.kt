@@ -7,7 +7,9 @@ import androidx.lifecycle.ViewModel
 
 sealed class StopwatchState {
     object Started : StopwatchState()
+
     object Stopped : StopwatchState()
+
     object Neutral : StopwatchState()
 }
 
@@ -16,6 +18,7 @@ class StopwatchViewModel : ViewModel() {
     var elapsedTime: Long = 0
     private var _state = MutableLiveData<StopwatchState>(StopwatchState.Neutral)
     val state: LiveData<StopwatchState> get() = _state
+
     fun start() {
         if (_state.value != StopwatchState.Started) {
             elapsedTime = 0
@@ -30,6 +33,5 @@ class StopwatchViewModel : ViewModel() {
             startTime = 0
             _state.value = StopwatchState.Stopped
         }
-
     }
 }

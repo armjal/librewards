@@ -43,22 +43,20 @@ class ProductRepository(val database: DatabaseReference) {
         return productRef.removeValue()
     }
 
-    private fun createProductsValueEventListener(): ValueEventListener {
-        return object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val productEntries = mutableListOf<ProductEntry>()
-                for (dataSnapshot in snapshot.children) {
-                    val productEntry = ProductEntry()
-                    productEntry.id = dataSnapshot.key!!
-                    productEntry.product = dataSnapshot.getValue(Product::class.java)!!
-                    productEntries.add(productEntry)
-                    _productEntriesLiveData.postValue(productEntries)
-                }
+    private fun createProductsValueEventListener(): ValueEventListener = object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            val productEntries = mutableListOf<ProductEntry>()
+            for (dataSnapshot in snapshot.children) {
+                val productEntry = ProductEntry()
+                productEntry.id = dataSnapshot.key!!
+                productEntry.product = dataSnapshot.getValue(Product::class.java)!!
+                productEntries.add(productEntry)
+                _productEntriesLiveData.postValue(productEntries)
             }
+        }
 
-            override fun onCancelled(error: DatabaseError) {
-                Log.e(TAG, "Database error: ${error.message}")
-            }
+        override fun onCancelled(error: DatabaseError) {
+            Log.e(TAG, "Database error: ${error.message}")
         }
     }
 

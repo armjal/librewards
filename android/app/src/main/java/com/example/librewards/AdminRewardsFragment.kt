@@ -4,7 +4,6 @@ import android.app.Dialog
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.ImageDecoder
-import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -15,7 +14,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.toDrawable
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -71,7 +69,7 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
         database = FirebaseDatabase.getInstance().reference.child("products")
             .child(adminActivity.university)
         storageReference = FirebaseStorage.getInstance().reference.child("products").child(
-            "${adminActivity.university}/images/"
+            "${adminActivity.university}/images/",
         )
 
         productRepo = ProductRepository(database)
@@ -80,7 +78,7 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = AdminFragmentRewardsBinding.inflate(inflater, container, false)
         return binding.root
@@ -200,7 +198,7 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
         showProgressBar()
         val product = Product(
             addProductBinding!!.productName.text.toString(),
-            addProductBinding!!.productCost.text.toString()
+            addProductBinding!!.productCost.text.toString(),
         )
         val imageFile =
             ImageFile(name = hashFunction(product.productName), uri = imageLocalFilePath)
@@ -208,7 +206,7 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
         addProduct(product, imageFile)
     }
 
-    private fun addProduct(product: Product, imageFile: ImageFile){
+    private fun addProduct(product: Product, imageFile: ImageFile) {
         lifecycleScope.launch {
             viewModel.addProductEntry(product, imageFile).collect {
                 when (it) {
@@ -227,6 +225,7 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
             }
         }
     }
+
     private fun showProgressBar() {
         addProductBinding?.uploadProgressBar?.visibility = View.VISIBLE
         addProductBinding?.uploadButton?.isEnabled = false
@@ -248,14 +247,14 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
         imageLocalFilePath = null
     }
 
-    private fun registerImagePickerLauncher(): ActivityResultLauncher<Intent?> {
-        return registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+    private fun registerImagePickerLauncher(): ActivityResultLauncher<Intent?> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == AppCompatActivity.RESULT_OK) {
                 imageLocalFilePath = it.data?.data
                 try {
                     val source = ImageDecoder.createSource(
                         requireActivity().contentResolver,
-                        imageLocalFilePath!!
+                        imageLocalFilePath!!,
                     )
                     val bitmap = ImageDecoder.decodeBitmap(source)
                     addProductBinding?.chosenImage?.let { img ->
@@ -268,7 +267,6 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
                 }
             }
         }
-    }
 
     companion object {
         private val TAG: String = AdminRewardsFragment::class.java.simpleName
@@ -277,6 +275,4 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
     override fun onProductClick(position: Int) {
         showManageProductPopup(productEntries, position)
     }
-
-
 }
