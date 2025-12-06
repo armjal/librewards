@@ -45,9 +45,8 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.database.FirebaseDatabase
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 
-
 class TimerFragment(
-    override val icon: Int = R.drawable.timer
+    override val icon: Int = R.drawable.timer,
 ) : FragmentExtended(), OnMapReadyCallback {
     private var userRepo = UserRepository(FirebaseDatabase.getInstance().reference)
     private val mainSharedViewModel: MainSharedViewModel by activityViewModels()
@@ -76,7 +75,7 @@ class TimerFragment(
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?,
     ): View {
         // Inflate the layout for this fragment
         mainActivity = activity as MainActivity
@@ -111,22 +110,19 @@ class TimerFragment(
                     mainActivity.profileImage.setOnClickListener(null)
                     touchableList[0]?.isEnabled = false
                     touchableList[1]?.isEnabled = false
-
                 } else {
                     mainActivity.profileImage.setOnClickListener { }
                     touchableList[0]?.isEnabled = true
                     touchableList[1]?.isEnabled = true
                 }
-
             }
 
             override fun onPanelStateChanged(
                 panel: View?,
                 previousState: SlidingUpPanelLayout.PanelState?,
-                newState: SlidingUpPanelLayout.PanelState?
+                newState: SlidingUpPanelLayout.PanelState?,
             ) {
             }
-
         })
     }
 
@@ -151,9 +147,7 @@ class TimerFragment(
                     circle.fillColor = "#4dff0000".toColorInt()
                 } else {
                     circle.fillColor = "#4d318ce7".toColorInt()
-
                 }
-
             }
 
             override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
@@ -165,7 +159,6 @@ class TimerFragment(
 
             override fun onProviderDisabled(provider: String) {
             }
-
         }
 
         locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0f, locListener)
@@ -184,40 +177,39 @@ class TimerFragment(
     }
 
     private fun checkLocationServicesPermissions(): Boolean {
-        //check if location permissions have been granted by user
+        // check if location permissions have been granted by user
         return ActivityCompat.checkSelfPermission(
-            mainActivity, Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
-            mainActivity, Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
+            mainActivity, Manifest.permission.ACCESS_COARSE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(
+                mainActivity, Manifest.permission.ACCESS_FINE_LOCATION,
+            ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestLocationServicesPermissions() {
         val permissionsToRequest = arrayOf(
-            Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION,
         )
         locationPermissionsLauncher.launch(permissionsToRequest)
     }
 
-    private fun registerLocationPermissionLauncher(): ActivityResultLauncher<Array<String>?> {
-        return registerForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions()
-        ) { permissions ->
-            if (permissions.getOrDefault(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    false
-                ) || permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
-            ) {
-                Log.d(TAG, "Location permission granted.")
-                if (googleMap != null) {
-                    onMapReady(googleMap!!)
-                } else {
-                    toastMessage(
-                        requireActivity(),
-                        "Location permission is required to use the timer feature."
-                    )
-                }
+    private fun registerLocationPermissionLauncher(): ActivityResultLauncher<Array<String>?> = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) { permissions ->
+        if (permissions.getOrDefault(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                false,
+            ) ||
+            permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
+        ) {
+            Log.d(TAG, "Location permission granted.")
+            if (googleMap != null) {
+                onMapReady(googleMap!!)
+            } else {
+                toastMessage(
+                    requireActivity(),
+                    "Location permission is required to use the timer feature.",
+                )
             }
         }
     }
@@ -263,11 +255,11 @@ class TimerFragment(
     fun validateUserWithinTimerBoundaries() {
         getLocationDistance()
         binding.stopwatch.onChronometerTickListener = OnChronometerTickListener {
-            //Checks if the stopwatch has gone over 24 hours. If so, the stopwatch resets back to its original state
+            // Checks if the stopwatch has gone over 24 hours. If so, the stopwatch resets back to its original state
             if (SystemClock.elapsedRealtime() - binding.stopwatch.base >= 800000) {
                 resetTimerState()
                 showPopup(
-                    requireActivity(), getString(R.string.no_stop_code_entered)
+                    requireActivity(), getString(R.string.no_stop_code_entered),
                 )
             }
             if (distance != null && distance!! > 50) {
@@ -288,12 +280,12 @@ class TimerFragment(
         if (minutes == 1) {
             showPopup(
                 requireActivity(),
-                getString(R.string.congrats_message, minutes, "minute", pointsEarned, newPoints)
+                getString(R.string.congrats_message, minutes, "minute", pointsEarned, newPoints),
             )
         } else {
             showPopup(
                 requireActivity(),
-                getString(R.string.congrats_message, minutes, "minutes", pointsEarned, newPoints)
+                getString(R.string.congrats_message, minutes, "minutes", pointsEarned, newPoints),
             )
         }
     }
@@ -318,7 +310,7 @@ class TimerFragment(
         } else {
             toastMessage(
                 requireActivity(),
-                "Could not determine location. Please ensure location services are enabled."
+                "Could not determine location. Please ensure location services are enabled.",
             )
         }
     }

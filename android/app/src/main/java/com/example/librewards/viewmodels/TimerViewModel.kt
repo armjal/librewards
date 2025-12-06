@@ -15,13 +15,10 @@ class TimerViewModel(val userRepo: UserRepository) : ViewModel() {
 class TimerViewModelFactory(
     private val userRepo: UserRepository,
 ) : ViewModelProvider.Factory {
-
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return if (modelClass.isAssignableFrom(TimerViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            TimerViewModel(userRepo) as T
-        } else {
-            throw IllegalArgumentException("ViewModel Not Found")
-        }
+    override fun <T : ViewModel> create(modelClass: Class<T>): T = if (modelClass.isAssignableFrom(TimerViewModel::class.java)) {
+        @Suppress("UNCHECKED_CAST")
+        TimerViewModel(userRepo) as T
+    } else {
+        throw IllegalArgumentException("ViewModel Not Found")
     }
 }

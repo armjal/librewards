@@ -2,7 +2,6 @@ package com.example.librewards
 
 import android.Manifest
 import android.content.pm.PackageManager.PERMISSION_GRANTED
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,8 +11,6 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat.checkSelfPermission
-import androidx.core.graphics.drawable.toDrawable
-import androidx.fragment.app.Fragment
 import com.example.librewards.databinding.AdminFragmentHomeBinding
 import com.example.librewards.utils.FragmentExtended
 import com.google.firebase.database.DataSnapshot
@@ -43,20 +40,18 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
                     Toast.makeText(
                         requireContext(),
                         "Camera permission is required to scan barcodes.",
-                        Toast.LENGTH_SHORT
+                        Toast.LENGTH_SHORT,
                     ).show()
                 }
             }
-
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = AdminFragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
-
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -131,12 +126,10 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
         })
     }
 
-    private fun checkCameraPermission(): Boolean {
-        return checkSelfPermission(
-            requireActivity(),
-            Manifest.permission.CAMERA
-        ) == PERMISSION_GRANTED
-    }
+    private fun checkCameraPermission(): Boolean = checkSelfPermission(
+        requireActivity(),
+        Manifest.permission.CAMERA,
+    ) == PERMISSION_GRANTED
 
     private fun scanQRCode() {
         if (checkCameraPermission()) {

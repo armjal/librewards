@@ -26,8 +26,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var lastName: String
     lateinit var photoURL: String
     lateinit var university: String
-    private var _binding: ActivityMainBinding? = null
-    private val binding get() = _binding!!
+    private lateinit var binding: ActivityMainBinding
     val mainSharedViewModel: MainSharedViewModel by viewModels {
         MainViewModelFactory(UserRepository(FirebaseDatabase.getInstance().reference))
     }
@@ -40,14 +39,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //Sets the layout to the XML file associated with it
-        _binding = ActivityMainBinding.inflate(layoutInflater)
+        // Sets the layout to the XML file associated with it
+        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         FirebaseApp.initializeApp(this)
 
         val timerFragment = TimerFragment()
         val rewardsFragment = RewardsFragment()
-
 
         initialiseVariables()
 
@@ -69,11 +67,6 @@ class MainActivity : AppCompatActivity() {
         mainSharedViewModel.startListeningForUserUpdates(email)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        _binding = null
-    }
-
     private fun initialiseVariables() {
         val extras = intent.extras
         email = extras?.getString("email").toString()
@@ -81,13 +74,13 @@ class MainActivity : AppCompatActivity() {
         lastName = extras?.getString("last_name").toString()
         university = extras?.getString("university").toString()
         photoURL = extras?.getString("photo").toString()
-
     }
 
     private fun logoutApp() {
         val auth = Firebase.auth
         if (auth.currentUser != null) {
             auth.signOut()
+            val intent = Intent(this, Login::class.java)
             intent.flags =
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
             supportFragmentManager.popBackStack()

@@ -9,6 +9,15 @@ repos:
       - id: check-yaml
       - id: check-json
 
+  # KT Lint
+  - repo: local
+    hooks:
+    - id: kt-lint
+      name: Run KT Lint
+      entry: bash -c "cd android && ./gradlew ktLintCheck"
+      language: system
+      pass_filenames: false
+
   # Android Lint
   - repo: local
     hooks:

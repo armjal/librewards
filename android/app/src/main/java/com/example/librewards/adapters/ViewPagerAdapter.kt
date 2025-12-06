@@ -11,11 +11,7 @@ class ViewPagerAdapter(fa: FragmentActivity) : FragmentStateAdapter(fa) {
         this.fragments.addAll(fragments)
     }
 
-    override fun createFragment(position: Int): Fragment {
-        return fragments[position]
-    }
+    override fun createFragment(position: Int): Fragment = fragments[position]
 
-    override fun getItemCount(): Int {
-        return fragments.size
-    }
+    override fun getItemCount(): Int = fragments.size
 }

@@ -12,7 +12,7 @@ import com.squareup.picasso.Picasso
 
 class RecyclerAdapter(
     var list: MutableList<ProductEntry>,
-    var mOnProductListener: OnProductListener
+    var mOnProductListener: OnProductListener,
 ) : RecyclerView.Adapter<RecyclerAdapter.ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.card_layout, parent, false)
@@ -24,12 +24,9 @@ class RecyclerAdapter(
         holder.itemTitle.text = product.productName
         (product.productCost + " points").also { holder.itemDetail.text = it }
         Picasso.get().load(product.productImageUrl).into(holder.itemImage)
-
     }
 
-    override fun getItemCount(): Int {
-        return list.size
-    }
+    override fun getItemCount(): Int = list.size
 
     inner class ViewHolder(itemView: View, var onProductListener: OnProductListener) :
         RecyclerView.ViewHolder(itemView), View.OnClickListener {
@@ -40,7 +37,6 @@ class RecyclerAdapter(
         init {
 
             itemView.setOnClickListener(this)
-
         }
 
         override fun onClick(v: View?) {
@@ -53,5 +49,4 @@ class RecyclerAdapter(
     fun interface OnProductListener {
         fun onProductClick(position: Int)
     }
-
 }

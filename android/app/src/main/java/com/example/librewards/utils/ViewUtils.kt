@@ -8,7 +8,6 @@ import android.widget.Toast
 import androidx.core.graphics.drawable.toDrawable
 import com.example.librewards.databinding.PopupLayoutBinding
 
-
 fun toastMessage(context: Context, message: String) {
     Toast.makeText(context, message, Toast.LENGTH_LONG).show()
 }

@@ -19,7 +19,7 @@ class QRCodeGenerator {
     @Throws(WriterException::class, IOException::class)
     fun createQR(
         data: String, height: Int,
-        width: Int
+        width: Int,
     ): Bitmap? {
         val charset: Charset = Charsets.UTF_8
         val hints: Hashtable<EncodeHintType, String> = Hashtable(2)
@@ -29,10 +29,9 @@ class QRCodeGenerator {
             BarcodeFormat.QR_CODE,
             width,
             height,
-            hints
+            hints,
         )
         return generateQrBitmap(height, width, bits)
-
     }
 }
 
@@ -46,7 +45,6 @@ private fun generateQrBitmap(height: Int, width: Int, bits: BitMatrix): Bitmap? 
                 }
             }
         }
-
     } catch (e: Exception) {
         Log.e("TAG", "Failed to create image: $e")
     }

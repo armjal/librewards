@@ -25,7 +25,6 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
         userRepo.listenForUserUpdates(email)
             .onEach { updatedUser ->
                 _updatedUser.value = updatedUser!!
-
             }
             .catch { error ->
                 Log.e(TAG, "Error observing user: ${error.message}")
@@ -42,13 +41,10 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
 class MainViewModelFactory(
     private val userRepo: UserRepository,
 ) : ViewModelProvider.Factory {
-
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return if (modelClass.isAssignableFrom(MainSharedViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            MainSharedViewModel(userRepo) as T
-        } else {
-            throw IllegalArgumentException("ViewModel Not Found")
-        }
+    override fun <T : ViewModel> create(modelClass: Class<T>): T = if (modelClass.isAssignableFrom(MainSharedViewModel::class.java)) {
+        @Suppress("UNCHECKED_CAST")
+        MainSharedViewModel(userRepo) as T
+    } else {
+        throw IllegalArgumentException("ViewModel Not Found")
     }
 }
