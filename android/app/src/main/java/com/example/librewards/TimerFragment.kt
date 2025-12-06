@@ -1,6 +1,7 @@
 package com.example.librewards
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -129,7 +130,13 @@ class TimerFragment(
         })
     }
 
+    @SuppressLint("MissingPermission")
     private fun getLocationDistance() {
+        if (!checkLocationServicesPermissions()) {
+            requestLocationServicesPermissions()
+            return
+        }
+
         val locManager = mainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val locListener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
@@ -160,11 +167,8 @@ class TimerFragment(
             }
 
         }
-        if (checkLocationServicesPermissions()) {
-            locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0f, locListener)
-        } else {
-            requestLocationServicesPermissions()
-        }
+
+        locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0f, locListener)
     }
 
     private fun drawCircle(point: LatLng, googleMap: GoogleMap) {
@@ -294,6 +298,7 @@ class TimerFragment(
         }
     }
 
+    @SuppressLint("MissingPermission")
     override fun onMapReady(p0: GoogleMap) {
         googleMap = p0
         if (!checkLocationServicesPermissions()) {
