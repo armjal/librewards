@@ -180,7 +180,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExte
                 val finalPoints = Integer.parseInt(dbPoints) - minusValue
                 refChild.setValue(finalPoints.toString())
                 binding.rewardsPoints.text = finalPoints.toString()
-                mainSharedViewModel.updatePoints(finalPoints.toString())
+                mainSharedViewModel.updatePoints(finalPoints)
             }
 
             override fun onCancelled(error: DatabaseError) {
