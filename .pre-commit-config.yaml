@@ -1,0 +1,19 @@
+repos:
+  # General Code Hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: check-json
+
+  # Android Lint
+  - repo: local
+    hooks:
+      - id: android-lint
+        name: Run Android Lint
+        entry: bash -c "cd android && ./gradlew lint"
+        language: system
+        pass_filenames: false

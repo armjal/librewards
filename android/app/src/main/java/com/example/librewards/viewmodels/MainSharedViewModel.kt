@@ -24,7 +24,7 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
     fun startListeningForUserUpdates(email: String) {
         userRepo.listenForUserUpdates(email)
             .onEach { updatedUser ->
-                _updatedUser.value = updatedUser
+                _updatedUser.value = updatedUser!!
 
             }
             .catch { error ->
