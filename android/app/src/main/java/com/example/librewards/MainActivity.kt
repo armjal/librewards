@@ -28,6 +28,9 @@ class MainActivity : AppCompatActivity() {
     lateinit var university: String
     private var _binding: ActivityMainBinding? = null
     private val binding get() = _binding!!
+    val mainSharedViewModel: MainSharedViewModel by viewModels {
+        MainViewModelFactory(UserRepository(FirebaseDatabase.getInstance().reference))
+    }
 
     // Exposing views for fragments temporarily
     val profileImage: ImageView get() = binding.profileImage
@@ -44,7 +47,6 @@ class MainActivity : AppCompatActivity() {
 
         val timerFragment = TimerFragment()
         val rewardsFragment = RewardsFragment()
-        val database = FirebaseDatabase.getInstance().reference
 
 
         initialiseVariables()
@@ -52,9 +54,7 @@ class MainActivity : AppCompatActivity() {
         Picasso.get().load(photoURL).into(binding.profileImage)
 
         "$firstName $lastName".also { binding.username.text = it }
-        val mainSharedViewModel: MainSharedViewModel by viewModels {
-            MainViewModelFactory(UserRepository(database))
-        }
+
         val viewPagerAdapter = ViewPagerAdapter(this)
         binding.viewPager.adapter = viewPagerAdapter
         val fragments = listOf(timerFragment, rewardsFragment)
@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
         binding.profileImage.setOnClickListener {
             logoutApp()
         }
-        mainSharedViewModel.getUser(email)
+        mainSharedViewModel.startListeningForUserUpdates(email)
     }
 
     override fun onDestroy() {

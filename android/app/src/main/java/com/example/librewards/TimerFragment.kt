@@ -19,6 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.graphics.toColorInt
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import com.example.librewards.databinding.FragmentTimerBinding
 import com.example.librewards.qrcode.QRCodeGenerator
 import com.example.librewards.repositories.UserRepository
@@ -27,7 +28,10 @@ import com.example.librewards.utils.calculatePointsFromTime
 import com.example.librewards.utils.showPopup
 import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.MainSharedViewModel
-import com.example.librewards.viewmodels.MainViewModelFactory
+import com.example.librewards.viewmodels.StopwatchState
+import com.example.librewards.viewmodels.StopwatchViewModel
+import com.example.librewards.viewmodels.TimerViewModel
+import com.example.librewards.viewmodels.TimerViewModelFactory
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -37,33 +41,31 @@ import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 
 
 class TimerFragment(
     override val icon: Int = R.drawable.timer
 ) : FragmentExtended(), OnMapReadyCallback {
-    private lateinit var userRepo: UserRepository
-    private val mainSharedViewModel: MainSharedViewModel by activityViewModels {
-        MainViewModelFactory(userRepo)
+    private var userRepo = UserRepository(FirebaseDatabase.getInstance().reference)
+    private val mainSharedViewModel: MainSharedViewModel by activityViewModels()
+
+    private val timerViewModel: TimerViewModel by viewModels {
+        TimerViewModelFactory(userRepo)
     }
+
+    private val stopwatchViewModel: StopwatchViewModel by viewModels()
     private var marker: Marker? = null
     private lateinit var latLngLocTwo: LatLng
     private lateinit var latLngLocOne: LatLng
     private lateinit var circle: Circle
-    private lateinit var fh: FirebaseHandler
     private lateinit var mainActivity: MainActivity
     private lateinit var locationOne: Location
     private lateinit var locationTwo: Location
-    private var pointsListener: ValueEventListener? = null
     private var distance: Float? = null
     lateinit var mapFragment: SupportMapFragment
     private var googleMap: GoogleMap? = null
-    private lateinit var circleOptions: CircleOptions
     private var _binding: FragmentTimerBinding? = null
     private val binding get() = _binding!!
     private val locationPermissionsLauncher = registerLocationPermissionLauncher()
@@ -77,10 +79,6 @@ class TimerFragment(
     ): View {
         // Inflate the layout for this fragment
         mainActivity = activity as MainActivity
-        val database = FirebaseDatabase.getInstance().reference
-        userRepo = UserRepository(database)
-        fh = FirebaseHandler()
-
         _binding = FragmentTimerBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -91,7 +89,8 @@ class TimerFragment(
         mapFragment = childFragmentManager.findFragmentById(R.id.googleMap) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        addTimerEventListener()
+        handleStudyingChanges()
+        handleStopwatchChanges()
         val qrGen = QRCodeGenerator()
         binding.qrCode.setImageBitmap(qrGen.createQR(hashFunction(mainActivity.email), 400, 400))
         binding.qrCodeNumber.text = hashFunction(mainActivity.email)
@@ -170,38 +169,29 @@ class TimerFragment(
 
     private fun drawCircle(point: LatLng, googleMap: GoogleMap) {
         // Instantiating CircleOptions to draw a circle around the marker
-        circleOptions = CircleOptions()
-        // Specifying the center of the circle
-        circleOptions.center(point)
-        // Radius of the circle
-        circleOptions.radius(50.0)
-        // Border color of the circle
-        circleOptions.strokeColor(Color.BLACK)
-        // Fill color of the circle
-        circleOptions.fillColor("#4d318ce7".toColorInt())
-        // Border width of the circle
-        circleOptions.strokeWidth(2f)
-        // Adding the circle to the GoogleMap
-        circle = googleMap.addCircle(circleOptions)
+        CircleOptions().let {
+            it.center(point)
+            it.radius(50.0)
+            it.strokeColor(Color.BLACK)
+            it.fillColor("#4d318ce7".toColorInt())
+            it.strokeWidth(2f)
+            circle = googleMap.addCircle(it)
+        }
     }
 
     private fun checkLocationServicesPermissions(): Boolean {
         //check if location permissions have been granted by user
         return ActivityCompat.checkSelfPermission(
-            mainActivity,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED ||
-                ActivityCompat.checkSelfPermission(
-                    mainActivity,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
+            mainActivity, Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
+            mainActivity, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
 
     }
 
     private fun requestLocationServicesPermissions() {
         val permissionsToRequest = arrayOf(
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION
         )
         locationPermissionsLauncher.launch(permissionsToRequest)
     }
@@ -210,8 +200,10 @@ class TimerFragment(
         return registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions ->
-            if (permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
-                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
+            if (permissions.getOrDefault(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    false
+                ) || permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
             ) {
                 Log.d(TAG, "Location permission granted.")
                 if (googleMap != null) {
@@ -226,94 +218,78 @@ class TimerFragment(
         }
     }
 
-    private fun addTimerEventListener() {
-        val refChild = fh.getChild("users", mainActivity.email, "studying")
-        var isStudying: String
-        val timerListener = object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                isStudying = dataSnapshot.value.toString()
-                Log.d(TAG, isStudying)
-                if (isStudying == "1") {
-                    binding.stopwatch.base = SystemClock.elapsedRealtime()
-                    binding.stopwatch.start()
-                    getLocationDistance()
-                    binding.stopwatch.onChronometerTickListener = OnChronometerTickListener {
-                        //Checks if the stopwatch has gone over 24 hours. If so, the stopwatch resets back to its original state
-                        if (SystemClock.elapsedRealtime() - binding.stopwatch.base >= 800000) {
-                            binding.stopwatch.base = SystemClock.elapsedRealtime()
-                            binding.stopwatch.stop()
-                            showPopup(
-                                requireActivity(),
-                                "No stop code was entered for 24 hours. The timer has been reset"
-                            )
-                        }
-                        if (distance != null && distance!! > 50) {
-                            binding.stopwatch.base = SystemClock.elapsedRealtime()
-                            binding.stopwatch.stop()
-                            fh.getChild("users", mainActivity.email, "studying").setValue("2")
-                        }
-                    }
-
-                } else if (isStudying == "0") {
-                    val totalTime = SystemClock.elapsedRealtime() - binding.stopwatch.base
-                    setPointsFromTime(totalTime)
-                    binding.stopwatch.base = SystemClock.elapsedRealtime()
-                    binding.stopwatch.stop()
-                    googleMap?.stopAnimation()
-                    googleMap?.clear()
-                    refChild.setValue("2")
-                }
-
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // Failed to read value
-                Log.w(TAG, "Failed to read value.", error.toException())
+    private fun handleStudyingChanges() {
+        mainSharedViewModel.updatedUser.observe(viewLifecycleOwner) { user ->
+            when (user?.studying) {
+                "0" -> stopwatchViewModel.stop()
+                "1" -> stopwatchViewModel.start()
             }
         }
-        refChild.addValueEventListener(timerListener)
     }
 
-    private fun addPointsListener(addValue: Int): Int {
-        val refChild = fh.getChild("users", mainActivity.email, "points")
-        var dbPoints: String
-        var finalPoints = 0
-        pointsListener = object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                dbPoints = dataSnapshot.value.toString()
-                if (dbPoints != "null") {
-                    finalPoints = Integer.parseInt(dbPoints) + addValue
-                    binding.usersPoints.text = finalPoints.toString()
-                    mainSharedViewModel.updatePoints(finalPoints.toString())
+    private fun handleStopwatchChanges() {
+        stopwatchViewModel.state.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                StopwatchState.Started -> {
+                    binding.stopwatch.base = SystemClock.elapsedRealtime()
+                    binding.stopwatch.start()
+                    validateUserWithinTimerBoundaries()
+                }
+
+                StopwatchState.Stopped -> {
+                    setPointsFromTime(stopwatchViewModel.elapsedTime)
+                    resetTimerState()
+                    timerViewModel.updateStudying(mainSharedViewModel.updatedUser.value!!, "2")
+                }
+
+                else -> {
+                    resetTimerState()
                 }
             }
+        }
+    }
 
-            override fun onCancelled(error: DatabaseError) {
-                // Failed to read value
-                Log.w(TAG, "Failed to read value.", error.toException())
+    fun resetTimerState() {
+        binding.stopwatch.stop()
+        binding.stopwatch.base = SystemClock.elapsedRealtime()
+        googleMap?.stopAnimation()
+        googleMap?.clear()
+    }
+
+    fun validateUserWithinTimerBoundaries() {
+        getLocationDistance()
+        binding.stopwatch.onChronometerTickListener = OnChronometerTickListener {
+            //Checks if the stopwatch has gone over 24 hours. If so, the stopwatch resets back to its original state
+            if (SystemClock.elapsedRealtime() - binding.stopwatch.base >= 800000) {
+                resetTimerState()
+                showPopup(
+                    requireActivity(), getString(R.string.no_stop_code_entered)
+                )
+            }
+            if (distance != null && distance!! > 50) {
+                resetTimerState()
+                timerViewModel.updateStudying(mainSharedViewModel.updatedUser.value!!, "2")
             }
         }
-        refChild.addListenerForSingleValueEvent(pointsListener as ValueEventListener)
-        return finalPoints
     }
 
     private fun setPointsFromTime(totalTime: Long) {
         val pointsEarned = calculatePointsFromTime(totalTime)
         val minutes = (totalTime / 1000 / 60).toInt()
 
-        addPointsListener(pointsEarned)
+        mainSharedViewModel.updatePoints(pointsEarned)
 
         val newPoints = pointsEarned + Integer.parseInt(binding.usersPoints.text.toString())
 
         if (minutes == 1) {
             showPopup(
                 requireActivity(),
-                getString(R.string.congrats_message, "minute", minutes, pointsEarned, newPoints)
+                getString(R.string.congrats_message, minutes, "minute", pointsEarned, newPoints)
             )
         } else {
             showPopup(
                 requireActivity(),
-                getString(R.string.congrats_message, "minutes", minutes, pointsEarned, newPoints)
+                getString(R.string.congrats_message, minutes, "minutes", pointsEarned, newPoints)
             )
         }
     }
@@ -324,10 +300,8 @@ class TimerFragment(
             requestLocationServicesPermissions()
             return
         }
-        val locManager =
-            mainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val lastKnownLocation =
-            locManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+        val locManager = mainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val lastKnownLocation = locManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
         if (lastKnownLocation != null) {
             locationOne = lastKnownLocation // The crucial initialization
             latLngLocOne = LatLng(locationOne.latitude, locationOne.longitude)

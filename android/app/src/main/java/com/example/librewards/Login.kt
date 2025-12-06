@@ -51,7 +51,7 @@ class Login : AppCompatActivity() {
     private fun getUserLoginInfo(email: String, activity: AppCompatActivity) {
         val id = hashFunction(email)
         val refChild = database.child("users").child(id)
-        refChild.addValueEventListener(object : ValueEventListener {
+        refChild.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 val user = dataSnapshot.getValue(User::class.java)
                 val intent = Intent(this@Login, activity::class.java)
