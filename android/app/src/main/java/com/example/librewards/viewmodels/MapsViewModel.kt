@@ -1,5 +1,6 @@
 package com.example.librewards.viewmodels
 
+import android.annotation.SuppressLint
 import android.location.Location
 import android.os.Looper
 import androidx.lifecycle.LiveData
@@ -15,6 +16,9 @@ import com.google.android.gms.maps.model.LatLng
 
 class MapsViewModel(val fusedLocationClient: FusedLocationProviderClient) : ViewModel() {
     private var _chosenLocation: Location? = null
+    private var _hasChosenLocation = MutableLiveData(false)
+    val hasChosenLocation: LiveData<Boolean> = _hasChosenLocation
+
     private var _currentLocation: Location? = null
 
     private var _currentLocationLatLng = MutableLiveData<LatLng>()
@@ -23,6 +27,7 @@ class MapsViewModel(val fusedLocationClient: FusedLocationProviderClient) : View
     private var _distanceFromChosenLocation = MutableLiveData<Float>()
     val distance: LiveData<Float> get() = _distanceFromChosenLocation
 
+    @SuppressLint("MissingPermission")
     fun listenToLocationChanges() {
         val locationRequest = LocationRequest
             .Builder(Priority.PRIORITY_HIGH_ACCURACY, 2000)
@@ -48,7 +53,12 @@ class MapsViewModel(val fusedLocationClient: FusedLocationProviderClient) : View
 
     fun setChosenLocation() {
         _chosenLocation = _currentLocation
+        _hasChosenLocation.value = true
         _distanceFromChosenLocation.value = 0F
+    }
+
+    fun reset() {
+        _hasChosenLocation.value = false
     }
 }
 

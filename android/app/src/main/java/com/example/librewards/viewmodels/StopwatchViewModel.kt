@@ -11,6 +11,8 @@ sealed class StopwatchState {
     object Stopped : StopwatchState()
 
     object Neutral : StopwatchState()
+
+    object Reset : StopwatchState()
 }
 
 class StopwatchViewModel : ViewModel() {
@@ -32,6 +34,14 @@ class StopwatchViewModel : ViewModel() {
             elapsedTime = SystemClock.elapsedRealtime() - startTime
             startTime = 0
             _state.value = StopwatchState.Stopped
+        }
+    }
+
+    fun reset() {
+        if (_state.value != StopwatchState.Reset) {
+            elapsedTime = 0
+            startTime = 0
+            _state.value = StopwatchState.Reset
         }
     }
 }
