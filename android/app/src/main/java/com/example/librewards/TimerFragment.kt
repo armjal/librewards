@@ -29,10 +29,14 @@ import com.example.librewards.utils.calculatePointsFromTime
 import com.example.librewards.utils.showPopup
 import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.MainSharedViewModel
+import com.example.librewards.viewmodels.MapsViewModel
+import com.example.librewards.viewmodels.MapsViewModelFactory
 import com.example.librewards.viewmodels.StopwatchState
 import com.example.librewards.viewmodels.StopwatchViewModel
 import com.example.librewards.viewmodels.TimerViewModel
 import com.example.librewards.viewmodels.TimerViewModelFactory
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -48,6 +52,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout
 class TimerFragment(
     override val icon: Int = R.drawable.timer,
 ) : FragmentExtended(), OnMapReadyCallback {
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var userRepo = UserRepository(FirebaseDatabase.getInstance().reference)
     private val mainSharedViewModel: MainSharedViewModel by activityViewModels()
 
@@ -56,15 +61,15 @@ class TimerFragment(
     }
 
     private val stopwatchViewModel: StopwatchViewModel by viewModels()
+    private val mapsViewModel: MapsViewModel by viewModels {
+        MapsViewModelFactory(fusedLocationClient)
+    }
     private var marker: Marker? = null
     private lateinit var latLngLocTwo: LatLng
     private lateinit var latLngLocOne: LatLng
     private lateinit var circle: Circle
     private lateinit var mainActivity: MainActivity
-    private lateinit var locationOne: Location
-    private lateinit var locationTwo: Location
     private var distance: Float? = null
-    lateinit var mapFragment: SupportMapFragment
     private var googleMap: GoogleMap? = null
     private var _binding: FragmentTimerBinding? = null
     private val binding get() = _binding!!
@@ -85,10 +90,15 @@ class TimerFragment(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        mapFragment = childFragmentManager.findFragmentById(R.id.googleMap) as SupportMapFragment
+        if (!checkLocationServicesPermissions()) {
+            requestLocationServicesPermissions()
+            return
+        }
+        val mapFragment = childFragmentManager.findFragmentById(R.id.googleMap) as SupportMapFragment
         mapFragment.getMapAsync(this)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(mainActivity)
 
+        mapsViewModel.listenToLocationChanges()
         handleStudyingChanges()
         handleStopwatchChanges()
         val qrGen = QRCodeGenerator()
@@ -293,25 +303,18 @@ class TimerFragment(
     @SuppressLint("MissingPermission")
     override fun onMapReady(p0: GoogleMap) {
         googleMap = p0
-        if (!checkLocationServicesPermissions()) {
-            requestLocationServicesPermissions()
-            return
-        }
-        val locManager = mainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val lastKnownLocation = locManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-        if (lastKnownLocation != null) {
-            locationOne = lastKnownLocation // The crucial initialization
-            latLngLocOne = LatLng(locationOne.latitude, locationOne.longitude)
-            val markerOptions = MarkerOptions().position(latLngLocOne).title("I am here.")
-            p0.animateCamera(CameraUpdateFactory.newLatLng(latLngLocOne))
-            p0.animateCamera(CameraUpdateFactory.newLatLngZoom(latLngLocOne, 17F))
-            marker = p0.addMarker(markerOptions)!!
-            drawCircle(latLngLocOne, p0)
-        } else {
-            toastMessage(
-                requireActivity(),
-                "Could not determine location. Please ensure location services are enabled.",
-            )
+        observeLocationChanges()
+    }
+
+    private fun observeLocationChanges() {
+        mapsViewModel.currentLatLng.observe(viewLifecycleOwner) { latLng ->
+            if (marker == null) {
+                val markerOptions = MarkerOptions().position(latLng).title("I am here.")
+                marker = googleMap?.addMarker(markerOptions)!!
+            } else {
+                marker?.position = latLng
+            }
+            googleMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17F))
         }
     }
 }

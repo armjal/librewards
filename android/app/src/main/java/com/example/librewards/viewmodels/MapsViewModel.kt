@@ -1,0 +1,51 @@
+package com.example.librewards.viewmodels
+
+import android.location.Location
+import android.os.Looper
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.Priority
+import com.google.android.gms.maps.model.LatLng
+
+class MapsViewModel(val fusedLocationClient: FusedLocationProviderClient) : ViewModel() {
+    private var initialLocation: Location? = null
+    private var _currentLocationLatLng = MutableLiveData<LatLng>()
+    val currentLatLng: LiveData<LatLng> get() = _currentLocationLatLng
+    private var _distanceFromInitialLocation = MutableLiveData<Float>()
+    val distance: LiveData<Float> get() = _distanceFromInitialLocation
+
+    fun listenToLocationChanges() {
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2000).setMinUpdateDistanceMeters(20f).build()
+        val locationCallback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                result.locations.forEach { location ->
+                    if (location != null) {
+                        if (initialLocation == null) {
+                            initialLocation = location
+                        }
+                        _distanceFromInitialLocation.value = initialLocation!!.distanceTo(location)
+                        _currentLocationLatLng.value = LatLng(location.latitude, location.longitude)
+                    }
+                }
+            }
+        }
+        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+    }
+}
+
+class MapsViewModelFactory(
+    private val fusedLocationClient: FusedLocationProviderClient,
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T = if (modelClass.isAssignableFrom(MapsViewModel::class.java)) {
+        @Suppress("UNCHECKED_CAST")
+        MapsViewModel(fusedLocationClient) as T
+    } else {
+        throw IllegalArgumentException("ViewModel Not Found")
+    }
+}
