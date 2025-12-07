@@ -3,7 +3,6 @@ package com.example.librewards
 import android.app.Dialog
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,30 +10,30 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.setMargins
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.librewards.databinding.FragmentRewardsBinding
 import com.example.librewards.databinding.PopupLayoutBinding
 import com.example.librewards.models.Product
 import com.example.librewards.models.ProductEntry
+import com.example.librewards.repositories.UserRepository
 import com.example.librewards.utils.FragmentExtended
 import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.MainSharedViewModel
+import com.example.librewards.viewmodels.MainViewModelFactory
+
 import com.example.librewards.viewmodels.RewardsViewModel
 import com.example.librewards.viewmodels.RewardsViewModelFactory
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
+
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.squareup.picasso.Picasso
 
 class RewardsFragment(override val icon: Int = R.drawable.reward) :
     FragmentExtended(),
     RecyclerAdapter.OnProductListener {
+    private lateinit var productRepo: ProductRepository
     private val mainSharedViewModel: MainSharedViewModel by activityViewModels()
     private val rewardsViewModel: RewardsViewModel by viewModels {
-        RewardsViewModelFactory(mainActivity.userRepo)
+        RewardsViewModelFactory(mainActivity.userRepo, productRepo)
     }
     private lateinit var productDatabase: DatabaseReference
     private lateinit var mainActivity: MainActivity
@@ -52,8 +51,8 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
         productDatabase = FirebaseDatabase.getInstance().reference
             .child("products")
             .child(mainActivity.university)
+        productRepo = ProductRepository(productDatabase)
         _binding = FragmentRewardsBinding.inflate(inflater, container, false)
-
         return binding.root
     }
 
@@ -62,26 +61,21 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
         val layoutManager = LinearLayoutManager(context)
         "See rewards from ${mainActivity.university}".also { binding.rewardsText.text = it }
         binding.rewardsRecycler.layoutManager = layoutManager
-        productEntries = mutableListOf()
-        val adapter = RecyclerAdapter(productEntries, this)
-        binding.rewardsRecycler.adapter = adapter
         mainSharedViewModel.userPoints.observe(viewLifecycleOwner) { points ->
             binding.rewardsPoints.text = points
         }
-        productDatabase.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                productEntries.clear()
-                for (dataSnapshot in snapshot.children) {
-                    val productEntry = ProductEntry()
-                    productEntry.id = dataSnapshot.key!!
-                    productEntry.product = dataSnapshot.getValue(Product::class.java)!!
-                    productEntries.add(productEntry)
-                }
-                adapter.notifyDataSetChanged()
-            }
 
-            override fun onCancelled(error: DatabaseError) {}
-        })
+        productEntries = mutableListOf()
+        val adapter = RecyclerAdapter(productEntries, this)
+        binding.rewardsRecycler.adapter = adapter
+
+        rewardsViewModel.productEntries.observe(viewLifecycleOwner) {
+            productEntries.clear()
+            productEntries.addAll(it)
+            adapter.notifyDataSetChanged()
+        }
+
+        rewardsViewModel.listenForRewardRedemption(mainActivity.email)
     }
 
     override fun onDestroyView() {
@@ -97,8 +91,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
 
         if (pointsInt > 0) {
             binding.rewardsPoints.text = pointsInt.toString()
-            rewardsViewModel.minusPoints(
-                mainSharedViewModel.updatedUser.value!!,
+            mainSharedViewModel.minusPoints(
                 Integer.parseInt(productEntries[position].product.productCost),
             )
         } else {
@@ -107,14 +100,9 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
     }
 
     private fun showImagePopup(list: MutableList<ProductEntry>, position: Int) {
-        val redeemRef = FirebaseDatabase.getInstance()
-            .reference.child("users")
-            .child(hashFunction(mainActivity.email))
-            .child("redeemingReward")
-        redeemRef.setValue("1")
         productPopup = Dialog(requireActivity())
         productPopup.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
-
+//        rewardsViewModel.updateRewardRedeemed(mainSharedViewModel.updatedUser.value!!, "0")
         val popupBinding = PopupLayoutBinding.inflate(layoutInflater)
         productPopup.setContentView(popupBinding.root)
 
@@ -147,26 +135,21 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
         }
         Picasso.get().load(list[position].product.productImageUrl).into(popupBinding.popupImageView)
 
-        var redeemed: String
-
-        val redeemListener = redeemRef.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                redeemed = snapshot.value.toString()
-                if (redeemed == "1") {
-                    redeemRef.setValue("0")
+        rewardsViewModel.rewardStatus.observe(viewLifecycleOwner) { status ->
+            when (status) {
+                RewardsEvent.Redeemed -> {
                     calculatePointsFromPurchase(position)
+//                    rewardsViewModel.updateRewardRedeemed(mainSharedViewModel.updatedUser.value!!, "0")
                 }
-            }
 
-            override fun onCancelled(error: DatabaseError) {
-                Log.e(TAG, "Could not access database")
+                else -> {}
             }
-        })
+        }
 
         popupBinding.closeBtn.setOnClickListener {
             productPopup.dismiss()
         }
-        productPopup.setOnDismissListener { redeemRef.removeEventListener(redeemListener) }
+//        productPopup.setOnDismissListener { rewardsViewModel.updateRewardRedeemed(mainSharedViewModel.updatedUser.value!!, "2") }
         productPopup.show()
     }
 
