@@ -2,12 +2,8 @@ package com.example.librewards
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
@@ -65,8 +61,6 @@ class TimerFragment(
         MapsViewModelFactory(fusedLocationClient)
     }
     private var marker: Marker? = null
-    private lateinit var latLngLocTwo: LatLng
-    private lateinit var latLngLocOne: LatLng
     private lateinit var circle: Circle
     private lateinit var mainActivity: MainActivity
     private var distance: Float? = null
@@ -138,40 +132,15 @@ class TimerFragment(
 
     @SuppressLint("MissingPermission")
     private fun getLocationDistance() {
-        if (!checkLocationServicesPermissions()) {
-            requestLocationServicesPermissions()
-            return
-        }
-
-        val locManager = mainActivity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val locListener = object : LocationListener {
-            override fun onLocationChanged(location: Location) {
-                locationTwo = location
-                distance = locationOne.distanceTo(locationTwo)
-                Log.d(TAG, distance.toString())
-                latLngLocTwo = LatLng(locationTwo.latitude, locationTwo.longitude)
-                if (marker != null) {
-                    marker!!.position = latLngLocTwo
-                }
-                if (distance!! > 40) {
-                    circle.fillColor = "#4dff0000".toColorInt()
-                } else {
-                    circle.fillColor = "#4d318ce7".toColorInt()
-                }
-            }
-
-            override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
-                Log.d(TAG, "Status changed")
-            }
-
-            override fun onProviderEnabled(provider: String) {
-            }
-
-            override fun onProviderDisabled(provider: String) {
+        mapsViewModel.setChosenLocation()
+        drawCircle(mapsViewModel.currentLatLng.value!!, googleMap!!)
+        mapsViewModel.distance.observe(viewLifecycleOwner) { distance ->
+            if (distance!! > 40) {
+                circle.fillColor = "#4dff0000".toColorInt()
+            } else {
+                circle.fillColor = "#4d318ce7".toColorInt()
             }
         }
-
-        locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0f, locListener)
     }
 
     private fun drawCircle(point: LatLng, googleMap: GoogleMap) {
@@ -191,9 +160,9 @@ class TimerFragment(
         return ActivityCompat.checkSelfPermission(
             mainActivity, Manifest.permission.ACCESS_COARSE_LOCATION,
         ) == PackageManager.PERMISSION_GRANTED ||
-            ActivityCompat.checkSelfPermission(
-                mainActivity, Manifest.permission.ACCESS_FINE_LOCATION,
-            ) == PackageManager.PERMISSION_GRANTED
+                ActivityCompat.checkSelfPermission(
+                    mainActivity, Manifest.permission.ACCESS_FINE_LOCATION,
+                ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestLocationServicesPermissions() {
@@ -239,7 +208,7 @@ class TimerFragment(
                 StopwatchState.Started -> {
                     binding.stopwatch.base = SystemClock.elapsedRealtime()
                     binding.stopwatch.start()
-                    validateUserWithinTimerBoundaries()
+                    getLocationDistance()
                 }
 
                 StopwatchState.Stopped -> {

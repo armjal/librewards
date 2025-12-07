@@ -14,28 +14,41 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
 
 class MapsViewModel(val fusedLocationClient: FusedLocationProviderClient) : ViewModel() {
-    private var initialLocation: Location? = null
+    private var _chosenLocation: Location? = null
+    private var _currentLocation: Location? = null
+
     private var _currentLocationLatLng = MutableLiveData<LatLng>()
     val currentLatLng: LiveData<LatLng> get() = _currentLocationLatLng
-    private var _distanceFromInitialLocation = MutableLiveData<Float>()
-    val distance: LiveData<Float> get() = _distanceFromInitialLocation
+
+    private var _distanceFromChosenLocation = MutableLiveData<Float>()
+    val distance: LiveData<Float> get() = _distanceFromChosenLocation
 
     fun listenToLocationChanges() {
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2000).setMinUpdateDistanceMeters(20f).build()
+        val locationRequest = LocationRequest
+            .Builder(Priority.PRIORITY_HIGH_ACCURACY, 2000)
+            .setMinUpdateDistanceMeters(20f)
+            .build()
+
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 result.locations.forEach { location ->
                     if (location != null) {
-                        if (initialLocation == null) {
-                            initialLocation = location
+                        if (_chosenLocation == null) {
+                            _chosenLocation = location
                         }
-                        _distanceFromInitialLocation.value = initialLocation!!.distanceTo(location)
+                        _distanceFromChosenLocation.value = _chosenLocation!!.distanceTo(location)
                         _currentLocationLatLng.value = LatLng(location.latitude, location.longitude)
+                        _currentLocation = location
                     }
                 }
             }
         }
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+    }
+
+    fun setChosenLocation() {
+        _chosenLocation = _currentLocation
+        _distanceFromChosenLocation.value = 0F
     }
 }
 
