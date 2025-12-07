@@ -27,8 +27,9 @@ class MainActivity : AppCompatActivity() {
     lateinit var photoURL: String
     lateinit var university: String
     private lateinit var binding: ActivityMainBinding
+    val userRepo = UserRepository(FirebaseDatabase.getInstance().reference)
     val mainSharedViewModel: MainSharedViewModel by viewModels {
-        MainViewModelFactory(UserRepository(FirebaseDatabase.getInstance().reference))
+        MainViewModelFactory(userRepo)
     }
 
     // Exposing views for fragments temporarily
