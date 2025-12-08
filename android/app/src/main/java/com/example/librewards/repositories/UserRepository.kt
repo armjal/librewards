@@ -22,23 +22,22 @@ class UserRepository(val database: DatabaseReference) {
         return database.child("users").child(id).setValue(user)
     }
 
-    fun updateUser(user: User): Task<Void?> {
-        val id = hashFunction(user.email)
-        return database.child("users").child(id).updateChildren(user.toMap())
+    fun updateField(email: String, field: String, value: String) {
+        val id = hashFunction(email)
+        database.child("users").child(id).child(field).setValue(value)
     }
 
-    fun listenForUserUpdates(email: String): Flow<User?> = callbackFlow {
+    fun listenForUserField(email: String, field: String): Flow<String?> = callbackFlow {
         val userId = hashFunction(email)
-        val userRef = database.child("users").child(userId)
+        val userRef = database.child("users").child(userId).child(field)
 
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val user = snapshot.getValue(User::class.java)
-                trySend(user)
+                trySend(snapshot.value as String)
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Log.e(TAG, "Database error for user listener: ${error.message}")
+                Log.e(TAG, "Database error for '$field' listener: ${error.message}")
                 close(error.toException())
             }
         }
@@ -46,7 +45,7 @@ class UserRepository(val database: DatabaseReference) {
         userRef.addValueEventListener(listener)
 
         awaitClose {
-            Log.d(TAG, "Removing user listener for $email")
+            Log.d(TAG, "Removing $field listener for $email")
             userRef.removeEventListener(listener)
         }
     }

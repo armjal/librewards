@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
         binding.profileImage.setOnClickListener {
             logoutApp()
         }
-        mainSharedViewModel.startListeningForUserUpdates(email)
+        mainSharedViewModel.startObservingUser(email)
     }
 
     private fun initialiseVariables() {

@@ -25,8 +25,7 @@ import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.MainSharedViewModel
 import com.example.librewards.viewmodels.MapsViewModel
 import com.example.librewards.viewmodels.MapsViewModelFactory
-import com.example.librewards.viewmodels.StopwatchState
-import com.example.librewards.viewmodels.StopwatchViewModel
+import com.example.librewards.viewmodels.TimerState
 import com.example.librewards.viewmodels.TimerViewModel
 import com.example.librewards.viewmodels.TimerViewModelFactory
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -49,10 +48,8 @@ class TimerFragment(
     private val mainSharedViewModel: MainSharedViewModel by activityViewModels()
 
     private val timerViewModel: TimerViewModel by viewModels {
-        TimerViewModelFactory(mainActivity.userRepo)
+        TimerViewModelFactory(mainSharedViewModel)
     }
-
-    private val stopwatchViewModel: StopwatchViewModel by viewModels()
     private val mapsViewModel: MapsViewModel by viewModels {
         MapsViewModelFactory(fusedLocationClient)
     }
@@ -75,8 +72,7 @@ class TimerFragment(
         _binding = FragmentTimerBinding.inflate(inflater, container, false)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(mainActivity)
         mapsViewModel.listenToLocationChanges()
-        observeStudyingStatus()
-        observeStopwatchState()
+        observeTimerState()
 
         return binding.root
     }
@@ -87,8 +83,8 @@ class TimerFragment(
             requestLocationServicesPermissions()
             return
         }
-        mainSharedViewModel.updatedUser.observe(viewLifecycleOwner) { user ->
-            binding.usersPoints.text = user.points
+        mainSharedViewModel.userPoints.observe(viewLifecycleOwner) { points ->
+            binding.usersPoints.text = points
         }
         val mapFragment = childFragmentManager.findFragmentById(R.id.googleMap) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -104,7 +100,7 @@ class TimerFragment(
         mapsViewModel.distance.observe(viewLifecycleOwner) { distance ->
             if (distance!! > 40) {
                 circle.fillColor = "#4dff0000".toColorInt()
-                stopwatchViewModel.reset()
+                timerViewModel.reset()
             } else {
                 circle.fillColor = "#4d318ce7".toColorInt()
             }
@@ -158,34 +154,25 @@ class TimerFragment(
         }
     }
 
-    private fun observeStudyingStatus() {
-        mainSharedViewModel.updatedUser.observe(viewLifecycleOwner) { user ->
-            when (user?.studying) {
-                "0" -> stopwatchViewModel.stop()
-                "1" -> stopwatchViewModel.start()
-            }
-        }
-    }
-
-    private fun observeStopwatchState() {
-        stopwatchViewModel.state.observe(viewLifecycleOwner) { state ->
+    private fun observeTimerState() {
+        timerViewModel.state.observe(viewLifecycleOwner) { state ->
             when (state) {
-                StopwatchState.Started -> {
+                TimerState.Started -> {
                     binding.stopwatch.base = SystemClock.elapsedRealtime()
                     binding.stopwatch.start()
                     mapsViewModel.setChosenLocation()
                     listenIfUserIsInTimerBoundaries()
                 }
 
-                StopwatchState.Stopped -> {
-                    setPointsFromTimeSpent(stopwatchViewModel.elapsedTime)
+                TimerState.Stopped -> {
+                    setPointsFromTimeSpent(timerViewModel.elapsedTime)
                     resetTimerState()
-                    timerViewModel.updateStudying(mainSharedViewModel.updatedUser.value!!, "2")
+                    timerViewModel.reset()
                 }
 
-                StopwatchState.Reset -> {
+                TimerState.Reset -> {
                     resetTimerState()
-                    timerViewModel.updateStudying(mainSharedViewModel.updatedUser.value!!, "2")
+                    timerViewModel.reset()
                 }
 
                 else -> {}
