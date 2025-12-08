@@ -62,8 +62,8 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
         productEntries = mutableListOf()
         val adapter = RecyclerAdapter(productEntries, this)
         binding.rewardsRecycler.adapter = adapter
-        mainSharedViewModel.updatedUser.observe(viewLifecycleOwner) { user ->
-            binding.rewardsPoints.text = user.points
+        mainSharedViewModel.userPoints.observe(viewLifecycleOwner) { points ->
+            binding.rewardsPoints.text = points
         }
         val productDb = FirebaseDatabase.getInstance().reference
             .child("products")

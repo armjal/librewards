@@ -1,23 +1,69 @@
 package com.example.librewards.viewmodels
 
+import android.os.SystemClock
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.librewards.models.User
-import com.example.librewards.repositories.UserRepository
 
-class TimerViewModel(val userRepo: UserRepository) : ViewModel() {
-    fun updateStudying(currentUser: User, studying: String) {
-        val updatedUser = currentUser.copy(studying = studying)
-        userRepo.updateUser(updatedUser)
+sealed class TimerState {
+    object Started : TimerState()
+
+    object Stopped : TimerState()
+
+    object Neutral : TimerState()
+
+    object Reset : TimerState()
+}
+
+class TimerViewModel(val mainSharedViewModel: MainSharedViewModel) : ViewModel() {
+    var startTime: Long = 0
+    var elapsedTime: Long = 0
+    private var _state = MutableLiveData<TimerState>(TimerState.Neutral)
+    val state: LiveData<TimerState> get() = _state
+
+    init {
+        mainSharedViewModel.studyingStatus.observeForever { status -> handleStudyingStatusChange(status) }
+    }
+
+    private fun handleStudyingStatusChange(status: String?) {
+        when (status) {
+            "0" -> stop()
+            "1" -> start()
+        }
+    }
+
+    fun start() {
+        if (_state.value == TimerState.Started) return
+        mainSharedViewModel.updateStudying("1")
+        elapsedTime = 0
+        startTime = SystemClock.elapsedRealtime()
+        _state.value = TimerState.Started
+    }
+
+    fun stop() {
+        if (_state.value == TimerState.Stopped) return
+        mainSharedViewModel.updateStudying("0")
+        elapsedTime = SystemClock.elapsedRealtime() - startTime
+        startTime = 0
+        _state.value = TimerState.Stopped
+    }
+
+    fun reset() {
+        if (_state.value == TimerState.Reset) return
+        mainSharedViewModel.updateStudying("2")
+        elapsedTime = 0
+        startTime = 0
+        _state.value = TimerState.Reset
     }
 }
 
 class TimerViewModelFactory(
-    private val userRepo: UserRepository,
+    private val mainSharedViewModel: MainSharedViewModel,
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T = if (modelClass.isAssignableFrom(TimerViewModel::class.java)) {
         @Suppress("UNCHECKED_CAST")
-        TimerViewModel(userRepo) as T
+        TimerViewModel(mainSharedViewModel) as T
     } else {
         throw IllegalArgumentException("ViewModel Not Found")
     }
