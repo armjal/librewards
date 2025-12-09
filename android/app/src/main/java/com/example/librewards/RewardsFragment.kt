@@ -10,32 +10,33 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.setMargins
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.librewards.databinding.FragmentRewardsBinding
 import com.example.librewards.databinding.PopupLayoutBinding
-import com.example.librewards.models.Product
 import com.example.librewards.models.ProductEntry
-import com.example.librewards.repositories.UserRepository
+import com.example.librewards.repositories.ProductRepository
 import com.example.librewards.utils.FragmentExtended
 import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.MainSharedViewModel
-import com.example.librewards.viewmodels.MainViewModelFactory
-
+import com.example.librewards.viewmodels.RewardsEvent
 import com.example.librewards.viewmodels.RewardsViewModel
 import com.example.librewards.viewmodels.RewardsViewModelFactory
-
 import com.google.firebase.database.FirebaseDatabase
 import com.squareup.picasso.Picasso
 
 class RewardsFragment(override val icon: Int = R.drawable.reward) :
     FragmentExtended(),
     RecyclerAdapter.OnProductListener {
+    companion object {
+        val TAG: String = RewardsFragment::class.java.simpleName
+    }
+
     private lateinit var productRepo: ProductRepository
     private val mainSharedViewModel: MainSharedViewModel by activityViewModels()
     private val rewardsViewModel: RewardsViewModel by viewModels {
-        RewardsViewModelFactory(mainActivity.userRepo, productRepo)
+        RewardsViewModelFactory(mainSharedViewModel, productRepo)
     }
-    private lateinit var productDatabase: DatabaseReference
     private lateinit var mainActivity: MainActivity
     private lateinit var productEntries: MutableList<ProductEntry>
     private lateinit var productPopup: Dialog
@@ -48,7 +49,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
         savedInstanceState: Bundle?,
     ): View {
         mainActivity = activity as MainActivity
-        productDatabase = FirebaseDatabase.getInstance().reference
+        val productDatabase = FirebaseDatabase.getInstance().reference
             .child("products")
             .child(mainActivity.university)
         productRepo = ProductRepository(productDatabase)
@@ -74,8 +75,6 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
             productEntries.addAll(it)
             adapter.notifyDataSetChanged()
         }
-
-        rewardsViewModel.listenForRewardRedemption(mainActivity.email)
     }
 
     override fun onDestroyView() {
@@ -91,7 +90,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
 
         if (pointsInt > 0) {
             binding.rewardsPoints.text = pointsInt.toString()
-            mainSharedViewModel.minusPoints(
+            rewardsViewModel.minusPoints(
                 Integer.parseInt(productEntries[position].product.productCost),
             )
         } else {
@@ -102,19 +101,13 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
     private fun showImagePopup(list: MutableList<ProductEntry>, position: Int) {
         productPopup = Dialog(requireActivity())
         productPopup.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
-//        rewardsViewModel.updateRewardRedeemed(mainSharedViewModel.updatedUser.value!!, "0")
         val popupBinding = PopupLayoutBinding.inflate(layoutInflater)
         productPopup.setContentView(popupBinding.root)
 
         popupBinding.popupImageView.layoutParams.height = 150
         popupBinding.popupImageView.layoutParams.width = 150
         popupBinding.popupImageView.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-            setMargins(
-                30,
-                0,
-                0,
-                0,
-            )
+            setMargins(30, 0, 0, 0)
         }
 
 //         val drawableQR = mainActivity.qrCode.drawable
@@ -139,7 +132,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
             when (status) {
                 RewardsEvent.Redeemed -> {
                     calculatePointsFromPurchase(position)
-//                    rewardsViewModel.updateRewardRedeemed(mainSharedViewModel.updatedUser.value!!, "0")
+                    rewardsViewModel.setRewardsStatus(RewardsEvent.ReadyToRedeem)
                 }
 
                 else -> {}
@@ -149,15 +142,12 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
         popupBinding.closeBtn.setOnClickListener {
             productPopup.dismiss()
         }
-//        productPopup.setOnDismissListener { rewardsViewModel.updateRewardRedeemed(mainSharedViewModel.updatedUser.value!!, "2") }
+        productPopup.setOnDismissListener { rewardsViewModel.setRewardsStatus(RewardsEvent.Neutral) }
         productPopup.show()
     }
 
-    companion object {
-        val TAG: String = RewardsFragment::class.java.simpleName
-    }
-
     override fun onProductClick(position: Int) {
+        rewardsViewModel.setRewardsStatus(RewardsEvent.ReadyToRedeem)
         showImagePopup(productEntries, position)
     }
 }

@@ -26,18 +26,30 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
         userRepo.listenForUserField(email, "studying").map { it!! }
     }.asLiveData()
 
+    val redeemingRewardStatus: LiveData<String> = userEmailFlow.flatMapLatest { email ->
+        userRepo.listenForUserField(email, "redeemingReward").map { it!! }
+    }.asLiveData()
+
     fun startObservingUser(email: String) {
         Log.d(TAG, "Starting to observe user: $email")
         userEmailFlow.value = email
     }
 
-    fun updatePoints(points: Int) {
+    fun addPoints(points: Int) {
         val updatedPoints = parseInt(userPoints.value!!) + points
         userRepo.updateField(userEmailFlow.value, "points", updatedPoints.toString())
     }
 
+    fun updatePoints(points: String) {
+        userRepo.updateField(userEmailFlow.value, "points", points)
+    }
+
     fun updateStudying(studying: String) {
         userRepo.updateField(userEmailFlow.value, "studying", studying)
+    }
+
+    fun updateRedeemingReward(points: String) {
+        userRepo.updateField(userEmailFlow.value, "redeemingReward", points)
     }
 }
 
