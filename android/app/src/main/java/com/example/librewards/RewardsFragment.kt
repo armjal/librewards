@@ -14,7 +14,7 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.librewards.databinding.FragmentRewardsBinding
 import com.example.librewards.databinding.PopupLayoutBinding
-import com.example.librewards.models.ProductEntry
+import com.example.librewards.models.Product
 import com.example.librewards.repositories.ProductRepository
 import com.example.librewards.utils.FragmentExtended
 import com.example.librewards.utils.toastMessage
@@ -38,7 +38,6 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
         RewardsViewModelFactory(mainSharedViewModel, productRepo)
     }
     private lateinit var mainActivity: MainActivity
-    private lateinit var productEntries: MutableList<ProductEntry>
     private lateinit var productPopup: Dialog
 
     private var _binding: FragmentRewardsBinding? = null
@@ -68,14 +67,11 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
             binding.rewardsPoints.text = points
         }
 
-        productEntries = mutableListOf()
-        val adapter = RecyclerAdapter(productEntries, this)
+        val adapter = RecyclerAdapter(mutableListOf(), this)
         binding.rewardsRecycler.adapter = adapter
 
         rewardsViewModel.productEntries.observe(viewLifecycleOwner) {
-            productEntries.clear()
-            productEntries.addAll(it)
-            adapter.notifyDataSetChanged()
+            adapter.updateList(it)
         }
     }
 
@@ -84,12 +80,12 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
         _binding = null
     }
 
-    private fun showProductPopup(list: MutableList<ProductEntry>, position: Int) {
+    private fun showProductPopup(chosenProduct: Product) {
         with(popupBinding) {
-            popupText.text = list[position].product.productName
-            "${list[position].product.productCost} points".also { popupCost.text = it }
+            popupText.text = chosenProduct.productName
+            "${chosenProduct.productCost} points".also { popupCost.text = it }
 
-            Picasso.get().load(list[position].product.productImageUrl).into(popupImageView)
+            Picasso.get().load(chosenProduct.productImageUrl).into(popupImageView)
         }
         productPopup.show()
     }
@@ -121,12 +117,12 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
         }
     }
 
-    fun observeRewardsStatus(productPosition: Int) {
+    fun observeRewardsStatus(chosenProduct: Product) {
         rewardsViewModel.rewardStatus.observe(viewLifecycleOwner) { status ->
             when (status) {
                 RewardsEvent.Redeemed -> {
                     rewardsViewModel.minusPoints(
-                        Integer.parseInt(productEntries[productPosition].product.productCost),
+                        Integer.parseInt(chosenProduct.productCost),
                     )
                     rewardsViewModel.setRewardsStatus(RewardsEvent.ReadyToRedeem)
                 }
@@ -141,9 +137,10 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
     }
 
     override fun onProductClick(position: Int) {
+        val chosenProduct = rewardsViewModel.productEntries.value!![position].product
         rewardsViewModel.setRewardsStatus(RewardsEvent.ReadyToRedeem)
-        observeRewardsStatus(position)
-        showProductPopup(productEntries, position)
+        observeRewardsStatus(chosenProduct)
+        showProductPopup(chosenProduct)
         productPopup.setOnDismissListener { rewardsViewModel.setRewardsStatus(RewardsEvent.Neutral) }
     }
 }
