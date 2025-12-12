@@ -14,6 +14,8 @@ sealed class RewardsEvent() {
     object Redeemed : RewardsEvent()
 
     object Neutral : RewardsEvent()
+
+    object InsufficientFunds : RewardsEvent()
 }
 
 class RewardsViewModel(val mainSharedViewModel: MainSharedViewModel, val productRepo: ProductRepository) : ViewModel() {
@@ -40,10 +42,15 @@ class RewardsViewModel(val mainSharedViewModel: MainSharedViewModel, val product
             RewardsEvent.ReadyToRedeem -> mainSharedViewModel.updateRedeemingReward("0")
             RewardsEvent.Redeemed -> mainSharedViewModel.updateRedeemingReward("1")
             RewardsEvent.Neutral -> mainSharedViewModel.updateRedeemingReward("2")
+            else -> {}
         }
     }
 
     fun minusPoints(points: Int) {
+        if (points > parseInt(mainSharedViewModel.userPoints.value!!)) {
+            _rewardStatus.value = RewardsEvent.InsufficientFunds
+            return
+        }
         val updatedPoints = parseInt(mainSharedViewModel.userPoints.value!!) - points
         mainSharedViewModel.updatePoints(updatedPoints.toString())
     }

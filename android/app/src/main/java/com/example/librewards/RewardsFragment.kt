@@ -43,6 +43,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
 
     private var _binding: FragmentRewardsBinding? = null
     private val binding get() = _binding!!
+    private lateinit var popupBinding: PopupLayoutBinding
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -53,6 +54,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
             .child("products")
             .child(mainActivity.university)
         productRepo = ProductRepository(productDatabase)
+        setupProductPopupUI()
         _binding = FragmentRewardsBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -82,72 +84,66 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
         _binding = null
     }
 
-    private fun calculatePointsFromPurchase(position: Int) {
-        val pointsInt =
-            Integer.parseInt(binding.rewardsPoints.text.toString()) - Integer.parseInt(
-                productEntries[position].product.productCost,
-            )
+    private fun showProductPopup(list: MutableList<ProductEntry>, position: Int) {
+        with(popupBinding) {
+            popupText.text = list[position].product.productName
+            "${list[position].product.productCost} points".also { popupCost.text = it }
 
-        if (pointsInt > 0) {
-            binding.rewardsPoints.text = pointsInt.toString()
-            rewardsViewModel.minusPoints(
-                Integer.parseInt(productEntries[position].product.productCost),
-            )
-        } else {
-            toastMessage(requireActivity(), "You do not have sufficient points for this purchase")
+            Picasso.get().load(list[position].product.productImageUrl).into(popupImageView)
         }
+        productPopup.show()
     }
 
-    private fun showImagePopup(list: MutableList<ProductEntry>, position: Int) {
+    private fun setupProductPopupUI() {
         productPopup = Dialog(requireActivity())
         productPopup.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
-        val popupBinding = PopupLayoutBinding.inflate(layoutInflater)
+        popupBinding = PopupLayoutBinding.inflate(layoutInflater)
         productPopup.setContentView(popupBinding.root)
-
-        popupBinding.popupImageView.layoutParams.height = 150
-        popupBinding.popupImageView.layoutParams.width = 150
-        popupBinding.popupImageView.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-            setMargins(30, 0, 0, 0)
-        }
 
 //         val drawableQR = mainActivity.qrCode.drawable
 //         popupBinding.popupQr.setImageDrawable(drawableQR)
 
-        popupBinding.popupQr.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(50) }
-        popupBinding.popupText.text = list[position].product.productName
-        "${list[position].product.productCost} points".also { popupBinding.popupCost.text = it }
-        popupBinding.popupCost.textSize = 20F
-        popupBinding.popupText.textSize = 25F
-        popupBinding.popupCost.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-            setMargins(
-                0,
-                0,
-                0,
-                50,
-            )
+        with(popupBinding) {
+            popupImageView.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                height = 150
+                width = 150
+                setMargins(30, 0, 0, 0)
+            }
+            popupQr.updateLayoutParams<ViewGroup.MarginLayoutParams> { setMargins(50) }
+            popupText.textSize = 25F
+            popupCost.textSize = 20F
+            popupCost.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                setMargins(0, 0, 0, 50)
+            }
+            closeBtn.setOnClickListener {
+                productPopup.dismiss()
+            }
         }
-        Picasso.get().load(list[position].product.productImageUrl).into(popupBinding.popupImageView)
+    }
 
+    fun observeRewardsStatus(productPosition: Int) {
         rewardsViewModel.rewardStatus.observe(viewLifecycleOwner) { status ->
             when (status) {
                 RewardsEvent.Redeemed -> {
-                    calculatePointsFromPurchase(position)
+                    rewardsViewModel.minusPoints(
+                        Integer.parseInt(productEntries[productPosition].product.productCost),
+                    )
                     rewardsViewModel.setRewardsStatus(RewardsEvent.ReadyToRedeem)
+                }
+
+                RewardsEvent.InsufficientFunds -> {
+                    toastMessage(requireActivity(), getString(R.string.insufficient_funds))
                 }
 
                 else -> {}
             }
         }
-
-        popupBinding.closeBtn.setOnClickListener {
-            productPopup.dismiss()
-        }
-        productPopup.setOnDismissListener { rewardsViewModel.setRewardsStatus(RewardsEvent.Neutral) }
-        productPopup.show()
     }
 
     override fun onProductClick(position: Int) {
         rewardsViewModel.setRewardsStatus(RewardsEvent.ReadyToRedeem)
-        showImagePopup(productEntries, position)
+        observeRewardsStatus(position)
+        showProductPopup(productEntries, position)
+        productPopup.setOnDismissListener { rewardsViewModel.setRewardsStatus(RewardsEvent.Neutral) }
     }
 }
