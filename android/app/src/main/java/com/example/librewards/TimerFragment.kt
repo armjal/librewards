@@ -165,7 +165,7 @@ class TimerFragment(
                 }
 
                 TimerState.Stopped -> {
-                    setPointsFromTimeSpent(timerViewModel.elapsedTime)
+                    setPointsFromTimeSpent(timerViewModel.elapsedTime.value!!)
                     resetTimerState()
                     timerViewModel.reset()
                 }

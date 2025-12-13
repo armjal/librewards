@@ -18,7 +18,8 @@ sealed class TimerState {
 
 class TimerViewModel(val mainSharedViewModel: MainSharedViewModel) : ViewModel() {
     var startTime: Long = 0
-    var elapsedTime: Long = 0
+    private var _elapsedTime = MutableLiveData<Long>(0)
+    val elapsedTime: LiveData<Long> = _elapsedTime
     private var _state = MutableLiveData<TimerState>(TimerState.Neutral)
     val state: LiveData<TimerState> get() = _state
 
@@ -36,7 +37,7 @@ class TimerViewModel(val mainSharedViewModel: MainSharedViewModel) : ViewModel()
     fun start() {
         if (_state.value == TimerState.Started) return
         mainSharedViewModel.updateStudying("1")
-        elapsedTime = 0
+        _elapsedTime.value = 0
         startTime = SystemClock.elapsedRealtime()
         _state.value = TimerState.Started
     }
@@ -44,7 +45,7 @@ class TimerViewModel(val mainSharedViewModel: MainSharedViewModel) : ViewModel()
     fun stop() {
         if (_state.value == TimerState.Stopped) return
         mainSharedViewModel.updateStudying("0")
-        elapsedTime = SystemClock.elapsedRealtime() - startTime
+        _elapsedTime.value = SystemClock.elapsedRealtime() - startTime
         startTime = 0
         _state.value = TimerState.Stopped
     }
@@ -52,7 +53,7 @@ class TimerViewModel(val mainSharedViewModel: MainSharedViewModel) : ViewModel()
     fun reset() {
         if (_state.value == TimerState.Reset) return
         mainSharedViewModel.updateStudying("2")
-        elapsedTime = 0
+        _elapsedTime.value = 0
         startTime = 0
         _state.value = TimerState.Reset
     }
