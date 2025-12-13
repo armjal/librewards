@@ -2,6 +2,7 @@ package com.example.librewards.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
@@ -16,6 +17,9 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
         val TAG: String = MainSharedViewModel::class.java.simpleName
     }
 
+    private val _panelSlideOffset = MutableLiveData<Float>()
+    val panelSlideOffset: LiveData<Float> = _panelSlideOffset
+
     private val userEmailFlow = MutableStateFlow("")
 
     val userPoints: LiveData<String> = userEmailFlow.flatMapLatest { email ->
@@ -29,6 +33,10 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
     val redeemingRewardStatus: LiveData<String> = userEmailFlow.flatMapLatest { email ->
         userRepo.listenForUserField(email, "redeemingReward").map { it!! }
     }.asLiveData()
+
+    fun onPanelSlide(offset: Float) {
+        _panelSlideOffset.value = offset
+    }
 
     fun startObservingUser(email: String) {
         Log.d(TAG, "Starting to observe user: $email")

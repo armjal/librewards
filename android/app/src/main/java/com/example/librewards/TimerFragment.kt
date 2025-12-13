@@ -247,24 +247,10 @@ class TimerFragment(
     }
 
     private fun setupSlidePanelListener() {
-        val touchableList: ArrayList<View?> = mainActivity.tabLayout.touchables
         binding.slidingPanel.addPanelSlideListener(object :
             SlidingUpPanelLayout.PanelSlideListener {
             override fun onPanelSlide(panel: View?, slideOffset: Float) {
-                mainActivity.profileImage.alpha = (1.3 - slideOffset).toFloat()
-                mainActivity.logo.alpha = (1.3 - slideOffset).toFloat()
-                mainActivity.appBarLayout.alpha = (1.3 - slideOffset).toFloat()
-                mainActivity.tabLayout.alpha = (1.3 - slideOffset).toFloat()
-
-                if (slideOffset > 0.9) {
-                    mainActivity.profileImage.setOnClickListener(null)
-                    touchableList[0]?.isEnabled = false
-                    touchableList[1]?.isEnabled = false
-                } else {
-                    mainActivity.profileImage.setOnClickListener { }
-                    touchableList[0]?.isEnabled = true
-                    touchableList[1]?.isEnabled = true
-                }
+                mainSharedViewModel.onPanelSlide(slideOffset)
             }
 
             override fun onPanelStateChanged(
