@@ -104,8 +104,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
         popupBinding = PopupLayoutBinding.inflate(layoutInflater)
         productPopup.setContentView(popupBinding.root)
 
-//         val drawableQR = mainActivity.qrCode.drawable
-//         popupBinding.popupQr.setImageDrawable(drawableQR)
+        observerUserQRCode()
 
         with(popupBinding) {
             popupImageView.updateLayoutParams<ViewGroup.MarginLayoutParams> {
@@ -122,6 +121,12 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
             closeBtn.setOnClickListener {
                 productPopup.dismiss()
             }
+        }
+    }
+
+    private fun observerUserQRCode() {
+        mainSharedViewModel.userQrCode.observe(viewLifecycleOwner) { qrCode ->
+            popupBinding.popupQr.setImageBitmap(qrCode.bitmap)
         }
     }
 
