@@ -54,7 +54,6 @@ class TimerFragment(
     }
     private var marker: Marker? = null
     private lateinit var circle: Circle
-    private lateinit var mainActivity: MainActivity
     private var googleMap: GoogleMap? = null
     private var _binding: FragmentTimerBinding? = null
     private val binding get() = _binding!!
@@ -67,9 +66,8 @@ class TimerFragment(
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?,
     ): View {
-        mainActivity = activity as MainActivity
         _binding = FragmentTimerBinding.inflate(inflater, container, false)
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(mainActivity)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         mapsViewModel.listenToLocationChanges()
         observeTimerState()
 
@@ -89,8 +87,8 @@ class TimerFragment(
         mapFragment.getMapAsync(this)
 
         val qrGen = QRCodeGenerator()
-        binding.qrCode.setImageBitmap(qrGen.createQR(hashFunction(mainActivity.email), 400, 400))
-        binding.qrCodeNumber.text = hashFunction(mainActivity.email)
+        binding.qrCode.setImageBitmap(qrGen.createQR(hashFunction(mainSharedViewModel.userEmail.value!!), 400, 400))
+        binding.qrCodeNumber.text = hashFunction(mainSharedViewModel.userEmail.value!!)
         observeMinutesSpentAtLibrary()
         setupSlidePanelListener()
     }
@@ -119,10 +117,10 @@ class TimerFragment(
     }
 
     private fun checkLocationServicesPermissions(): Boolean = ActivityCompat.checkSelfPermission(
-        mainActivity, Manifest.permission.ACCESS_COARSE_LOCATION,
+        requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION,
     ) == PackageManager.PERMISSION_GRANTED ||
         ActivityCompat.checkSelfPermission(
-            mainActivity, Manifest.permission.ACCESS_FINE_LOCATION,
+            requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION,
         ) == PackageManager.PERMISSION_GRANTED
 
     private fun requestLocationServicesPermissions() {

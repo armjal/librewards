@@ -20,17 +20,18 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
     private val _panelSlideOffset = MutableLiveData<Float>()
     val panelSlideOffset: LiveData<Float> = _panelSlideOffset
 
-    private val userEmailFlow = MutableStateFlow("")
+    private val _userEmailFlow = MutableStateFlow("")
+    val userEmail: LiveData<String> = _userEmailFlow.asLiveData()
 
-    val userPoints: LiveData<String> = userEmailFlow.flatMapLatest { email ->
+    val userPoints: LiveData<String> = _userEmailFlow.flatMapLatest { email ->
         userRepo.listenForUserField(email, "points").map { it!! }
     }.asLiveData()
 
-    val studyingStatus: LiveData<String> = userEmailFlow.flatMapLatest { email ->
+    val studyingStatus: LiveData<String> = _userEmailFlow.flatMapLatest { email ->
         userRepo.listenForUserField(email, "studying").map { it!! }
     }.asLiveData()
 
-    val redeemingRewardStatus: LiveData<String> = userEmailFlow.flatMapLatest { email ->
+    val redeemingRewardStatus: LiveData<String> = _userEmailFlow.flatMapLatest { email ->
         userRepo.listenForUserField(email, "redeemingReward").map { it!! }
     }.asLiveData()
 
@@ -40,24 +41,24 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
 
     fun startObservingUser(email: String) {
         Log.d(TAG, "Starting to observe user: $email")
-        userEmailFlow.value = email
+        _userEmailFlow.value = email
     }
 
     fun addPoints(points: Int) {
         val updatedPoints = parseInt(userPoints.value!!) + points
-        userRepo.updateField(userEmailFlow.value, "points", updatedPoints.toString())
+        userRepo.updateField(_userEmailFlow.value, "points", updatedPoints.toString())
     }
 
     fun updatePoints(points: String) {
-        userRepo.updateField(userEmailFlow.value, "points", points)
+        userRepo.updateField(_userEmailFlow.value, "points", points)
     }
 
     fun updateStudying(studying: String) {
-        userRepo.updateField(userEmailFlow.value, "studying", studying)
+        userRepo.updateField(_userEmailFlow.value, "studying", studying)
     }
 
     fun updateRedeemingReward(points: String) {
-        userRepo.updateField(userEmailFlow.value, "redeemingReward", points)
+        userRepo.updateField(_userEmailFlow.value, "redeemingReward", points)
     }
 }
 
