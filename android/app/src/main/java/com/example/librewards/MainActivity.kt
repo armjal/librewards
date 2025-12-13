@@ -66,6 +66,7 @@ class MainActivity : AppCompatActivity() {
             logoutApp()
         }
         mainSharedViewModel.startObservingUser(email)
+        mainSharedViewModel.createQRCode()
         mainSharedViewModel.panelSlideOffset.observe(this) { slideOffset ->
             val alpha = (1.3 - slideOffset).toFloat()
             binding.appBarLayout.alpha = alpha

@@ -1,16 +1,24 @@
 package com.example.librewards.viewmodels
 
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
+import com.example.librewards.hashFunction
+import com.example.librewards.qrcode.QRCodeGenerator
 import com.example.librewards.repositories.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import java.lang.Integer.parseInt
+
+data class UserQRCode(
+    val bitmap: Bitmap,
+    val number: String,
+)
 
 class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
     companion object {
@@ -21,7 +29,8 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
     val panelSlideOffset: LiveData<Float> = _panelSlideOffset
 
     private val _userEmailFlow = MutableStateFlow("")
-    val userEmail: LiveData<String> = _userEmailFlow.asLiveData()
+    private var _userQrCode = MutableLiveData<UserQRCode>(null)
+    val userQrCode: LiveData<UserQRCode> = _userQrCode
 
     val userPoints: LiveData<String> = _userEmailFlow.flatMapLatest { email ->
         userRepo.listenForUserField(email, "points").map { it!! }
@@ -42,6 +51,13 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
     fun startObservingUser(email: String) {
         Log.d(TAG, "Starting to observe user: $email")
         _userEmailFlow.value = email
+    }
+
+    fun createQRCode() {
+        val qrCodeGenerator = QRCodeGenerator()
+        val qrCodeNumber = hashFunction(_userEmailFlow.value)
+        val qrCodeBitmap = qrCodeGenerator.createQR(qrCodeNumber, 400, 400)
+        _userQrCode.value = UserQRCode(qrCodeBitmap!!, qrCodeNumber)
     }
 
     fun addPoints(points: Int) {

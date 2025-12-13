@@ -17,7 +17,6 @@ import androidx.core.graphics.toColorInt
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import com.example.librewards.databinding.FragmentTimerBinding
-import com.example.librewards.qrcode.QRCodeGenerator
 import com.example.librewards.utils.FragmentExtended
 import com.example.librewards.utils.showPopup
 import com.example.librewards.utils.toastMessage
@@ -71,9 +70,6 @@ class TimerFragment(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val qrGen = QRCodeGenerator()
-        binding.qrCode.setImageBitmap(qrGen.createQR(hashFunction(mainSharedViewModel.userEmail.value!!), 400, 400))
-        binding.qrCodeNumber.text = hashFunction(mainSharedViewModel.userEmail.value!!)
         setupMap()
         setupObservers()
         setupSlidePanelListener()
@@ -96,11 +92,19 @@ class TimerFragment(
         mainSharedViewModel.userPoints.observe(viewLifecycleOwner) { points ->
             binding.usersPoints.text = points
         }
+        observerUserQRCode()
         observeTimerState()
         observeDistanceForTimer()
         observeMinutesSpentAtLibrary()
         observeLocationChanges()
         observeForMapDrawing()
+    }
+
+    private fun observerUserQRCode() {
+        mainSharedViewModel.userQrCode.observe(viewLifecycleOwner) { qrCode ->
+            binding.qrCode.setImageBitmap(qrCode.bitmap)
+            binding.qrCodeNumber.text = qrCode.number
+        }
     }
 
     private fun observeTimerState() {
