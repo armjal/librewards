@@ -66,6 +66,18 @@ class MainActivity : AppCompatActivity() {
             logoutApp()
         }
         mainSharedViewModel.startObservingUser(email)
+        mainSharedViewModel.panelSlideOffset.observe(this) { slideOffset ->
+            val alpha = (1.3 - slideOffset).toFloat()
+            binding.appBarLayout.alpha = alpha
+            binding.profileImage.alpha = alpha
+            binding.logo.alpha = alpha
+            binding.tabLayout.alpha = alpha
+
+            val panelIsUp = slideOffset > 0.9
+            binding.profileImage.isClickable = !panelIsUp
+            binding.tabLayout.touchables.forEach { it?.isEnabled = !panelIsUp }
+            binding.viewPager.isUserInputEnabled = !panelIsUp
+        }
     }
 
     private fun initialiseVariables() {

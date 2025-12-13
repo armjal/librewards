@@ -5,6 +5,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.librewards.utils.calculatePointsFromTime
+import java.lang.Integer.parseInt
 
 sealed class TimerState {
     object Started : TimerState()
@@ -16,9 +18,17 @@ sealed class TimerState {
     object Reset : TimerState()
 }
 
+data class TimerSummary(
+    var minutesSpent: Int,
+    val pointsEarned: Int,
+    val newTotalPoints: Int,
+)
+
 class TimerViewModel(val mainSharedViewModel: MainSharedViewModel) : ViewModel() {
     var startTime: Long = 0
     var elapsedTime: Long = 0
+    private var _timerSummary = MutableLiveData<TimerSummary>(null)
+    val timerSummary: LiveData<TimerSummary> = _timerSummary
     private var _state = MutableLiveData<TimerState>(TimerState.Neutral)
     val state: LiveData<TimerState> get() = _state
 
@@ -46,7 +56,19 @@ class TimerViewModel(val mainSharedViewModel: MainSharedViewModel) : ViewModel()
         mainSharedViewModel.updateStudying("0")
         elapsedTime = SystemClock.elapsedRealtime() - startTime
         startTime = 0
+
+        val pointsEarned = calculatePointsFromTime(elapsedTime)
+        mainSharedViewModel.addPoints(pointsEarned)
+        generateTimerSummary(pointsEarned)
+
         _state.value = TimerState.Stopped
+    }
+
+    private fun generateTimerSummary(pointsEarned: Int) {
+        val currentPoints = parseInt(mainSharedViewModel.userPoints.value!!)
+
+        val minutesSpent = (elapsedTime / 1000 / 60).toInt()
+        _timerSummary.value = TimerSummary(minutesSpent, pointsEarned, currentPoints + pointsEarned)
     }
 
     fun reset() {
