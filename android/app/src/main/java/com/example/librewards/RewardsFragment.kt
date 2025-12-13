@@ -32,46 +32,54 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
         val TAG: String = RewardsFragment::class.java.simpleName
     }
 
-    private lateinit var productRepo: ProductRepository
     private val mainSharedViewModel: MainSharedViewModel by activityViewModels()
     private val rewardsViewModel: RewardsViewModel by viewModels {
+        val mainActivity = requireActivity() as MainActivity
+        val productDatabase = FirebaseDatabase.getInstance().reference
+            .child("products")
+            .child(mainActivity.university)
+        val productRepo = ProductRepository(productDatabase)
         RewardsViewModelFactory(mainSharedViewModel, productRepo)
     }
-    private lateinit var mainActivity: MainActivity
-    private lateinit var productPopup: Dialog
 
     private var _binding: FragmentRewardsBinding? = null
     private val binding get() = _binding!!
+    private lateinit var productPopup: Dialog
     private lateinit var popupBinding: PopupLayoutBinding
+    private lateinit var recyclerAdapter: RecyclerAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        mainActivity = activity as MainActivity
-        val productDatabase = FirebaseDatabase.getInstance().reference
-            .child("products")
-            .child(mainActivity.university)
-        productRepo = ProductRepository(productDatabase)
-        setupProductPopupUI()
         _binding = FragmentRewardsBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val layoutManager = LinearLayoutManager(context)
-        "See rewards from ${mainActivity.university}".also { binding.rewardsText.text = it }
-        binding.rewardsRecycler.layoutManager = layoutManager
+        val mainActivity = activity as MainActivity
+        binding.rewardsText.text = getString(R.string.rewards_from_university, mainActivity.university)
+        setupProductPopupUI()
+        setupRecyclerAdapter()
+        setupObservers()
+    }
+
+    fun setupRecyclerAdapter() {
+        recyclerAdapter = RecyclerAdapter(mutableListOf(), this)
+        with(binding.rewardsRecycler) {
+            layoutManager = LinearLayoutManager(context)
+            adapter = recyclerAdapter
+        }
+    }
+
+    fun setupObservers() {
         mainSharedViewModel.userPoints.observe(viewLifecycleOwner) { points ->
             binding.rewardsPoints.text = points
         }
 
-        val adapter = RecyclerAdapter(mutableListOf(), this)
-        binding.rewardsRecycler.adapter = adapter
-
         rewardsViewModel.productEntries.observe(viewLifecycleOwner) {
-            adapter.updateList(it)
+            recyclerAdapter.updateList(it)
         }
     }
 
@@ -83,7 +91,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
     private fun showProductPopup(chosenProduct: Product) {
         with(popupBinding) {
             popupText.text = chosenProduct.productName
-            "${chosenProduct.productCost} points".also { popupCost.text = it }
+            popupCost.text = "${chosenProduct.productCost} points"
 
             Picasso.get().load(chosenProduct.productImageUrl).into(popupImageView)
         }
