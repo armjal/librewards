@@ -89,6 +89,7 @@ class TimerFragment(
         binding.qrCodeNumber.text = hashFunction(mainSharedViewModel.userEmail.value!!)
         setupObservers()
         setupSlidePanelListener()
+        setupChronometerDurationListener()
     }
 
     private fun setupObservers() {
@@ -106,7 +107,6 @@ class TimerFragment(
                     binding.stopwatch.base = SystemClock.elapsedRealtime()
                     binding.stopwatch.start()
                     mapsViewModel.setChosenLocation()
-                    setupChronometerDurationListener()
                 }
 
                 TimerState.Stopped, TimerState.Reset -> {
