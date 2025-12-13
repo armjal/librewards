@@ -214,10 +214,7 @@ class TimerFragment(
             if (googleMap != null) {
                 onMapReady(googleMap!!)
             } else {
-                toastMessage(
-                    requireActivity(),
-                    "Location permission is required to use the timer feature.",
-                )
+                toastMessage(requireActivity(), getString(R.string.location_permission_not_enabled))
             }
         }
     }
@@ -258,7 +255,8 @@ class TimerFragment(
                 panel: View?,
                 previousState: SlidingUpPanelLayout.PanelState?,
                 newState: SlidingUpPanelLayout.PanelState?,
-            ) {}
+            ) {
+            }
         })
     }
 }
