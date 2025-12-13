@@ -19,7 +19,6 @@ import androidx.fragment.app.viewModels
 import com.example.librewards.databinding.FragmentTimerBinding
 import com.example.librewards.qrcode.QRCodeGenerator
 import com.example.librewards.utils.FragmentExtended
-import com.example.librewards.utils.calculatePointsFromTime
 import com.example.librewards.utils.showPopup
 import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.MainSharedViewModel
@@ -92,7 +91,7 @@ class TimerFragment(
         val qrGen = QRCodeGenerator()
         binding.qrCode.setImageBitmap(qrGen.createQR(hashFunction(mainActivity.email), 400, 400))
         binding.qrCodeNumber.text = hashFunction(mainActivity.email)
-
+        observeMinutesSpentAtLibrary()
         setupSlidePanelListener()
     }
 
@@ -165,7 +164,6 @@ class TimerFragment(
                 }
 
                 TimerState.Stopped -> {
-                    setPointsFromTimeSpent(timerViewModel.elapsedTime.value!!)
                     resetTimerState()
                     timerViewModel.reset()
                 }
@@ -177,6 +175,21 @@ class TimerFragment(
 
                 else -> {}
             }
+        }
+    }
+
+    private fun observeMinutesSpentAtLibrary() {
+        timerViewModel.timerSummary.observe(viewLifecycleOwner) {
+            if (it == null) return@observe
+
+            val minuteText = resources.getQuantityString(R.plurals.minutes_plural, it.minutesSpent)
+
+            showPopup(
+                requireActivity(),
+                getString(
+                    R.string.congrats_message, it.minutesSpent, minuteText, it.pointsEarned, it.newTotalPoints,
+                ),
+            )
         }
     }
 
@@ -199,27 +212,6 @@ class TimerFragment(
                     requireActivity(), getString(R.string.no_stop_code_entered),
                 )
             }
-        }
-    }
-
-    private fun setPointsFromTimeSpent(totalTime: Long) {
-        val pointsEarned = calculatePointsFromTime(totalTime)
-        val minutes = (totalTime / 1000 / 60).toInt()
-
-        mainSharedViewModel.addPoints(pointsEarned)
-
-        val newPoints = pointsEarned + Integer.parseInt(binding.usersPoints.text.toString())
-
-        if (minutes == 1) {
-            showPopup(
-                requireActivity(),
-                getString(R.string.congrats_message, minutes, "minute", pointsEarned, newPoints),
-            )
-        } else {
-            showPopup(
-                requireActivity(),
-                getString(R.string.congrats_message, minutes, "minutes", pointsEarned, newPoints),
-            )
         }
     }
 

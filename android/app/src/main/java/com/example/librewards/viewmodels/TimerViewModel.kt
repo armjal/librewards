@@ -5,6 +5,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.librewards.utils.calculatePointsFromTime
+import java.lang.Integer.parseInt
 
 sealed class TimerState {
     object Started : TimerState()
@@ -16,10 +18,17 @@ sealed class TimerState {
     object Reset : TimerState()
 }
 
+data class TimerSummary(
+    var minutesSpent: Int,
+    val pointsEarned: Int,
+    val newTotalPoints: Int,
+)
+
 class TimerViewModel(val mainSharedViewModel: MainSharedViewModel) : ViewModel() {
     var startTime: Long = 0
-    private var _elapsedTime = MutableLiveData<Long>(0)
-    val elapsedTime: LiveData<Long> = _elapsedTime
+    var elapsedTime: Long = 0
+    private var _timerSummary = MutableLiveData<TimerSummary>(null)
+    val timerSummary: LiveData<TimerSummary> = _timerSummary
     private var _state = MutableLiveData<TimerState>(TimerState.Neutral)
     val state: LiveData<TimerState> get() = _state
 
@@ -37,7 +46,7 @@ class TimerViewModel(val mainSharedViewModel: MainSharedViewModel) : ViewModel()
     fun start() {
         if (_state.value == TimerState.Started) return
         mainSharedViewModel.updateStudying("1")
-        _elapsedTime.value = 0
+        elapsedTime = 0
         startTime = SystemClock.elapsedRealtime()
         _state.value = TimerState.Started
     }
@@ -45,15 +54,27 @@ class TimerViewModel(val mainSharedViewModel: MainSharedViewModel) : ViewModel()
     fun stop() {
         if (_state.value == TimerState.Stopped) return
         mainSharedViewModel.updateStudying("0")
-        _elapsedTime.value = SystemClock.elapsedRealtime() - startTime
+        elapsedTime = SystemClock.elapsedRealtime() - startTime
         startTime = 0
+
+        val pointsEarned = calculatePointsFromTime(elapsedTime)
+        mainSharedViewModel.addPoints(pointsEarned)
+        generateTimerSummary(pointsEarned)
+
         _state.value = TimerState.Stopped
+    }
+
+    private fun generateTimerSummary(pointsEarned: Int) {
+        val currentPoints = parseInt(mainSharedViewModel.userPoints.value!!)
+
+        val minutesSpent = (elapsedTime / 1000 / 60).toInt()
+        _timerSummary.value = TimerSummary(minutesSpent, pointsEarned, currentPoints + pointsEarned)
     }
 
     fun reset() {
         if (_state.value == TimerState.Reset) return
         mainSharedViewModel.updateStudying("2")
-        _elapsedTime.value = 0
+        elapsedTime = 0
         startTime = 0
         _state.value = TimerState.Reset
     }
