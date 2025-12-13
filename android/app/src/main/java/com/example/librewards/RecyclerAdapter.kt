@@ -26,6 +26,12 @@ class RecyclerAdapter(
         Picasso.get().load(product.productImageUrl).into(holder.itemImage)
     }
 
+    fun updateList(newList: List<ProductEntry>) {
+        list.clear()
+        list.addAll(newList)
+        notifyDataSetChanged()
+    }
+
     override fun getItemCount(): Int = list.size
 
     inner class ViewHolder(itemView: View, var onProductListener: OnProductListener) :

@@ -50,6 +50,7 @@
     <string name="edit_product">Edit product</string>
     <string name="congrats_message">Well done, you spent %1$d %2$s at the library and have earned %3$d points!\nYour new points balance is: %4$d</string>
     <string name="no_stop_code_entered">No stop code was entered for 24 hours. The timer has been reset</string>
-
+    <string name="insufficient_funds">You do not have sufficient points for this purchase</string>
+    <string name="rewards_from_university">See rewards from %s</string>
 
 </resources>
