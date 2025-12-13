@@ -67,32 +67,36 @@ class TimerFragment(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentTimerBinding.inflate(inflater, container, false)
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-        mapsViewModel.listenToLocationChanges()
-
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        if (!checkLocationServicesPermissions()) {
-            requestLocationServicesPermissions()
-            return
-        }
-        mainSharedViewModel.userPoints.observe(viewLifecycleOwner) { points ->
-            binding.usersPoints.text = points
-        }
-        val mapFragment = childFragmentManager.findFragmentById(R.id.googleMap) as SupportMapFragment
-        mapFragment.getMapAsync(this)
         val qrGen = QRCodeGenerator()
         binding.qrCode.setImageBitmap(qrGen.createQR(hashFunction(mainSharedViewModel.userEmail.value!!), 400, 400))
         binding.qrCodeNumber.text = hashFunction(mainSharedViewModel.userEmail.value!!)
+        setupMap()
         setupObservers()
         setupSlidePanelListener()
         setupChronometerDurationListener()
     }
 
+    private fun setupMap() {
+        if (!checkLocationServicesPermissions()) {
+            requestLocationServicesPermissions()
+            return
+        }
+
+        val mapFragment = childFragmentManager.findFragmentById(R.id.googleMap) as SupportMapFragment
+        mapFragment.getMapAsync(this)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+        mapsViewModel.listenToLocationChanges()
+    }
+
     private fun setupObservers() {
+        mainSharedViewModel.userPoints.observe(viewLifecycleOwner) { points ->
+            binding.usersPoints.text = points
+        }
         observeTimerState()
         observeDistanceForTimer()
         observeMinutesSpentAtLibrary()
@@ -254,8 +258,7 @@ class TimerFragment(
                 panel: View?,
                 previousState: SlidingUpPanelLayout.PanelState?,
                 newState: SlidingUpPanelLayout.PanelState?,
-            ) {
-            }
+            ) {}
         })
     }
 }
