@@ -206,7 +206,7 @@ class TimerFragment(
         val pointsEarned = calculatePointsFromTime(totalTime)
         val minutes = (totalTime / 1000 / 60).toInt()
 
-        mainSharedViewModel.updatePoints(pointsEarned)
+        mainSharedViewModel.addPoints(pointsEarned)
 
         val newPoints = pointsEarned + Integer.parseInt(binding.usersPoints.text.toString())
 
