@@ -45,7 +45,6 @@ class TimerFragment(
 ) : FragmentExtended(), OnMapReadyCallback {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val mainSharedViewModel: MainSharedViewModel by activityViewModels()
-
     private val timerViewModel: TimerViewModel by viewModels {
         TimerViewModelFactory(mainSharedViewModel)
     }
@@ -53,7 +52,7 @@ class TimerFragment(
         MapsViewModelFactory(fusedLocationClient)
     }
     private var marker: Marker? = null
-    private lateinit var circle: Circle
+    private lateinit var mapCircle: Circle
     private var googleMap: GoogleMap? = null
     private var _binding: FragmentTimerBinding? = null
     private val binding get() = _binding!!
@@ -67,52 +66,124 @@ class TimerFragment(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentTimerBinding.inflate(inflater, container, false)
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-        mapsViewModel.listenToLocationChanges()
-        observeTimerState()
-
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val qrGen = QRCodeGenerator()
+        binding.qrCode.setImageBitmap(qrGen.createQR(hashFunction(mainSharedViewModel.userEmail.value!!), 400, 400))
+        binding.qrCodeNumber.text = hashFunction(mainSharedViewModel.userEmail.value!!)
+        setupMap()
+        setupObservers()
+        setupSlidePanelListener()
+        setupChronometerDurationListener()
+    }
+
+    private fun setupMap() {
         if (!checkLocationServicesPermissions()) {
             requestLocationServicesPermissions()
             return
         }
+
+        val mapFragment = childFragmentManager.findFragmentById(R.id.googleMap) as SupportMapFragment
+        mapFragment.getMapAsync(this)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+        mapsViewModel.listenToLocationChanges()
+    }
+
+    private fun setupObservers() {
         mainSharedViewModel.userPoints.observe(viewLifecycleOwner) { points ->
             binding.usersPoints.text = points
         }
-        val mapFragment = childFragmentManager.findFragmentById(R.id.googleMap) as SupportMapFragment
-        mapFragment.getMapAsync(this)
-
-        val qrGen = QRCodeGenerator()
-        binding.qrCode.setImageBitmap(qrGen.createQR(hashFunction(mainSharedViewModel.userEmail.value!!), 400, 400))
-        binding.qrCodeNumber.text = hashFunction(mainSharedViewModel.userEmail.value!!)
+        observeTimerState()
+        observeDistanceForTimer()
         observeMinutesSpentAtLibrary()
-        setupSlidePanelListener()
+        observeLocationChanges()
+        observeForMapDrawing()
     }
 
-    private fun observeDistanceForTimer() {
-        mapsViewModel.distance.observe(viewLifecycleOwner) { distance ->
-            if (distance!! > 40) {
-                circle.fillColor = "#4dff0000".toColorInt()
-                timerViewModel.reset()
-            } else {
-                circle.fillColor = "#4d318ce7".toColorInt()
+    private fun observeTimerState() {
+        timerViewModel.state.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                TimerState.Started -> {
+                    binding.stopwatch.base = SystemClock.elapsedRealtime()
+                    binding.stopwatch.start()
+                    mapsViewModel.setChosenLocation()
+                }
+
+                TimerState.Stopped, TimerState.Reset -> {
+                    resetTimerState()
+                    timerViewModel.reset()
+                }
+
+                else -> {}
             }
         }
     }
 
+    private fun observeDistanceForTimer() {
+        val redSemiTransparent = "#4dff0000".toColorInt()
+        val blueSemiTransparent = "#4d318ce7".toColorInt()
+        mapsViewModel.distance.observe(viewLifecycleOwner) { distance ->
+            if (distance == null || !this::mapCircle.isInitialized) return@observe
+            if (distance > 40) {
+                mapCircle.fillColor = redSemiTransparent
+                timerViewModel.reset()
+            } else {
+                mapCircle.fillColor = blueSemiTransparent
+            }
+        }
+    }
+
+    private fun observeMinutesSpentAtLibrary() {
+        timerViewModel.timerSummary.observe(viewLifecycleOwner) {
+            if (it == null) return@observe
+
+            val minuteText = resources.getQuantityString(R.plurals.minutes_plural, it.minutesSpent)
+
+            showPopup(
+                requireActivity(),
+                getString(
+                    R.string.congrats_message, it.minutesSpent, minuteText, it.pointsEarned, it.newTotalPoints,
+                ),
+            )
+        }
+    }
+
+    private fun observeForMapDrawing() {
+        mapsViewModel.hasChosenLocation.observe(viewLifecycleOwner) { hasChosenLocation ->
+            if (hasChosenLocation) {
+                drawMapCircle(mapsViewModel.currentLatLng.value!!, googleMap!!)
+            } else {
+                googleMap?.stopAnimation()
+                if (this::mapCircle.isInitialized) {
+                    mapCircle.remove()
+                }
+            }
+        }
+    }
+
+    private fun observeLocationChanges() {
+        mapsViewModel.currentLatLng.observe(viewLifecycleOwner) { latLng ->
+            if (marker == null) {
+                val markerOptions = MarkerOptions().position(latLng).title("I am here.")
+                marker = googleMap?.addMarker(markerOptions)!!
+            } else {
+                marker?.position = latLng
+            }
+            googleMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17F))
+        }
+    }
+
     private fun drawMapCircle(point: LatLng, googleMap: GoogleMap) {
-        // Instantiating CircleOptions to draw a circle around the marker
         CircleOptions().let {
             it.center(point)
             it.radius(50.0)
             it.strokeColor(Color.BLACK)
             it.fillColor("#4d318ce7".toColorInt())
             it.strokeWidth(2f)
-            circle = googleMap.addCircle(it)
+            mapCircle = googleMap.addCircle(it)
         }
     }
 
@@ -143,51 +214,8 @@ class TimerFragment(
             if (googleMap != null) {
                 onMapReady(googleMap!!)
             } else {
-                toastMessage(
-                    requireActivity(),
-                    "Location permission is required to use the timer feature.",
-                )
+                toastMessage(requireActivity(), getString(R.string.location_permission_not_enabled))
             }
-        }
-    }
-
-    private fun observeTimerState() {
-        timerViewModel.state.observe(viewLifecycleOwner) { state ->
-            when (state) {
-                TimerState.Started -> {
-                    binding.stopwatch.base = SystemClock.elapsedRealtime()
-                    binding.stopwatch.start()
-                    mapsViewModel.setChosenLocation()
-                    listenIfUserIsInTimerBoundaries()
-                }
-
-                TimerState.Stopped -> {
-                    resetTimerState()
-                    timerViewModel.reset()
-                }
-
-                TimerState.Reset -> {
-                    resetTimerState()
-                    timerViewModel.reset()
-                }
-
-                else -> {}
-            }
-        }
-    }
-
-    private fun observeMinutesSpentAtLibrary() {
-        timerViewModel.timerSummary.observe(viewLifecycleOwner) {
-            if (it == null) return@observe
-
-            val minuteText = resources.getQuantityString(R.plurals.minutes_plural, it.minutesSpent)
-
-            showPopup(
-                requireActivity(),
-                getString(
-                    R.string.congrats_message, it.minutesSpent, minuteText, it.pointsEarned, it.newTotalPoints,
-                ),
-            )
         }
     }
 
@@ -200,11 +228,10 @@ class TimerFragment(
         mapsViewModel.reset()
     }
 
-    fun listenIfUserIsInTimerBoundaries() {
-        observeDistanceForTimer()
+    fun setupChronometerDurationListener() {
         binding.stopwatch.onChronometerTickListener = OnChronometerTickListener {
-            // Checks if the stopwatch has gone over 24 hours. If so, the stopwatch resets back to its original state
-            if (SystemClock.elapsedRealtime() - binding.stopwatch.base >= 800000) {
+            val twentyFourHoursMs = 864000
+            if (SystemClock.elapsedRealtime() - binding.stopwatch.base >= twentyFourHoursMs) {
                 resetTimerState()
                 showPopup(
                     requireActivity(), getString(R.string.no_stop_code_entered),
@@ -213,35 +240,8 @@ class TimerFragment(
         }
     }
 
-    override fun onMapReady(p0: GoogleMap) {
-        googleMap = p0
-        observeLocationChanges()
-        observeForMapDrawing()
-    }
-
-    private fun observeForMapDrawing() {
-        mapsViewModel.hasChosenLocation.observe(viewLifecycleOwner) { hasChosenLocation ->
-            if (hasChosenLocation) {
-                drawMapCircle(mapsViewModel.currentLatLng.value!!, googleMap!!)
-            } else {
-                googleMap?.stopAnimation()
-                if (this::circle.isInitialized) {
-                    circle.remove()
-                }
-            }
-        }
-    }
-
-    private fun observeLocationChanges() {
-        mapsViewModel.currentLatLng.observe(viewLifecycleOwner) { latLng ->
-            if (marker == null) {
-                val markerOptions = MarkerOptions().position(latLng).title("I am here.")
-                marker = googleMap?.addMarker(markerOptions)!!
-            } else {
-                marker?.position = latLng
-            }
-            googleMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17F))
-        }
+    override fun onMapReady(map: GoogleMap) {
+        googleMap = map
     }
 
     private fun setupSlidePanelListener() {

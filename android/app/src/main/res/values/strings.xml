@@ -52,6 +52,7 @@
     <string name="no_stop_code_entered">No stop code was entered for 24 hours. The timer has been reset</string>
     <string name="insufficient_funds">You do not have sufficient points for this purchase</string>
     <string name="rewards_from_university">See rewards from %s</string>
+    <string name="location_permission_not_enabled">Location permission is required to use the timer feature</string>
     <plurals name="minutes_plural">
         <item quantity="one">minute</item>
         <item quantity="other">minutes</item>
