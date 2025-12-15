@@ -53,6 +53,8 @@
     <string name="insufficient_funds">You do not have sufficient points for this purchase</string>
     <string name="rewards_from_university">See rewards from %s</string>
     <string name="location_permission_not_enabled">Location permission is required to use the timer feature</string>
+    <string name="auth_failed">Authentication failed</string>
+    <string name="error_msg_empty_fields">Please ensure all fields are correctly filled out</string>
     <plurals name="minutes_plural">
         <item quantity="one">minute</item>
         <item quantity="other">minutes</item>
