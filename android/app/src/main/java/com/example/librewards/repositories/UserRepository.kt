@@ -11,6 +11,7 @@ import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 
 class UserRepository(val database: DatabaseReference) {
     companion object {
@@ -25,6 +26,17 @@ class UserRepository(val database: DatabaseReference) {
     fun updateField(email: String, field: String, value: String) {
         val id = hashFunction(email)
         database.child("users").child(id).child(field).setValue(value)
+    }
+
+    suspend fun getUser(email: String): User? {
+        val id = hashFunction(email)
+        return try {
+            val dbValue = database.child("users").child(id).get().await()
+            dbValue.getValue(User::class.java)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get user for email $email: ${e.message}")
+            null
+        }
     }
 
     fun listenForUserField(email: String, field: String): Flow<String?> = callbackFlow {

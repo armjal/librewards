@@ -2,7 +2,6 @@ package com.example.librewards
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.ImageView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -11,32 +10,19 @@ import com.example.librewards.databinding.ActivityMainBinding
 import com.example.librewards.repositories.UserRepository
 import com.example.librewards.viewmodels.MainSharedViewModel
 import com.example.librewards.viewmodels.MainViewModelFactory
-import com.google.android.material.appbar.AppBarLayout
-import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.database.FirebaseDatabase
-import com.squareup.picasso.Picasso
 
 class MainActivity : AppCompatActivity() {
-    lateinit var email: String
-    lateinit var firstName: String
-    lateinit var lastName: String
-    lateinit var photoURL: String
-    lateinit var university: String
     private lateinit var binding: ActivityMainBinding
     val userRepo = UserRepository(FirebaseDatabase.getInstance().reference)
     val mainSharedViewModel: MainSharedViewModel by viewModels {
         MainViewModelFactory(userRepo)
     }
-
-    // Exposing views for fragments temporarily
-    val profileImage: ImageView get() = binding.profileImage
-    val logo: ImageView get() = binding.logo
-    val appBarLayout: AppBarLayout get() = binding.appBarLayout
-    val tabLayout: TabLayout get() = binding.tabLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,12 +33,6 @@ class MainActivity : AppCompatActivity() {
 
         val timerFragment = TimerFragment()
         val rewardsFragment = RewardsFragment()
-
-        initialiseVariables()
-
-        Picasso.get().load(photoURL).into(binding.profileImage)
-
-        "$firstName $lastName".also { binding.username.text = it }
 
         val viewPagerAdapter = ViewPagerAdapter(this)
         binding.viewPager.adapter = viewPagerAdapter
@@ -65,7 +45,9 @@ class MainActivity : AppCompatActivity() {
         binding.profileImage.setOnClickListener {
             logoutApp()
         }
-        mainSharedViewModel.startObservingUser(email)
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        mainSharedViewModel.startObservingUser(currentUser?.email!!)
+        observeUser()
         mainSharedViewModel.createQRCode()
         mainSharedViewModel.panelSlideOffset.observe(this) { slideOffset ->
             val alpha = (1.3 - slideOffset).toFloat()
@@ -81,13 +63,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun initialiseVariables() {
-        val extras = intent.extras
-        email = extras?.getString("email").toString()
-        firstName = extras?.getString("first_name").toString()
-        lastName = extras?.getString("last_name").toString()
-        university = extras?.getString("university").toString()
-        photoURL = extras?.getString("photo").toString()
+    private fun observeUser() {
+        mainSharedViewModel.user.observe(this) {
+            if (it == null) return@observe
+            binding.username.text = "${it.firstname} ${it.surname}"
+        }
     }
 
     private fun logoutApp() {
