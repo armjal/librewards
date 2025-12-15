@@ -7,12 +7,15 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
 import com.example.librewards.hashFunction
+import com.example.librewards.models.User
 import com.example.librewards.qrcode.QRCodeGenerator
 import com.example.librewards.repositories.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import java.lang.Integer.parseInt
 
 data class UserQRCode(
@@ -31,6 +34,9 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
     private val _userEmailFlow = MutableStateFlow("")
     private var _userQrCode = MutableLiveData<UserQRCode>(null)
     val userQrCode: LiveData<UserQRCode> = _userQrCode
+
+    private var _user = MutableLiveData<User>(null)
+    val user: LiveData<User> = _user
 
     val userPoints: LiveData<String> = _userEmailFlow.flatMapLatest { email ->
         userRepo.listenForUserField(email, "points").map { it!! }
@@ -51,6 +57,7 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
     fun startObservingUser(email: String) {
         Log.d(TAG, "Starting to observe user: $email")
         _userEmailFlow.value = email
+        setUser(email)
     }
 
     fun createQRCode() {
@@ -75,6 +82,16 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
 
     fun updateRedeemingReward(points: String) {
         userRepo.updateField(_userEmailFlow.value, "redeemingReward", points)
+    }
+
+    fun setUser(email: String) {
+        viewModelScope.launch {
+            try {
+                _user.postValue(userRepo.getUser(email))
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to get user: ${e.message}")
+            }
+        }
     }
 }
 

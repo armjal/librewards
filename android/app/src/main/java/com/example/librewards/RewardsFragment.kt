@@ -34,10 +34,9 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
 
     private val mainSharedViewModel: MainSharedViewModel by activityViewModels()
     private val rewardsViewModel: RewardsViewModel by viewModels {
-        val mainActivity = requireActivity() as MainActivity
         val productDatabase = FirebaseDatabase.getInstance().reference
             .child("products")
-            .child(mainActivity.university)
+            .child(mainSharedViewModel.user.value?.university!!)
         val productRepo = ProductRepository(productDatabase)
         RewardsViewModelFactory(mainSharedViewModel, productRepo)
     }
@@ -58,8 +57,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val mainActivity = activity as MainActivity
-        binding.rewardsText.text = getString(R.string.rewards_from_university, mainActivity.university)
+        binding.rewardsText.text = getString(R.string.rewards_from_university, mainSharedViewModel.user.value!!.university)
         setupProductPopupUI()
         setupRecyclerAdapter()
         setupObservers()
