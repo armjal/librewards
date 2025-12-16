@@ -1,6 +1,8 @@
 package com.example.librewards.viewmodels
 
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.google.firebase.auth.FirebaseAuth
@@ -12,9 +14,14 @@ sealed class LoginStatus {
     object Successful : LoginStatus()
 
     object Failed : LoginStatus()
+
+    object LoggedOut : LoginStatus()
 }
 
 class LoginViewModel(val auth: FirebaseAuth) : ViewModel() {
+    private var _loginState = MutableLiveData<LoginStatus>(null)
+    val loginState: LiveData<LoginStatus> = _loginState
+
     companion object {
         val TAG: String = LoginViewModel::class.java.simpleName
     }
@@ -32,6 +39,14 @@ class LoginViewModel(val auth: FirebaseAuth) : ViewModel() {
             }
         }
         awaitClose {
+        }
+    }
+
+    fun logout() {
+        if (auth.currentUser != null) {
+            auth.signOut()
+            _loginState.value = LoginStatus.LoggedOut
+            Log.i(TAG, "User logged out")
         }
     }
 }

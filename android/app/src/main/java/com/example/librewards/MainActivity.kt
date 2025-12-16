@@ -8,6 +8,9 @@ import androidx.core.content.ContextCompat
 import com.example.librewards.adapters.ViewPagerAdapter
 import com.example.librewards.databinding.ActivityMainBinding
 import com.example.librewards.repositories.UserRepository
+import com.example.librewards.viewmodels.LoginStatus
+import com.example.librewards.viewmodels.LoginViewModel
+import com.example.librewards.viewmodels.LoginViewModelFactory
 import com.example.librewards.viewmodels.MainSharedViewModel
 import com.example.librewards.viewmodels.MainViewModelFactory
 import com.google.android.material.tabs.TabLayoutMediator
@@ -22,6 +25,9 @@ class MainActivity : AppCompatActivity() {
     val userRepo = UserRepository(FirebaseDatabase.getInstance().reference)
     val mainSharedViewModel: MainSharedViewModel by viewModels {
         MainViewModelFactory(userRepo)
+    }
+    val loginViewModel: LoginViewModel by viewModels {
+        LoginViewModelFactory(Firebase.auth)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,11 +49,13 @@ class MainActivity : AppCompatActivity() {
         }.attach()
 
         binding.profileImage.setOnClickListener {
-            logoutApp()
+            mainSharedViewModel.userRepo.stopAllListeners()
+            loginViewModel.logout()
         }
         val currentUser = FirebaseAuth.getInstance().currentUser
         mainSharedViewModel.startObservingUser(currentUser?.email!!)
         observeUser()
+        observeLoginStatus()
         mainSharedViewModel.createQRCode()
         mainSharedViewModel.panelSlideOffset.observe(this) { slideOffset ->
             val alpha = (1.3 - slideOffset).toFloat()
@@ -70,16 +78,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun logoutApp() {
-        val auth = Firebase.auth
-        if (auth.currentUser != null) {
-            auth.signOut()
-            val intent = Intent(this, Login::class.java)
-            intent.flags =
-                Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-            supportFragmentManager.popBackStack()
-            startActivity(intent)
-            finish()
+    private fun observeLoginStatus() {
+        loginViewModel.loginState.observe(this) { status ->
+            when (status) {
+                LoginStatus.LoggedOut -> {
+                    exitActivity()
+                }
+                else -> {}
+            }
         }
+    }
+
+    private fun exitActivity() {
+        val intent = Intent(this, Login::class.java)
+        intent.flags =
+            Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(intent)
+        finish()
     }
 }

@@ -12,6 +12,7 @@ import com.example.librewards.viewmodels.LoginViewModel
 import com.example.librewards.viewmodels.LoginViewModelFactory
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 
 class Login : AppCompatActivity() {
@@ -59,7 +60,7 @@ class Login : AppCompatActivity() {
         lifecycleScope.launch {
             val loginFlow = loginViewModel.login(binding.loginEmail.text.toString(), binding.loginPassword.text.toString())
 
-            loginFlow.collect { status ->
+            loginFlow.take(1).collect { status ->
                 when (status) {
                     LoginStatus.Successful -> {
                         openUserApp()
@@ -68,6 +69,8 @@ class Login : AppCompatActivity() {
                     LoginStatus.Failed -> {
                         toastMessage(this@Login, getString(R.string.auth_failed))
                     }
+
+                    else -> {}
                 }
             }
         }

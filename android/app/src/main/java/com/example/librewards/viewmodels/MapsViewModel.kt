@@ -27,6 +27,21 @@ class MapsViewModel(val fusedLocationClient: FusedLocationProviderClient) : View
     private var _distanceFromChosenLocation = MutableLiveData<Float>()
     val distance: LiveData<Float> get() = _distanceFromChosenLocation
 
+    private val locationCallback = object : LocationCallback() {
+        override fun onLocationResult(result: LocationResult) {
+            result.locations.forEach { location ->
+                if (location != null) {
+                    if (_chosenLocation == null) {
+                        _chosenLocation = location
+                    }
+                    _distanceFromChosenLocation.value = _chosenLocation!!.distanceTo(location)
+                    _currentLocationLatLng.value = LatLng(location.latitude, location.longitude)
+                    _currentLocation = location
+                }
+            }
+        }
+    }
+
     @SuppressLint("MissingPermission")
     fun listenToLocationChanges() {
         val locationRequest = LocationRequest
@@ -34,20 +49,6 @@ class MapsViewModel(val fusedLocationClient: FusedLocationProviderClient) : View
             .setMinUpdateDistanceMeters(20f)
             .build()
 
-        val locationCallback = object : LocationCallback() {
-            override fun onLocationResult(result: LocationResult) {
-                result.locations.forEach { location ->
-                    if (location != null) {
-                        if (_chosenLocation == null) {
-                            _chosenLocation = location
-                        }
-                        _distanceFromChosenLocation.value = _chosenLocation!!.distanceTo(location)
-                        _currentLocationLatLng.value = LatLng(location.latitude, location.longitude)
-                        _currentLocation = location
-                    }
-                }
-            }
-        }
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
     }
 
@@ -59,6 +60,11 @@ class MapsViewModel(val fusedLocationClient: FusedLocationProviderClient) : View
 
     fun reset() {
         _hasChosenLocation.value = false
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 }
 

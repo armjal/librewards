@@ -76,6 +76,11 @@ class TimerFragment(
         setupChronometerDurationListener()
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     private fun setupMap() {
         if (!checkLocationServicesPermissions()) {
             requestLocationServicesPermissions()
