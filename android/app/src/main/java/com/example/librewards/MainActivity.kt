@@ -31,10 +31,16 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Sets the layout to the XML file associated with it
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setupFragmentsView()
+        setupLogoutListener()
+        setupObservers()
+        mainSharedViewModel.createQRCode()
+    }
+
+    private fun setupFragmentsView() {
         val timerFragment = TimerFragment()
         val rewardsFragment = RewardsFragment()
 
@@ -45,28 +51,21 @@ class MainActivity : AppCompatActivity() {
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
             tab.icon = ContextCompat.getDrawable(this, fragments[position].icon)
         }.attach()
+    }
 
+    private fun setupLogoutListener() {
         binding.profileImage.setOnClickListener {
             mainSharedViewModel.userRepo.stopAllListeners()
             loginViewModel.logout()
         }
+    }
+
+    private fun setupObservers() {
         val currentUser = FirebaseAuth.getInstance().currentUser
         mainSharedViewModel.startObservingUser(currentUser?.email!!)
         observeUser()
         observeLoginStatus()
-        mainSharedViewModel.createQRCode()
-        mainSharedViewModel.panelSlideOffset.observe(this) { slideOffset ->
-            val alpha = (1.3 - slideOffset).toFloat()
-            binding.appBarLayout.alpha = alpha
-            binding.profileImage.alpha = alpha
-            binding.logo.alpha = alpha
-            binding.tabLayout.alpha = alpha
-
-            val panelIsUp = slideOffset > 0.9
-            binding.profileImage.isClickable = !panelIsUp
-            binding.tabLayout.touchables.forEach { it?.isEnabled = !panelIsUp }
-            binding.viewPager.isUserInputEnabled = !panelIsUp
-        }
+        observePanelSlider()
     }
 
     private fun observeUser() {
