@@ -66,26 +66,24 @@ class Register : AppCompatActivity() {
         loadSpinnerData()
 
         binding.registerHereButton.setOnClickListener {
-            if (binding.registrationEmail.text.toString() == "" ||
-                binding.registrationPassword.text.toString() == "" ||
-                binding.registrationFirstName.text.toString() == "" ||
-                binding.registrationLastName.text.toString() == "" ||
-                spinnerPos == 0
-            ) {
-                toastMessage(this, "Please ensure all fields are correctly filled out.")
-            } else {
-                signUp()
-            }
+            signUp()
         }
     }
 
     private fun signUp() {
-        val user = User(
-            binding.registrationFirstName.text.toString(),
-            binding.registrationLastName.text.toString(),
-            binding.registrationEmail.text.toString(),
-            uniSelected,
-        )
+        val user: User
+        try {
+            user = User.create(
+                binding.registrationFirstName.text.toString(),
+                binding.registrationLastName.text.toString(),
+                binding.registrationEmail.text.toString(),
+                uniSelected,
+            )
+        } catch (e: Exception) {
+            Log.d(TAG, "Validation of user registration request failed: ${e.message}")
+            toastMessage(this, "Please ensure all fields are correctly filled out.")
+            return
+        }
 
         registerViewModel.signUp(user, binding.registrationPassword.text.toString())
     }
