@@ -59,11 +59,6 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
     private val binding get() = _binding!!
     private var addProductBinding: AddProductPopupBinding? = null
     private var manageProductBinding: ManageProductPopupBinding? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        adminActivity = activity as AdminActivity
-    }
     private val imagePickerLauncher = getImagePickerLauncher()
 
     override fun onCreateView(
@@ -201,12 +196,12 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
                     is UiEvent.Success -> {
                         toastMessage(requireActivity(), it.message)
                         resetProductInputFields()
-                        hideProgressBar()
+                        setProgressState(isLoading = false)
                     }
 
                     is UiEvent.Failure -> {
                         Log.e(TAG, it.message)
-                        hideProgressBar()
+                        setProgressState(isLoading = false)
                         toastMessage(requireActivity(), "Product upload failed")
                     }
                 }
@@ -214,14 +209,11 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
         }
     }
 
-    private fun showProgressBar() {
-        addProductBinding?.uploadProgressBar?.visibility = View.VISIBLE
-        addProductBinding?.uploadButton?.isEnabled = false
-    }
-
-    private fun hideProgressBar() {
-        addProductBinding?.uploadProgressBar?.visibility = View.GONE
-        addProductBinding?.uploadButton?.isEnabled = true
+    private fun setProgressState(isLoading: Boolean) {
+        addProductBinding?.let { binding ->
+            binding.uploadProgressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            binding.uploadButton.isEnabled = !isLoading
+        }
     }
 
     private fun resetProductInputFields() {
