@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:fitsSystemWindows="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/gradient_white"
@@ -146,7 +147,6 @@
 
         </LinearLayout>
     </RelativeLayout>
-
     <ImageView
         android:id="@+id/backToLogin"
         android:layout_width="wrap_content"
@@ -159,5 +159,5 @@
         app:srcCompat="@drawable/baseline_arrow_back_ios_new_24"
         app:tint="@color/colorOrange" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
 
+</androidx.constraintlayout.widget.ConstraintLayout>
