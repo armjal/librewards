@@ -31,20 +31,21 @@ import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.AdminRewardsViewModel
 import com.example.librewards.viewmodels.AdminRewardsViewModelFactory
 import com.example.librewards.viewmodels.UiEvent
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageReference
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.launch
 import java.io.IOException
 
 class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExtended(), RecyclerAdapter.OnProductListener {
     private val viewModel: AdminRewardsViewModel by viewModels {
-        AdminRewardsViewModelFactory(productRepo, storageRepo)
+        val database = FirebaseDatabase.getInstance().reference.child("products")
+            .child(adminActivity.university)
+        val storageReference = FirebaseStorage.getInstance().reference.child("products").child(
+            "${adminActivity.university}/images/",
+        )
+        AdminRewardsViewModelFactory(ProductRepository(database), StorageRepository(storageReference))
     }
-    private lateinit var database: DatabaseReference
-    private lateinit var storageReference: StorageReference
     private lateinit var adminActivity: AdminActivity
     private var popup: Dialog? = null
 
@@ -58,22 +59,12 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
 
     private var addProductBinding: AddProductPopupBinding? = null
     private var manageProductBinding: ManageProductPopupBinding? = null
-    private lateinit var productRepo: ProductRepository
-    private lateinit var storageRepo: StorageRepository
 
     private val imagePickerLauncher = registerImagePickerLauncher()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         adminActivity = activity as AdminActivity
-        database = FirebaseDatabase.getInstance().reference.child("products")
-            .child(adminActivity.university)
-        storageReference = FirebaseStorage.getInstance().reference.child("products").child(
-            "${adminActivity.university}/images/",
-        )
-
-        productRepo = ProductRepository(database)
-        storageRepo = StorageRepository(storageReference)
     }
 
     override fun onCreateView(
