@@ -1,11 +1,11 @@
 package com.example.librewards
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.librewards.databinding.ActivityLoginBinding
+import com.example.librewards.utils.startLibRewardsActivity
 import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.LoginStatus
 import com.example.librewards.viewmodels.LoginViewModel
@@ -42,7 +42,7 @@ class Login : AppCompatActivity() {
 
     private fun setupRegistrationButtonListener() {
         binding.registerButton.setOnClickListener {
-            startLibRewardsActivity(Register::class.java)
+            startLibRewardsActivity(this, Register::class.java)
         }
     }
 
@@ -80,16 +80,10 @@ class Login : AppCompatActivity() {
         Firebase.auth.currentUser?.getIdToken(true)?.addOnSuccessListener {
             val isAdmin = it.claims["admin"]
             if (isAdmin == true) {
-                startLibRewardsActivity(AdminActivity::class.java)
+                startLibRewardsActivity(this, AdminActivity::class.java)
             } else {
-                startLibRewardsActivity(MainActivity::class.java)
+                startLibRewardsActivity(this, MainActivity::class.java)
             }
         }
-    }
-
-    private fun startLibRewardsActivity(activity: Class<*>) {
-        val intent = Intent(this@Login, activity)
-        startActivity(intent)
-        finish()
     }
 }
