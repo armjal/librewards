@@ -48,15 +48,11 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
     }
     private lateinit var adminActivity: AdminActivity
     private var popup: Dialog? = null
-
     private var imageLocalFilePath: Uri? = null
-    private lateinit var productEntries: MutableList<ProductEntry>
     private var layoutManager: RecyclerView.LayoutManager? = null
     private var adapter: RecyclerView.Adapter<RecyclerAdapter.ViewHolder>? = null
-
     private var _binding: AdminFragmentRewardsBinding? = null
     private val binding get() = _binding!!
-
     private var addProductBinding: AddProductPopupBinding? = null
     private var manageProductBinding: ManageProductPopupBinding? = null
 
@@ -80,14 +76,11 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
         binding.addAProduct.setOnClickListener { showAddProductPopup() }
         layoutManager = LinearLayoutManager(context)
         binding.adminRewardsRecycler.layoutManager = layoutManager
-        productEntries = mutableListOf()
-        adapter = RecyclerAdapter(productEntries, this)
+        adapter = RecyclerAdapter(mutableListOf(), this)
         binding.adminRewardsRecycler.adapter = adapter
 
         viewModel.productEntries.observe(viewLifecycleOwner) {
-            productEntries.clear()
-            productEntries.addAll(it)
-            (adapter as RecyclerAdapter).notifyDataSetChanged()
+            (adapter as RecyclerAdapter).updateList(it)
         }
     }
 
@@ -111,28 +104,29 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
         popup?.show()
     }
 
-    private fun showManageProductPopup(list: List<ProductEntry>, position: Int) {
-        val chosenProductEntry = list[position]
+    private fun showManageProductPopup(position: Int) {
+        val chosenProduct = viewModel.productEntries.value?.get(position)?.product!!
+        val chosenProductEntry = viewModel.productEntries.value?.get(position)!!
         popup = Dialog(requireActivity())
         popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         manageProductBinding = ManageProductPopupBinding.inflate(layoutInflater)
         popup?.setContentView(manageProductBinding!!.root)
-        Picasso.get().load(list[position].product.productImageUrl)
+        Picasso.get().load(chosenProduct.productImageUrl)
             .into(manageProductBinding!!.manageProductImage)
         manageProductBinding!!.let {
-            it.manageProductName.setText(list[position].product.productName)
-            it.manageProductCost.setText(list[position].product.productCost)
+            it.manageProductName.setText(chosenProduct.productName)
+            it.manageProductCost.setText(chosenProduct.productCost)
             it.closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
             it.updateButton.setOnClickListener {
-                chosenProductEntry.product.productName =
+                chosenProduct.productName =
                     manageProductBinding!!.manageProductName.text.toString()
-                chosenProductEntry.product.productCost =
+                chosenProduct.productCost =
                     manageProductBinding!!.manageProductCost.text.toString()
 
                 updateProduct(chosenProductEntry)
             }
             it.deleteButton.setOnClickListener {
-                deleteProduct(list[position])
+                deleteProduct(chosenProductEntry)
             }
         }
         popup?.show()
@@ -264,6 +258,6 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
     }
 
     override fun onProductClick(position: Int) {
-        showManageProductPopup(productEntries, position)
+        showManageProductPopup(position)
     }
 }
