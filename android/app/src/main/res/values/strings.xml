@@ -55,6 +55,8 @@
     <string name="location_permission_not_enabled">Location permission is required to use the timer feature</string>
     <string name="auth_failed">Authentication failed</string>
     <string name="error_msg_empty_fields">Please ensure all fields are correctly filled out</string>
+    <string name="choose_uni">Please choose a University</string>
+    <string name="selected_uni">User selected university: %s</string>
     <plurals name="minutes_plural">
         <item quantity="one">minute</item>
         <item quantity="other">minutes</item>

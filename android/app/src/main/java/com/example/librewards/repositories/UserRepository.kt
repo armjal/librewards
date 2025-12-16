@@ -36,7 +36,7 @@ class UserRepository(val database: DatabaseReference) {
             val dbValue = database.child("users").child(id).get().await()
             dbValue.getValue(User::class.java)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to get user for email $email: ${e.message}")
+            Log.e(TAG, "Failed to get user for email $email: ${e.message}", e)
             null
         }
     }
