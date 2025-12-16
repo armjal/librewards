@@ -60,12 +60,11 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
     private var addProductBinding: AddProductPopupBinding? = null
     private var manageProductBinding: ManageProductPopupBinding? = null
 
-    private val imagePickerLauncher = registerImagePickerLauncher()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         adminActivity = activity as AdminActivity
     }
+    private val imagePickerLauncher = getImagePickerLauncher()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -184,7 +183,7 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
             toastMessage(requireActivity(), "Please choose an image")
             return
         }
-        showProgressBar()
+        setProgressState(isLoading = true)
         val product = Product(
             addProductBinding!!.productName.text.toString(),
             addProductBinding!!.productCost.text.toString(),
@@ -236,24 +235,18 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
         imageLocalFilePath = null
     }
 
-    private fun registerImagePickerLauncher(): ActivityResultLauncher<Intent?> =
+    private fun getImagePickerLauncher(): ActivityResultLauncher<Intent?> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            if (it.resultCode == AppCompatActivity.RESULT_OK) {
-                imageLocalFilePath = it.data?.data
-                try {
-                    val source = ImageDecoder.createSource(
-                        requireActivity().contentResolver,
-                        imageLocalFilePath!!,
-                    )
-                    val bitmap = ImageDecoder.decodeBitmap(source)
-                    addProductBinding?.chosenImage?.let { img ->
-                        img.layoutParams.height = 300
-                        img.layoutParams.width = 300
-                        img.setImageBitmap(bitmap)
-                    }
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
+            if (it.resultCode != AppCompatActivity.RESULT_OK) return@registerForActivityResult
+            imageLocalFilePath = it.data?.data
+            try {
+                Picasso.get()
+                    .load(imageLocalFilePath)
+                    .resize(300, 300)
+                    .centerCrop()
+                    .into(addProductBinding?.chosenImage)
+            } catch (e: IOException) {
+                e.printStackTrace()
             }
         }
 
