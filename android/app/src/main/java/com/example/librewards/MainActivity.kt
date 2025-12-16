@@ -78,6 +78,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun observePanelSlider() {
+        mainSharedViewModel.panelSlideOffset.observe(this) { slideOffset ->
+            val alpha = (1.3 - slideOffset).toFloat()
+            with(binding) {
+                listOf(appBarLayout, profileImage, logo, tabLayout).forEach {
+                    it.alpha = alpha
+                }
+
+                val panelIsUp = slideOffset > 0.1
+                profileImage.isClickable = !panelIsUp
+                tabLayout.touchables.forEach { it?.isEnabled = !panelIsUp }
+                viewPager.isUserInputEnabled = !panelIsUp
+            }
+        }
+    }
+
     private fun observeLoginStatus() {
         loginViewModel.loginState.observe(this) { status ->
             when (status) {
