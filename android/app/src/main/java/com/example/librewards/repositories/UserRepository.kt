@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class UserRepository(val database: DatabaseReference) {
+    private val activeListeners = mutableMapOf<DatabaseReference, ValueEventListener>()
+
     companion object {
         val TAG: String = UserRepository::class.java.simpleName
     }
@@ -53,12 +55,21 @@ class UserRepository(val database: DatabaseReference) {
                 close(error.toException())
             }
         }
-
         userRef.addValueEventListener(listener)
+        activeListeners[userRef] = listener
 
         awaitClose {
             Log.d(TAG, "Removing $field listener for $email")
             userRef.removeEventListener(listener)
+            activeListeners.remove(userRef)
         }
+    }
+
+    fun stopAllListeners() {
+        Log.d(TAG, "Stopping all ${activeListeners.size} active listeners")
+        activeListeners.forEach { (ref, listener) ->
+            ref.removeEventListener(listener)
+        }
+        activeListeners.clear()
     }
 }
