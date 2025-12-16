@@ -35,14 +35,14 @@ class Login : AppCompatActivity() {
 
     public override fun onStart() {
         super.onStart()
-        openUserApp()
+        if (loginViewModel.isLoggedIn()) {
+            openUserApp()
+        }
     }
 
     private fun setupRegistrationButtonListener() {
         binding.registerButton.setOnClickListener {
-            val intent = Intent(this, Register::class.java)
-            startActivity(intent)
-            finish()
+            startLibRewardsActivity(Register::class.java)
         }
     }
 
@@ -80,14 +80,16 @@ class Login : AppCompatActivity() {
         Firebase.auth.currentUser?.getIdToken(true)?.addOnSuccessListener {
             val isAdmin = it.claims["admin"]
             if (isAdmin == true) {
-                val adminIntent = Intent(this@Login, AdminActivity::class.java)
-                startActivity(adminIntent)
-                finish()
+                startLibRewardsActivity(AdminActivity::class.java)
             } else {
-                val mainIntent = Intent(this@Login, MainActivity::class.java)
-                startActivity(mainIntent)
-                finish()
+                startLibRewardsActivity(MainActivity::class.java)
             }
         }
+    }
+
+    private fun startLibRewardsActivity(activity: Class<*>) {
+        val intent = Intent(this@Login, activity)
+        startActivity(intent)
+        finish()
     }
 }

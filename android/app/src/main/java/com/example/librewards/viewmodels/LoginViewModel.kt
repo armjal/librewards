@@ -49,6 +49,14 @@ class LoginViewModel(val auth: FirebaseAuth) : ViewModel() {
             Log.i(TAG, "User logged out")
         }
     }
+
+    fun isLoggedIn(): Boolean {
+        if (auth.currentUser != null) {
+            return true
+        }
+        Log.i(TAG, "User not logged in")
+        return false
+    }
 }
 
 class LoginViewModelFactory(
