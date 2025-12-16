@@ -15,7 +15,6 @@ import com.example.librewards.viewmodels.MainSharedViewModel
 import com.example.librewards.viewmodels.MainViewModelFactory
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.firebase.Firebase
-import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.database.FirebaseDatabase
@@ -35,7 +34,6 @@ class MainActivity : AppCompatActivity() {
         // Sets the layout to the XML file associated with it
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        FirebaseApp.initializeApp(this)
 
         val timerFragment = TimerFragment()
         val rewardsFragment = RewardsFragment()
