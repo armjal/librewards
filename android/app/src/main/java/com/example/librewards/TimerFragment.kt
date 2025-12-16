@@ -26,7 +26,6 @@ import com.example.librewards.viewmodels.MapsViewModelFactory
 import com.example.librewards.viewmodels.TimerState
 import com.example.librewards.viewmodels.TimerViewModel
 import com.example.librewards.viewmodels.TimerViewModelFactory
-import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -42,12 +41,12 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout
 class TimerFragment(
     override val icon: Int = R.drawable.timer,
 ) : FragmentExtended(), OnMapReadyCallback {
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val mainSharedViewModel: MainSharedViewModel by activityViewModels()
     private val timerViewModel: TimerViewModel by viewModels {
         TimerViewModelFactory(mainSharedViewModel)
     }
     private val mapsViewModel: MapsViewModel by viewModels {
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         MapsViewModelFactory(fusedLocationClient)
     }
     private var marker: Marker? = null
@@ -55,7 +54,7 @@ class TimerFragment(
     private var googleMap: GoogleMap? = null
     private var _binding: FragmentTimerBinding? = null
     private val binding get() = _binding!!
-    private val locationPermissionsLauncher = registerLocationPermissionLauncher()
+    private val locationPermissionsLauncher = setLocationPermissionLauncher()
 
     companion object {
         private val TAG: String = TimerFragment::class.java.simpleName
@@ -70,7 +69,9 @@ class TimerFragment(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupMap()
+        if (!checkLocationServicesPermissions()) {
+            requestLocationServicesPermissions()
+        }
         setupObservers()
         setupSlidePanelListener()
         setupChronometerDurationListener()
@@ -82,14 +83,8 @@ class TimerFragment(
     }
 
     private fun setupMap() {
-        if (!checkLocationServicesPermissions()) {
-            requestLocationServicesPermissions()
-            return
-        }
-
         val mapFragment = childFragmentManager.findFragmentById(R.id.googleMap) as SupportMapFragment
         mapFragment.getMapAsync(this)
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         mapsViewModel.listenToLocationChanges()
     }
 
@@ -210,21 +205,14 @@ class TimerFragment(
         locationPermissionsLauncher.launch(permissionsToRequest)
     }
 
-    private fun registerLocationPermissionLauncher(): ActivityResultLauncher<Array<String>?> = registerForActivityResult(
+    private fun setLocationPermissionLauncher(): ActivityResultLauncher<Array<String>?> = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { permissions ->
-        if (permissions.getOrDefault(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                false,
-            ) ||
-            permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
-        ) {
+        if (permissions.any { it.value }) {
             Log.d(TAG, "Location permission granted.")
-            if (googleMap != null) {
-                onMapReady(googleMap!!)
-            } else {
-                toastMessage(requireActivity(), getString(R.string.location_permission_not_enabled))
-            }
+            setupMap()
+        } else {
+            toastMessage(requireActivity(), getString(R.string.location_permission_not_enabled))
         }
     }
 
