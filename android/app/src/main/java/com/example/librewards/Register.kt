@@ -6,31 +6,35 @@ import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.librewards.databinding.ActivityRegisterBinding
 import com.example.librewards.models.User
 import com.example.librewards.repositories.UserRepository
 import com.example.librewards.resources.universities
 import com.example.librewards.utils.toastMessage
+import com.example.librewards.viewmodels.RegisterStatus
+import com.example.librewards.viewmodels.RegisterViewModel
+import com.example.librewards.viewmodels.RegisterViewModelFactory
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.database.FirebaseDatabase
 
 class Register : AppCompatActivity() {
-    private lateinit var auth: FirebaseAuth
     private lateinit var uniSelected: String
     private var spinnerPos: Int? = null
-    private lateinit var userRepo: UserRepository
+    private val registerViewModel: RegisterViewModel by viewModels {
+        val database = FirebaseDatabase.getInstance().reference
+        val userRepo = UserRepository(database)
+        RegisterViewModelFactory(Firebase.auth, userRepo)
+    }
     private lateinit var binding: ActivityRegisterBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        auth = Firebase.auth
-        val database = FirebaseDatabase.getInstance().reference
-        userRepo = UserRepository(database)
+        observeRegisterStatus()
 
         binding.backToLogin.setOnClickListener {
             val intent = Intent(this, Login::class.java)
@@ -76,30 +80,30 @@ class Register : AppCompatActivity() {
     }
 
     private fun signUp() {
-        auth.createUserWithEmailAndPassword(
+        val user = User(
+            binding.registrationFirstName.text.toString(),
+            binding.registrationLastName.text.toString(),
             binding.registrationEmail.text.toString(),
-            binding.registrationPassword.text.toString(),
+            uniSelected,
         )
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    val user = User(
-                        binding.registrationFirstName.text.toString(),
-                        binding.registrationLastName.text.toString(),
-                        binding.registrationEmail.text.toString(),
-                        uniSelected,
-                    )
-                    userRepo.addUser(user)
-                    // Sign in success, update UI with the signed-in user's information
-                    Log.d(TAG, "createUserWithEmail:success")
+
+        registerViewModel.signUp(user, binding.registrationPassword.text.toString())
+    }
+
+    private fun observeRegisterStatus() {
+        registerViewModel.registerStatus.observe(this) { status ->
+            when (status) {
+                RegisterStatus.Registered -> {
                     val intent = Intent(this, Login::class.java)
                     startActivity(intent)
-                } else {
-                    // If sign in fails, display a message to the user.
-                    Log.w(TAG, "createUserWithEmail:failure", task.exception)
+                    finish()
+                }
 
+                RegisterStatus.Failed -> {
                     toastMessage(this, "Authentication failed.")
                 }
             }
+        }
     }
 
     private fun loadSpinnerData() {
