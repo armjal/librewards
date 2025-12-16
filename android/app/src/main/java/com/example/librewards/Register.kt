@@ -12,6 +12,7 @@ import com.example.librewards.databinding.ActivityRegisterBinding
 import com.example.librewards.models.User
 import com.example.librewards.repositories.UserRepository
 import com.example.librewards.resources.universities
+import com.example.librewards.utils.startLibRewardsActivity
 import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.RegisterStatus
 import com.example.librewards.viewmodels.RegisterViewModel
@@ -21,52 +22,53 @@ import com.google.firebase.auth.auth
 import com.google.firebase.database.FirebaseDatabase
 
 class Register : AppCompatActivity() {
-    private lateinit var uniSelected: String
-    private var spinnerPos: Int? = null
+    companion object {
+        val TAG: String = Register::class.java.simpleName
+    }
+
     private val registerViewModel: RegisterViewModel by viewModels {
         val database = FirebaseDatabase.getInstance().reference
         val userRepo = UserRepository(database)
         RegisterViewModelFactory(Firebase.auth, userRepo)
     }
     private lateinit var binding: ActivityRegisterBinding
+    private var uniSelected: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         observeRegisterStatus()
+        setupButtonListeners()
+        setupSpinner()
+    }
 
+    private fun setupButtonListeners() {
         binding.backToLogin.setOnClickListener {
-            val intent = Intent(this, Login::class.java)
-            startActivity(intent)
+            startLibRewardsActivity(this, Login::class.java)
         }
-
-        binding.registrationSpinner.onItemSelectedListener =
-            object : AdapterView.OnItemSelectedListener {
-                override fun onNothingSelected(parent: AdapterView<*>?) {
-                    Log.d(TAG, "Unselected")
-                }
-
-                override fun onItemSelected(
-                    parent: AdapterView<*>?,
-                    view: View?,
-                    position: Int,
-                    id: Long,
-                ) {
-                    spinnerPos = position
-                    if (position == 0) {
-                        Log.d(TAG, "First element in spinner")
-                    } else {
-                        uniSelected = parent?.getItemAtPosition(position).toString()
-                        toastMessage(this@Register, "You selected: $uniSelected")
-                    }
-                }
-            }
-
-        loadSpinnerData()
 
         binding.registerHereButton.setOnClickListener {
             signUp()
+        }
+    }
+
+    private fun setupSpinner() {
+        loadSpinnerData()
+        binding.registrationSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                Log.d(TAG, "No university selected")
+            }
+
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (position == 0) {
+                    Log.d(TAG, "Placeholder university selected")
+                } else {
+                    uniSelected = parent?.getItemAtPosition(position).toString()
+                    toastMessage(this@Register, getString(R.string.selected_uni, uniSelected))
+                }
+            }
         }
     }
 
@@ -79,9 +81,9 @@ class Register : AppCompatActivity() {
                 binding.registrationEmail.text.toString(),
                 uniSelected,
             )
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             Log.d(TAG, "Validation of user registration request failed: ${e.message}")
-            toastMessage(this, "Please ensure all fields are correctly filled out.")
+            toastMessage(this, getString(R.string.error_msg_empty_fields))
             return
         }
 
@@ -98,7 +100,7 @@ class Register : AppCompatActivity() {
                 }
 
                 RegisterStatus.Failed -> {
-                    toastMessage(this, "Authentication failed.")
+                    toastMessage(this, getString(R.string.auth_failed))
                 }
             }
         }
@@ -106,22 +108,9 @@ class Register : AppCompatActivity() {
 
     private fun loadSpinnerData() {
         val uniList: MutableList<String> = universities.toMutableList()
-        // Spinner Drop down elements
-        uniList.add(0, "Please choose a University")
-        // Creating adapter for spinner
-        val dataAdapter = ArrayAdapter(
-            this,
-            R.layout.spinner_text, uniList,
-        )
-        // Drop down layout style - list view with radio button
-        dataAdapter
-            .setDropDownViewResource(R.layout.simple_spinner_dropdown)
-
-        // attaching data adapter to spinner
+        uniList.add(0, getString(R.string.choose_uni))
+        val dataAdapter = ArrayAdapter(this, R.layout.spinner_text, uniList)
+        dataAdapter.setDropDownViewResource(R.layout.simple_spinner_dropdown)
         binding.registrationSpinner.adapter = dataAdapter
-    }
-
-    companion object {
-        val TAG: String = Register::class.java.simpleName
     }
 }

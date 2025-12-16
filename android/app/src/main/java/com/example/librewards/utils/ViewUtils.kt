@@ -1,7 +1,9 @@
 package com.example.librewards.utils
 
+import android.app.Activity
 import android.app.Dialog
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.widget.Toast
@@ -20,4 +22,10 @@ fun showPopup(context: Context, text: String?) {
     popupLayoutBinding.popupText.text = text
     popupLayoutBinding.closeBtn.setOnClickListener { popup.dismiss() }
     popup.show()
+}
+
+fun startLibRewardsActivity(activityContext: Activity, activityToStart: Class<*>) {
+    val intent = Intent(activityContext, activityToStart)
+    activityContext.startActivity(intent)
+    activityContext.finish()
 }
