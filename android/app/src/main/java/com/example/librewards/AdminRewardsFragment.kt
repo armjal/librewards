@@ -14,6 +14,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.toDrawable
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -30,6 +31,7 @@ import com.example.librewards.utils.FragmentExtended
 import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.AdminRewardsViewModel
 import com.example.librewards.viewmodels.AdminRewardsViewModelFactory
+import com.example.librewards.viewmodels.AdminViewModel
 import com.example.librewards.viewmodels.UiEvent
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
@@ -40,12 +42,14 @@ import java.io.IOException
 class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExtended(), RecyclerAdapter.OnProductListener {
     private val viewModel: AdminRewardsViewModel by viewModels {
         val database = FirebaseDatabase.getInstance().reference.child("products")
-            .child(adminActivity.university)
+            .child(adminViewModel.user.value?.university!!)
         val storageReference = FirebaseStorage.getInstance().reference.child("products").child(
-            "${adminActivity.university}/images/",
+            "${adminViewModel.user.value?.university!!}/images/",
         )
         AdminRewardsViewModelFactory(ProductRepository(database), StorageRepository(storageReference))
     }
+
+    private val adminViewModel: AdminViewModel by activityViewModels()
     private lateinit var adminActivity: AdminActivity
     private var popup: Dialog? = null
     private var imageLocalFilePath: Uri? = null
