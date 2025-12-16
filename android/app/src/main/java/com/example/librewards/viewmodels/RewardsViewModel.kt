@@ -23,11 +23,13 @@ class RewardsViewModel(val mainSharedViewModel: MainSharedViewModel, val product
     private var _rewardStatus = MutableLiveData<RewardsEvent>(RewardsEvent.Neutral)
     val rewardStatus: LiveData<RewardsEvent> get() = _rewardStatus
 
+    private val redeemingStatusObserver: (String) -> Unit = { status ->
+        handleRewardStatusChange(status)
+    }
+
     init {
         productRepo.startListeningForProducts()
-        mainSharedViewModel.redeemingRewardStatus.observeForever { status ->
-            handleRewardStatusChange(status)
-        }
+        mainSharedViewModel.redeemingRewardStatus.observeForever(redeemingStatusObserver)
     }
 
     fun handleRewardStatusChange(status: String) {
@@ -58,6 +60,7 @@ class RewardsViewModel(val mainSharedViewModel: MainSharedViewModel, val product
     override fun onCleared() {
         super.onCleared()
         productRepo.stopListeningForProducts()
+        mainSharedViewModel.redeemingRewardStatus.removeObserver(redeemingStatusObserver)
     }
 }
 

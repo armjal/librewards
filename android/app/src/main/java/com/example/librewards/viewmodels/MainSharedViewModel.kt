@@ -93,6 +93,12 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
             }
         }
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        Log.d(TAG, "MainSharedViewModel is being cleared. Stopping all repository listeners.")
+        userRepo.stopAllListeners()
+    }
 }
 
 class MainViewModelFactory(

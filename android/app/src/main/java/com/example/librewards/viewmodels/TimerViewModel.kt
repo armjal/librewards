@@ -32,8 +32,12 @@ class TimerViewModel(val mainSharedViewModel: MainSharedViewModel) : ViewModel()
     private var _state = MutableLiveData<TimerState>(TimerState.Neutral)
     val state: LiveData<TimerState> get() = _state
 
+    private val studyingStatusObserver: (String) -> Unit = { status ->
+        handleStudyingStatusChange(status)
+    }
+
     init {
-        mainSharedViewModel.studyingStatus.observeForever { status -> handleStudyingStatusChange(status) }
+        mainSharedViewModel.studyingStatus.observeForever(studyingStatusObserver)
     }
 
     private fun handleStudyingStatusChange(status: String?) {
@@ -77,6 +81,11 @@ class TimerViewModel(val mainSharedViewModel: MainSharedViewModel) : ViewModel()
         elapsedTime = 0
         startTime = 0
         _state.value = TimerState.Reset
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        mainSharedViewModel.studyingStatus.removeObserver(studyingStatusObserver)
     }
 }
 
