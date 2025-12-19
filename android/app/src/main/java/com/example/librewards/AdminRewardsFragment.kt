@@ -3,7 +3,6 @@ package com.example.librewards
 import android.app.Dialog
 import android.content.Intent
 import android.graphics.Color
-import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -18,7 +17,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import androidx.viewbinding.ViewBinding
 import com.example.librewards.databinding.AddProductPopupBinding
 import com.example.librewards.databinding.AdminFragmentRewardsBinding
 import com.example.librewards.databinding.ManageProductPopupBinding
@@ -40,6 +39,10 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 
 class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : FragmentExtended(), RecyclerAdapter.OnProductListener {
+    companion object {
+        private val TAG: String = AdminRewardsFragment::class.java.simpleName
+    }
+
     private val viewModel: AdminRewardsViewModel by viewModels {
         val database = FirebaseDatabase.getInstance().reference.child("products")
             .child(adminViewModel.user.value?.university!!)
@@ -50,11 +53,8 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
     }
 
     private val adminViewModel: AdminViewModel by activityViewModels()
-    private lateinit var adminActivity: AdminActivity
     private var popup: Dialog? = null
     private var imageLocalFilePath: Uri? = null
-    private var layoutManager: RecyclerView.LayoutManager? = null
-    private var adapter: RecyclerView.Adapter<RecyclerAdapter.ViewHolder>? = null
     private var _binding: AdminFragmentRewardsBinding? = null
     private val binding get() = _binding!!
     private var addProductBinding: AddProductPopupBinding? = null
@@ -71,14 +71,15 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.addAProduct.setOnClickListener { showAddProductPopup() }
-        layoutManager = LinearLayoutManager(context)
+        binding.addAProduct.setOnClickListener {
+            showAddProductPopup()
+        }
+        val layoutManager = LinearLayoutManager(context)
         binding.adminRewardsRecycler.layoutManager = layoutManager
-        adapter = RecyclerAdapter(mutableListOf(), this)
+        val adapter = RecyclerAdapter(mutableListOf(), this)
         binding.adminRewardsRecycler.adapter = adapter
-
         viewModel.productEntries.observe(viewLifecycleOwner) {
-            (adapter as RecyclerAdapter).updateList(it)
+            adapter.updateList(it)
         }
     }
 
@@ -90,43 +91,42 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
     }
 
     private fun showAddProductPopup() {
-        popup = Dialog(requireActivity())
-        popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         addProductBinding = AddProductPopupBinding.inflate(layoutInflater)
-        popup?.setContentView(addProductBinding!!.root)
-        addProductBinding!!.let {
-            it.chooseButton.setOnClickListener { fileChooser() }
-            it.uploadButton.setOnClickListener { fileUploader() }
-            it.closeBtnAdmin.setOnClickListener { popup?.dismiss() }
+        showPopupWithContents(addProductBinding!!) {
+            with(addProductBinding!!) {
+                chooseButton.setOnClickListener { fileChooser() }
+                uploadButton.setOnClickListener { fileUploader() }
+                closeBtnAdmin.setOnClickListener { popup?.dismiss() }
+            }
         }
-        popup?.show()
     }
 
-    private fun showManageProductPopup(position: Int) {
-        val chosenProduct = viewModel.productEntries.value?.get(position)?.product!!
-        val chosenProductEntry = viewModel.productEntries.value?.get(position)!!
-        popup = Dialog(requireActivity())
-        popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+    private fun showManageProductPopup(productEntry: ProductEntry) {
+        val chosenProduct = productEntry.product
         manageProductBinding = ManageProductPopupBinding.inflate(layoutInflater)
-        popup?.setContentView(manageProductBinding!!.root)
-        Picasso.get().load(chosenProduct.productImageUrl)
-            .into(manageProductBinding!!.manageProductImage)
-        manageProductBinding!!.let {
-            it.manageProductName.setText(chosenProduct.productName)
-            it.manageProductCost.setText(chosenProduct.productCost)
-            it.closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
-            it.updateButton.setOnClickListener {
-                chosenProduct.productName =
-                    manageProductBinding!!.manageProductName.text.toString()
-                chosenProduct.productCost =
-                    manageProductBinding!!.manageProductCost.text.toString()
-
-                updateProduct(chosenProductEntry)
-            }
-            it.deleteButton.setOnClickListener {
-                deleteProduct(chosenProductEntry)
+        showPopupWithContents(manageProductBinding!!) {
+            with(manageProductBinding!!) {
+                Picasso.get().load(chosenProduct.productImageUrl).into(manageProductImage)
+                manageProductName.setText(chosenProduct.productName)
+                manageProductCost.setText(chosenProduct.productCost)
+                closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
+                updateButton.setOnClickListener {
+                    chosenProduct.productName = manageProductName.text.toString()
+                    chosenProduct.productCost = manageProductCost.text.toString()
+                    updateProduct(productEntry)
+                }
+                deleteButton.setOnClickListener {
+                    deleteProduct(productEntry)
+                }
             }
         }
+    }
+
+    private fun showPopupWithContents(binding: ViewBinding, addContent: () -> Unit) {
+        popup = Dialog(requireActivity())
+        popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+        popup?.setContentView(binding.root)
+        addContent()
         popup?.show()
     }
 
@@ -242,11 +242,8 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
             }
         }
 
-    companion object {
-        private val TAG: String = AdminRewardsFragment::class.java.simpleName
-    }
-
     override fun onProductClick(position: Int) {
-        showManageProductPopup(position)
+        val chosenProductEntry = viewModel.productEntries.value?.get(position)!!
+        showManageProductPopup(chosenProductEntry)
     }
 }
