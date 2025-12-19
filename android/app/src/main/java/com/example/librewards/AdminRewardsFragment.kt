@@ -21,7 +21,6 @@ import androidx.viewbinding.ViewBinding
 import com.example.librewards.databinding.AddProductPopupBinding
 import com.example.librewards.databinding.AdminFragmentRewardsBinding
 import com.example.librewards.databinding.ManageProductPopupBinding
-import com.example.librewards.models.ImageFile
 import com.example.librewards.models.Product
 import com.example.librewards.models.ProductEntry
 import com.example.librewards.repositories.ProductRepository
@@ -44,16 +43,18 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
     }
 
     private val viewModel: AdminRewardsViewModel by viewModels {
-        val database = FirebaseDatabase.getInstance().reference.child("products")
-            .child(adminViewModel.user.value?.university!!)
-        val storageReference = FirebaseStorage.getInstance().reference.child("products").child(
-            "${adminViewModel.user.value?.university!!}/images/",
+        val adminUniversity = adminViewModel.user.value?.university!!
+        val database = FirebaseDatabase.getInstance().reference.child(
+            getString(R.string.product_details_path, adminUniversity),
+        )
+        val storageReference = FirebaseStorage.getInstance().reference.child(
+            getString(R.string.product_img_path, adminUniversity),
         )
         AdminRewardsViewModelFactory(ProductRepository(database), StorageRepository(storageReference))
     }
 
     private val adminViewModel: AdminViewModel by activityViewModels()
-    private var popup: Dialog? = null
+    private var currentDialog: Dialog? = null
     private var imageLocalFilePath: Uri? = null
     private var _binding: AdminFragmentRewardsBinding? = null
     private val binding get() = _binding!!
@@ -71,16 +72,8 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.addAProduct.setOnClickListener {
-            showAddProductPopup()
-        }
-        val layoutManager = LinearLayoutManager(context)
-        binding.adminRewardsRecycler.layoutManager = layoutManager
-        val adapter = RecyclerAdapter(mutableListOf(), this)
-        binding.adminRewardsRecycler.adapter = adapter
-        viewModel.productEntries.observe(viewLifecycleOwner) {
-            adapter.updateList(it)
-        }
+        binding.addAProduct.setOnClickListener { showAddProductPopup() }
+        setupRecyclerView()
     }
 
     override fun onDestroyView() {
@@ -88,15 +81,27 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
         _binding = null
         addProductBinding = null
         manageProductBinding = null
+        currentDialog?.dismiss()
+        currentDialog = null
+    }
+
+    private fun setupRecyclerView() {
+        binding.adminRewardsRecycler.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = RecyclerAdapter(mutableListOf(), this@AdminRewardsFragment)
+        }
+        viewModel.productEntries.observe(viewLifecycleOwner) {
+            (binding.adminRewardsRecycler.adapter as RecyclerAdapter).updateList(it)
+        }
     }
 
     private fun showAddProductPopup() {
         addProductBinding = AddProductPopupBinding.inflate(layoutInflater)
         showPopupWithContents(addProductBinding!!) {
             with(addProductBinding!!) {
-                chooseButton.setOnClickListener { fileChooser() }
-                uploadButton.setOnClickListener { fileUploader() }
-                closeBtnAdmin.setOnClickListener { popup?.dismiss() }
+                chooseButton.setOnClickListener { chooseImage() }
+                uploadButton.setOnClickListener { uploadFile() }
+                closeBtnAdmin.setOnClickListener { currentDialog?.dismiss() }
             }
         }
     }
@@ -105,11 +110,11 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
         val chosenProduct = productEntry.product
         manageProductBinding = ManageProductPopupBinding.inflate(layoutInflater)
         showPopupWithContents(manageProductBinding!!) {
-            with(manageProductBinding!!) {
+            manageProductBinding!!.apply {
                 Picasso.get().load(chosenProduct.productImageUrl).into(manageProductImage)
                 manageProductName.setText(chosenProduct.productName)
                 manageProductCost.setText(chosenProduct.productCost)
-                closeBtnManageAdmin.setOnClickListener { popup?.dismiss() }
+                closeBtnManageAdmin.setOnClickListener { currentDialog?.dismiss() }
                 updateButton.setOnClickListener {
                     chosenProduct.productName = manageProductName.text.toString()
                     chosenProduct.productCost = manageProductCost.text.toString()
@@ -123,11 +128,11 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
     }
 
     private fun showPopupWithContents(binding: ViewBinding, addContent: () -> Unit) {
-        popup = Dialog(requireActivity())
-        popup?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
-        popup?.setContentView(binding.root)
+        currentDialog = Dialog(requireActivity())
+        currentDialog?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+        currentDialog?.setContentView(binding.root)
         addContent()
-        popup?.show()
+        currentDialog?.show()
     }
 
     private fun updateProduct(chosenProductEntry: ProductEntry) {
@@ -135,13 +140,13 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
             viewModel.updateProductEntry(chosenProductEntry).collect {
                 when (it) {
                     is UiEvent.Success -> {
-                        popup?.dismiss()
+                        currentDialog?.dismiss()
                         toastMessage(requireActivity(), it.message)
                     }
 
                     is UiEvent.Failure -> {
                         Log.e(TAG, it.message)
-                        toastMessage(requireActivity(), "Product update failed")
+                        toastMessage(requireActivity(), getString(R.string.product_update_failed))
                     }
                 }
             }
@@ -153,29 +158,30 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
             viewModel.deleteProductEntry(chosenProductEntry.id).collect {
                 when (it) {
                     is UiEvent.Success -> {
-                        popup?.dismiss()
+                        currentDialog?.dismiss()
                         toastMessage(requireActivity(), it.message)
                     }
 
                     is UiEvent.Failure -> {
                         Log.e(TAG, it.message)
-                        toastMessage(requireActivity(), "Product deletion failed")
+                        toastMessage(requireActivity(), getString(R.string.product_deletion_failed))
                     }
                 }
             }
         }
     }
 
-    private fun fileChooser() {
-        val intent = Intent()
-        intent.type = "image/*"
-        intent.action = Intent.ACTION_GET_CONTENT
-        imagePickerLauncher.launch(intent)
+    private fun chooseImage() {
+        imagePickerLauncher.launch(
+            Intent(Intent.ACTION_GET_CONTENT).apply {
+                type = "image/*"
+            },
+        )
     }
 
-    private fun fileUploader() {
+    private fun uploadFile() {
         if (imageLocalFilePath == null) {
-            toastMessage(requireActivity(), "Please choose an image")
+            toastMessage(requireActivity(), getString(R.string.choose_image))
             return
         }
         setProgressState(isLoading = true)
@@ -183,15 +189,12 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
             addProductBinding!!.productName.text.toString(),
             addProductBinding!!.productCost.text.toString(),
         )
-        val imageFile =
-            ImageFile(name = hashFunction(product.productName), uri = imageLocalFilePath)
-
-        addProduct(product, imageFile)
+        addProduct(product)
     }
 
-    private fun addProduct(product: Product, imageFile: ImageFile) {
+    private fun addProduct(product: Product) {
         lifecycleScope.launch {
-            viewModel.addProductEntry(product, imageFile).collect {
+            viewModel.addProductEntry(product, imageLocalFilePath).collect {
                 when (it) {
                     is UiEvent.Success -> {
                         toastMessage(requireActivity(), it.message)
@@ -202,7 +205,7 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
                     is UiEvent.Failure -> {
                         Log.e(TAG, it.message)
                         setProgressState(isLoading = false)
-                        toastMessage(requireActivity(), "Product upload failed")
+                        toastMessage(requireActivity(), getString(R.string.product_upload_failed))
                     }
                 }
             }
@@ -220,8 +223,10 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
         addProductBinding?.let {
             it.productName.text.clear()
             it.productCost.text.clear()
-            it.chosenImage.layoutParams.height = 0
-            it.chosenImage.layoutParams.width = 0
+            it.chosenImage.layoutParams.apply {
+                height = 0
+                width = 0
+            }
             it.chosenImage.setImageDrawable(null)
         }
         imageLocalFilePath = null
