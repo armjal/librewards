@@ -1,9 +1,11 @@
 package com.example.librewards.viewmodels
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.librewards.hashFunction
 import com.example.librewards.models.ImageFile
 import com.example.librewards.models.Product
 import com.example.librewards.models.ProductEntry
@@ -31,8 +33,10 @@ class AdminRewardsViewModel(
         productRepo.stopListeningForProducts()
     }
 
-    fun addProductEntry(product: Product, imageFile: ImageFile): Flow<UiEvent> = flow {
+    fun addProductEntry(product: Product, imageFilePath: Uri?): Flow<UiEvent> = flow {
+        val imageFile = ImageFile(name = hashFunction(product.productName), uri = imageFilePath)
         val productEntry = ProductEntry(generateProductId(), product)
+
         try {
             val uploadedImageDownloadUrl = uploadImage(imageFile)
             emit(UiEvent.Success("Image successfully uploaded"))

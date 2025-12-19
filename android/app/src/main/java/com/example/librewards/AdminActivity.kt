@@ -2,19 +2,24 @@ package com.example.librewards
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.example.librewards.adapters.ViewPagerAdapter
 import com.example.librewards.databinding.ActivityAdminBinding
+import com.example.librewards.repositories.UserRepository
+import com.example.librewards.viewmodels.AdminViewModel
+import com.example.librewards.viewmodels.AdminViewModelFactory
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.database.FirebaseDatabase
 
 class AdminActivity : AppCompatActivity() {
-    private lateinit var email: String
-    private lateinit var firstName: String
-    private lateinit var lastName: String
-    lateinit var university: String
+    private val viewModel: AdminViewModel by viewModels {
+        val userRepo = UserRepository(FirebaseDatabase.getInstance().reference)
+        AdminViewModelFactory(userRepo)
+    }
 
     private lateinit var binding: ActivityAdminBinding
 
@@ -23,9 +28,7 @@ class AdminActivity : AppCompatActivity() {
         // Sets the layout to the XML file associated with it
         binding = ActivityAdminBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        initialiseVariables()
         binding.adminProfileImage.setOnClickListener { logoutApp() }
-        ("$firstName $lastName").also { binding.adminUsername.text = it }
 
         val viewPagerAdapter = ViewPagerAdapter(this)
         binding.adminViewPager.adapter = viewPagerAdapter
@@ -34,6 +37,16 @@ class AdminActivity : AppCompatActivity() {
         TabLayoutMediator(binding.adminTabLayout, binding.adminViewPager) { tab, position ->
             tab.icon = ContextCompat.getDrawable(this, fragments[position].icon)
         }.attach()
+
+        viewModel.setUser(Firebase.auth.currentUser?.email!!)
+        observeUser()
+    }
+
+    private fun observeUser() {
+        viewModel.user.observe(this) {
+            if (it == null) return@observe
+            binding.adminUsername.text = "${it.firstname} ${it.surname}"
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -54,16 +67,6 @@ class AdminActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
-    }
-
-    private fun initialiseVariables() {
-        val extras = intent.extras
-        email = extras?.getString("email").toString()
-        firstName = extras?.getString("first_name").toString()
-        firstName = firstName[0].uppercaseChar().toString() + firstName.substring(1)
-        lastName = extras?.getString("last_name").toString()
-        lastName = lastName[0].uppercaseChar().toString() + lastName.substring(1)
-        university = extras?.getString("university").toString()
     }
 
     companion object {

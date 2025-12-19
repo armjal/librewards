@@ -57,6 +57,12 @@
     <string name="error_msg_empty_fields">Please ensure all fields are correctly filled out</string>
     <string name="choose_uni">Please choose a University</string>
     <string name="selected_uni">User selected university: %s</string>
+    <string name="product_upload_failed">Product upload failed</string>
+    <string name="product_update_failed">Product update failed</string>
+    <string name="product_deletion_failed">Product deletion failed</string>
+    <string name="choose_image">Please choose an image</string>
+    <string name="product_img_path">products//%s//images//</string>
+    <string name="product_details_path">products//%s//</string>
     <plurals name="minutes_plural">
         <item quantity="one">minute</item>
         <item quantity="other">minutes</item>
