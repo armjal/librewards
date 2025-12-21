@@ -31,13 +31,7 @@ class Login : AppCompatActivity() {
         setContentView(binding.root)
         setupRegistrationButtonListener()
         setupLoginButtonListener()
-    }
-
-    public override fun onStart() {
-        super.onStart()
-        if (loginViewModel.isLoggedIn()) {
-            openUserApp()
-        }
+        setupNavigationObserver()
     }
 
     private fun setupRegistrationButtonListener() {
@@ -62,10 +56,6 @@ class Login : AppCompatActivity() {
 
             loginFlow.take(1).collect { status ->
                 when (status) {
-                    LoginStatus.Successful -> {
-                        openUserApp()
-                    }
-
                     LoginStatus.Failed -> {
                         toastMessage(this@Login, getString(R.string.auth_failed))
                     }
@@ -76,10 +66,10 @@ class Login : AppCompatActivity() {
         }
     }
 
-    private fun openUserApp() {
-        Firebase.auth.currentUser?.getIdToken(true)?.addOnSuccessListener {
-            val isAdmin = it.claims["admin"]
-            if (isAdmin == true) {
+    private fun setupNavigationObserver() {
+        loginViewModel.isAdmin.observe(this) { isAdmin ->
+            if (isAdmin == null) return@observe
+            if (isAdmin) {
                 startLibRewardsActivity(this, AdminActivity::class.java)
             } else {
                 startLibRewardsActivity(this, MainActivity::class.java)
