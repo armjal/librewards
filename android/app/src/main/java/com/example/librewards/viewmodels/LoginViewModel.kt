@@ -21,9 +21,22 @@ sealed class LoginStatus {
 class LoginViewModel(val auth: FirebaseAuth) : ViewModel() {
     private var _loginState = MutableLiveData<LoginStatus>(null)
     val loginState: LiveData<LoginStatus> = _loginState
+    private var _isAdmin: MutableLiveData<Boolean?> = MutableLiveData(null)
+    val isAdmin: LiveData<Boolean?> = _isAdmin
 
     companion object {
         val TAG: String = LoginViewModel::class.java.simpleName
+    }
+
+    init {
+        setIsAdmin()
+    }
+
+    fun setIsAdmin() {
+        if (auth.currentUser == null) return
+        auth.currentUser?.getIdToken(true)?.addOnSuccessListener {
+            _isAdmin.value = it.claims["admin"] != null
+        }
     }
 
     fun login(email: String, password: String): Flow<LoginStatus> = callbackFlow {
@@ -31,6 +44,7 @@ class LoginViewModel(val auth: FirebaseAuth) : ViewModel() {
             email, password,
         ).addOnCompleteListener { task ->
             if (task.isSuccessful) {
+                setIsAdmin()
                 trySend(LoginStatus.Successful)
                 Log.d(TAG, "signInWithEmail:success")
             } else {
@@ -48,14 +62,6 @@ class LoginViewModel(val auth: FirebaseAuth) : ViewModel() {
             _loginState.value = LoginStatus.LoggedOut
             Log.i(TAG, "User logged out")
         }
-    }
-
-    fun isLoggedIn(): Boolean {
-        if (auth.currentUser != null) {
-            return true
-        }
-        Log.i(TAG, "User not logged in")
-        return false
     }
 }
 
