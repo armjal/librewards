@@ -3,7 +3,6 @@ package com.example.librewards
 import android.Manifest
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,11 +18,9 @@ import com.example.librewards.utils.toastMessage
 import com.example.librewards.viewmodels.AdminHomeViewModel
 import com.example.librewards.viewmodels.AdminHomeViewModelFactory
 import com.example.librewards.viewmodels.StudentRewardStatus
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
+import com.example.librewards.viewmodels.StudentTimerStatus
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -72,6 +69,7 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         observeStudentRewardStatus()
+        observeStudentTimerStatus()
         binding.scanTimerButton.setOnClickListener {
             currentScanIsForTimer = true
             scanQRCode()
@@ -81,7 +79,7 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
             scanQRCode()
         }
 
-        binding.startTimerButton.setOnClickListener { startStudentTimer(binding.enterQr.text.toString()) }
+        binding.startTimerButton.setOnClickListener { viewModel.startStudentTimer(binding.enterQr.text.toString()) }
         binding.redeemRewardButton.setOnClickListener { viewModel.redeemRewardForStudent(binding.enterQr.text.toString()) }
     }
 
@@ -101,32 +99,15 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
         }
     }
 
-    private fun startStudentTimer(studentNumber: String) {
-        var isStudying: String
-        val refChild =
-            database.child("users").child(studentNumber).child("studying")
-        refChild.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                isStudying = dataSnapshot.value.toString()
-                Log.d("TAG", isStudying)
-                when (isStudying) {
-                    "0", "2" -> {
-                        refChild.setValue("1")
-                    }
-                    "1" -> {
-                        refChild.setValue("0")
-                    }
-                    else -> {
-                        Toast.makeText(context, "Student ID is not recognised", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                }
+    private fun observeStudentTimerStatus() {
+        viewModel.studentTimerStatus.observe(viewLifecycleOwner) {
+            if (it == null) return@observe
+            when (it) {
+                StudentTimerStatus.Started -> toastMessage(requireActivity(), "Student timer started")
+                StudentTimerStatus.Stopped -> toastMessage(requireActivity(), "Student timer stopped")
+                StudentTimerStatus.Error -> toastMessage(requireActivity(), "Error starting student timer")
             }
-
-            override fun onCancelled(error: DatabaseError) {
-                Log.w(TAG, "Failed to read value.", error.toException())
-            }
-        })
+        }
     }
 
     private fun checkCameraPermission(): Boolean = checkSelfPermission(
@@ -152,7 +133,7 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
                 val rawValue = barcode.rawValue
                 if (rawValue != null) {
                     if (currentScanIsForTimer) {
-                        startStudentTimer(rawValue)
+                        viewModel.startStudentTimer(rawValue)
                     } else {
                         viewModel.redeemRewardForStudent(rawValue)
                     }

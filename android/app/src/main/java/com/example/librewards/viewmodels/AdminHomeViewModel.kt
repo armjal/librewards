@@ -19,9 +19,20 @@ sealed class StudentRewardStatus {
     object Error : StudentRewardStatus()
 }
 
+sealed class StudentTimerStatus {
+    object Stopped : StudentTimerStatus()
+
+    object Started : StudentTimerStatus()
+
+    object Error : StudentTimerStatus()
+}
+
 class AdminHomeViewModel(val userRepo: UserRepository) : ViewModel() {
     private var _studentRewardStatus: MutableLiveData<StudentRewardStatus> = MutableLiveData(StudentRewardStatus.NotRedeemed)
     val studentRewardStatus: LiveData<StudentRewardStatus> = _studentRewardStatus
+
+    private var _studentTimerStatus: MutableLiveData<StudentTimerStatus> = MutableLiveData(null)
+    val studentTimerStatus: LiveData<StudentTimerStatus> = _studentTimerStatus
 
     fun redeemRewardForStudent(studentId: String) {
         var student: User?
@@ -38,6 +49,27 @@ class AdminHomeViewModel(val userRepo: UserRepository) : ViewModel() {
                 }
                 else -> {
                     _studentRewardStatus.value = StudentRewardStatus.CantRedeem
+                }
+            }
+        }
+    }
+
+    fun startStudentTimer(studentNumber: String) {
+        var student: User?
+        viewModelScope.launch {
+            student = userRepo.getUser(studentNumber)
+            if (student == null) {
+                _studentTimerStatus.value = StudentTimerStatus.Error
+                return@launch
+            }
+            when (student?.studying) {
+                "0", "2" -> {
+                    userRepo.updateField(studentNumber, "studying", "1")
+                    _studentTimerStatus.value = StudentTimerStatus.Started
+                }
+                "1" -> {
+                    userRepo.updateField(studentNumber, "studying", "0")
+                    _studentTimerStatus.value = StudentTimerStatus.Stopped
                 }
             }
         }
