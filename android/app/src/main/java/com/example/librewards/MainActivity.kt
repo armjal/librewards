@@ -67,16 +67,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun observePanelSlider() {
         mainSharedViewModel.panelSlideOffset.observe(this) { slideOffset ->
-            val alpha = (1.3 - slideOffset).toFloat()
+            val shadowAlpha = (slideOffset * 0.6f).coerceIn(0f, 0.6f)
             with(binding) {
-                listOf(appBarLayout, profileImage, logo, tabLayout).forEach {
-                    it.alpha = alpha
-                }
+                shadowOverlay.alpha = shadowAlpha
 
-                val panelIsUp = slideOffset > 0.1
-                profileImage.isClickable = !panelIsUp
-                tabLayout.touchables.forEach { it?.isEnabled = !panelIsUp }
-                viewPager.isUserInputEnabled = !panelIsUp
+                val isPanelActive = slideOffset > 0.01f
+                profileImage.isClickable = !isPanelActive
+                val tabStrip = tabLayout.getChildAt(0) as? android.view.ViewGroup
+                tabStrip?.let {
+                    for (i in 0 until it.childCount) {
+                        it.getChildAt(i).isEnabled = !isPanelActive
+                    }
+                }
+                viewPager.isUserInputEnabled = !isPanelActive
             }
         }
     }
