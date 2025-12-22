@@ -63,6 +63,16 @@
     <string name="choose_image">Please choose an image</string>
     <string name="product_img_path">products//%s//images//</string>
     <string name="product_details_path">products//%s//</string>
+    <string name="camera_permission_required">Camera permission is required to scan barcodes.</string>
+    <string name="reward_redeemed">Reward redeemed for student</string>
+    <string name="student_not_prepared">Student not prepared to redeem reward</string>
+    <string name="error_redeeming_reward">Error redeeming reward</string>
+    <string name="timer_started">Student timer started</string>
+    <string name="timer_stopped">Student timer stopped</string>
+    <string name="error_starting_timer">Error starting student timer</string>
+    <string name="no_barcode_found">No barcode found</string>
+    <string name="scan_cancelled">Scan cancelled</string>
+    <string name="scan_failed">Scan failed: %s</string>
     <plurals name="minutes_plural">
         <item quantity="one">minute</item>
         <item quantity="other">minutes</item>

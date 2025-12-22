@@ -40,7 +40,7 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
         requestCameraPermissionLauncher =
             registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
                 if (!isGranted) {
-                    toastMessage(requireActivity(), "Camera permission is required to scan barcodes.")
+                    toastMessage(requireActivity(), getString(R.string.camera_permission_required))
                 }
             }
         val options = GmsBarcodeScannerOptions.Builder()
@@ -82,23 +82,23 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
     }
 
     private fun observeStudentRewardStatus() {
-        viewModel.studentRewardStatus.observe(viewLifecycleOwner) {
-            when (it) {
-                StudentRewardStatus.Redeemed -> toastMessage(requireActivity(), "Reward redeemed for student")
-                StudentRewardStatus.CantRedeem -> toastMessage(requireActivity(), "Student not prepared to redeem reward")
-                StudentRewardStatus.Error -> toastMessage(requireActivity(), "Error redeeming reward")
+        viewModel.studentRewardStatus.observe(viewLifecycleOwner) { status ->
+            when (status) {
+                StudentRewardStatus.Redeemed -> toastMessage(requireActivity(), getString(R.string.reward_redeemed))
+                StudentRewardStatus.CantRedeem -> toastMessage(requireActivity(), getString(R.string.student_not_prepared))
+                StudentRewardStatus.Error -> toastMessage(requireActivity(), getString(R.string.error_redeeming_reward))
                 else -> {}
             }
         }
     }
 
     private fun observeStudentTimerStatus() {
-        viewModel.studentTimerStatus.observe(viewLifecycleOwner) {
-            if (it == null) return@observe
-            when (it) {
-                StudentTimerStatus.Started -> toastMessage(requireActivity(), "Student timer started")
-                StudentTimerStatus.Stopped -> toastMessage(requireActivity(), "Student timer stopped")
-                StudentTimerStatus.Error -> toastMessage(requireActivity(), "Error starting student timer")
+        viewModel.studentTimerStatus.observe(viewLifecycleOwner) { status ->
+            if (status == null) return@observe
+            when (status) {
+                StudentTimerStatus.Started -> toastMessage(requireActivity(), getString(R.string.timer_started))
+                StudentTimerStatus.Stopped -> toastMessage(requireActivity(), getString(R.string.timer_stopped))
+                StudentTimerStatus.Error -> toastMessage(requireActivity(), getString(R.string.error_starting_timer))
             }
         }
     }
@@ -119,10 +119,10 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
                 if (rawValue != null) {
                     actionForStudent(rawValue)
                 } else {
-                    toastMessage(requireActivity(), "No barcode found")
+                    toastMessage(requireActivity(), getString(R.string.no_barcode_found))
                 }
             }
-            .addOnCanceledListener { toastMessage(requireActivity(), "Scan cancelled") }
-            .addOnFailureListener { e -> toastMessage(requireContext(), "Scan failed: ${e.message}") }
+            .addOnCanceledListener { toastMessage(requireActivity(), getString(R.string.scan_cancelled)) }
+            .addOnFailureListener { e -> toastMessage(requireContext(), getString(R.string.scan_failed, e.message)) }
     }
 }
