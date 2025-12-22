@@ -71,12 +71,10 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
         observeStudentRewardStatus()
         observeStudentTimerStatus()
         binding.scanTimerButton.setOnClickListener {
-            currentScanIsForTimer = true
-            scanQRCode()
+            startScanner(viewModel::toggleStudentTimer)
         }
         binding.scanRewardButton.setOnClickListener {
-            currentScanIsForTimer = false
-            scanQRCode()
+            startScanner(viewModel::redeemRewardForStudent)
         }
 
         binding.toggleTimerButton.setOnClickListener { viewModel.toggleStudentTimer(binding.enterQr.text.toString()) }
@@ -119,11 +117,11 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
         if (checkCameraPermission()) {
             startScanner()
         } else {
+    private fun startScanner(actionForStudent: (String) -> Unit) {
+        if (!checkCameraPermission()) {
             requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            return
         }
-    }
-
-    private fun startScanner() {
         val options = GmsBarcodeScannerOptions.Builder()
             .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
             .build()
@@ -132,13 +130,9 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
             .addOnSuccessListener { barcode ->
                 val rawValue = barcode.rawValue
                 if (rawValue != null) {
-                    if (currentScanIsForTimer) {
-                        viewModel.toggleStudentTimer(rawValue)
-                    } else {
-                        viewModel.redeemRewardForStudent(rawValue)
-                    }
+                    actionForStudent(rawValue)
                 } else {
-                    Toast.makeText(requireContext(), "No barcode found", Toast.LENGTH_SHORT).show()
+                    toastMessage(requireActivity(), "No barcode found")
                 }
             }
             .addOnCanceledListener {
@@ -148,5 +142,7 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
                 Toast.makeText(requireContext(), "Scan failed: ${e.message}", Toast.LENGTH_SHORT)
                     .show()
             }
+            .addOnCanceledListener { toastMessage(requireActivity(), "Scan cancelled") }
+            .addOnFailureListener { e -> toastMessage(requireContext(), "Scan failed: ${e.message}") }
     }
 }
