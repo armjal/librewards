@@ -8,10 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import com.example.librewards.hashFunction
 import com.example.librewards.models.User
 import com.example.librewards.qrcode.QRCodeGenerator
 import com.example.librewards.repositories.UserRepository
+import com.example.librewards.utils.generateIdFromKey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -62,30 +62,30 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
 
     fun createQRCode() {
         val qrCodeGenerator = QRCodeGenerator()
-        val qrCodeNumber = hashFunction(_userEmailFlow.value)
+        val qrCodeNumber = generateIdFromKey(_userEmailFlow.value)
         val qrCodeBitmap = qrCodeGenerator.createQR(qrCodeNumber, 400, 400)
         _userQrCode.value = UserQRCode(qrCodeBitmap!!, qrCodeNumber)
     }
 
     fun addPoints(points: Int) {
         val updatedPoints = parseInt(userPoints.value!!) + points
-        userRepo.updateField(hashFunction(_userEmailFlow.value), "points", updatedPoints.toString())
+        userRepo.updateField(generateIdFromKey(_userEmailFlow.value), "points", updatedPoints.toString())
     }
 
     fun updatePoints(points: String) {
-        userRepo.updateField(hashFunction(_userEmailFlow.value), "points", points)
+        userRepo.updateField(generateIdFromKey(_userEmailFlow.value), "points", points)
     }
 
     fun updateStudying(studying: String) {
-        userRepo.updateField(hashFunction(_userEmailFlow.value), "studying", studying)
+        userRepo.updateField(generateIdFromKey(_userEmailFlow.value), "studying", studying)
     }
 
     fun updateRedeemingReward(points: String) {
-        userRepo.updateField(hashFunction(_userEmailFlow.value), "redeemingReward", points)
+        userRepo.updateField(generateIdFromKey(_userEmailFlow.value), "redeemingReward", points)
     }
 
     fun setUser(email: String) {
-        val id = hashFunction(email)
+        val id = generateIdFromKey(email)
         viewModelScope.launch {
             try {
                 _user.postValue(userRepo.getUser(id))

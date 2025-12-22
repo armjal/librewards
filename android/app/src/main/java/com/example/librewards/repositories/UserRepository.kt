@@ -1,8 +1,8 @@
 package com.example.librewards.repositories
 
 import android.util.Log
-import com.example.librewards.hashFunction
 import com.example.librewards.models.User
+import com.example.librewards.utils.generateIdFromKey
 import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -21,7 +21,7 @@ class UserRepository(val database: DatabaseReference) {
     }
 
     fun addUser(user: User): Task<Void?> {
-        val id = hashFunction(user.email)
+        val id = generateIdFromKey(user.email)
         return database.child("users").child(id).setValue(user)
     }
 
@@ -38,7 +38,7 @@ class UserRepository(val database: DatabaseReference) {
     }
 
     fun listenForUserField(email: String, field: String): Flow<String?> = callbackFlow {
-        val userId = hashFunction(email)
+        val userId = generateIdFromKey(email)
         val userRef = database.child("users").child(userId).child(field)
 
         val listener = object : ValueEventListener {

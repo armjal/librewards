@@ -6,9 +6,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.librewards.hashFunction
 import com.example.librewards.models.User
 import com.example.librewards.repositories.UserRepository
+import com.example.librewards.utils.generateIdFromKey
 import com.example.librewards.viewmodels.MainSharedViewModel.Companion.TAG
 import kotlinx.coroutines.launch
 
@@ -17,7 +17,7 @@ class AdminViewModel(val userRepo: UserRepository) : ViewModel() {
     val user: LiveData<User> = _user
 
     fun setUser(email: String) {
-        val id = hashFunction(email)
+        val id = generateIdFromKey(email)
         viewModelScope.launch {
             try {
                 _user.postValue(userRepo.getUser(id))

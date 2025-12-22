@@ -5,12 +5,12 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.librewards.hashFunction
 import com.example.librewards.models.ImageFile
 import com.example.librewards.models.Product
 import com.example.librewards.models.ProductEntry
 import com.example.librewards.repositories.ProductRepository
 import com.example.librewards.repositories.StorageRepository
+import com.example.librewards.utils.generateIdFromKey
 import com.google.firebase.database.DatabaseException
 import com.google.firebase.storage.StorageException
 import kotlinx.coroutines.flow.Flow
@@ -34,7 +34,7 @@ class AdminRewardsViewModel(
     }
 
     fun addProductEntry(product: Product, imageFilePath: Uri?): Flow<UiEvent> = flow {
-        val imageFile = ImageFile(name = hashFunction(product.productName), uri = imageFilePath)
+        val imageFile = ImageFile(name = generateIdFromKey(product.productName), uri = imageFilePath)
         val productEntry = ProductEntry(generateProductId(), product)
 
         try {
