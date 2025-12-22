@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.librewards.hashFunction
 import com.example.librewards.models.User
 import com.example.librewards.repositories.UserRepository
 import com.example.librewards.viewmodels.MainSharedViewModel.Companion.TAG
@@ -16,9 +17,10 @@ class AdminViewModel(val userRepo: UserRepository) : ViewModel() {
     val user: LiveData<User> = _user
 
     fun setUser(email: String) {
+        val id = hashFunction(email)
         viewModelScope.launch {
             try {
-                _user.postValue(userRepo.getUser(email))
+                _user.postValue(userRepo.getUser(id))
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to get user: ${e.message}")
             }

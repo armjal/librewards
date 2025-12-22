@@ -3,47 +3,50 @@ package com.example.librewards
 import android.Manifest
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat.checkSelfPermission
+import androidx.fragment.app.viewModels
 import com.example.librewards.databinding.AdminFragmentHomeBinding
+import com.example.librewards.repositories.UserRepository
 import com.example.librewards.utils.FragmentExtended
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
+import com.example.librewards.utils.toastMessage
+import com.example.librewards.viewmodels.AdminHomeViewModel
+import com.example.librewards.viewmodels.AdminHomeViewModelFactory
+import com.example.librewards.viewmodels.StudentRewardStatus
+import com.example.librewards.viewmodels.StudentTimerStatus
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanner
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 
 class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExtended() {
+    private val viewModel: AdminHomeViewModel by viewModels {
+        val database = FirebaseDatabase.getInstance().reference
+        AdminHomeViewModelFactory(UserRepository(database))
+    }
+
     private lateinit var requestCameraPermissionLauncher: ActivityResultLauncher<String>
-    private lateinit var database: DatabaseReference
     private var _binding: AdminFragmentHomeBinding? = null
     private val binding get() = _binding!!
-    private var currentScanIsForTimer: Boolean = true
+    private lateinit var scanner: GmsBarcodeScanner
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        database = FirebaseDatabase.getInstance().reference
         requestCameraPermissionLauncher =
             registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-                if (isGranted) {
-                    startScanner()
-                } else {
-                    Toast.makeText(
-                        requireContext(),
-                        "Camera permission is required to scan barcodes.",
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                if (!isGranted) {
+                    toastMessage(requireActivity(), getString(R.string.camera_permission_required))
                 }
             }
+        val options = GmsBarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+            .build()
+        scanner = GmsBarcodeScanning.getClient(requireContext(), options)
     }
 
     override fun onCreateView(
@@ -56,18 +59,9 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        binding.scanTimerButton.setOnClickListener {
-            currentScanIsForTimer = true
-            scanQRCode()
-        }
-        binding.scanRewardButton.setOnClickListener {
-            currentScanIsForTimer = false
-            scanQRCode()
-        }
-
-        binding.startTimerButton.setOnClickListener { startStudentTimer(binding.enterQr.text.toString()) }
-        binding.redeemRewardButton.setOnClickListener { redeemStudentReward(binding.enterQr.text.toString()) }
+        observeStudentRewardStatus()
+        observeStudentTimerStatus()
+        setupButtonListeners()
     }
 
     override fun onDestroyView() {
@@ -75,55 +69,38 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
         _binding = null
     }
 
-    private fun redeemStudentReward(studentNumber: String) {
-        var redeemingReward: String
-        val refChild =
-            database.child("users").child(studentNumber).child("redeemingReward")
-        refChild.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                redeemingReward = dataSnapshot.value.toString()
-                Log.d(TAG, redeemingReward)
-                if (redeemingReward == "0") {
-                    refChild.setValue("1")
-                } else {
-                    Toast.makeText(context, "Student ID is not recognised", Toast.LENGTH_SHORT)
-                        .show()
-                }
-            }
+    private fun setupButtonListeners() {
+        binding.scanTimerButton.setOnClickListener {
+            startScanner(viewModel::toggleStudentTimer)
+        }
+        binding.scanRewardButton.setOnClickListener {
+            startScanner(viewModel::redeemRewardForStudent)
+        }
 
-            override fun onCancelled(error: DatabaseError) {
-                // Failed to read value
-                Log.w(TAG, "Failed to read value.", error.toException())
-            }
-        })
+        binding.toggleTimerButton.setOnClickListener { viewModel.toggleStudentTimer(binding.enterQr.text.toString()) }
+        binding.redeemRewardButton.setOnClickListener { viewModel.redeemRewardForStudent(binding.enterQr.text.toString()) }
     }
 
-    private fun startStudentTimer(studentNumber: String) {
-        var isStudying: String
-        val refChild =
-            database.child("users").child(studentNumber).child("studying")
-        refChild.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                isStudying = dataSnapshot.value.toString()
-                Log.d("TAG", isStudying)
-                when (isStudying) {
-                    "0", "2" -> {
-                        refChild.setValue("1")
-                    }
-                    "1" -> {
-                        refChild.setValue("0")
-                    }
-                    else -> {
-                        Toast.makeText(context, "Student ID is not recognised", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                }
+    private fun observeStudentRewardStatus() {
+        viewModel.studentRewardStatus.observe(viewLifecycleOwner) { status ->
+            when (status) {
+                StudentRewardStatus.Redeemed -> toastMessage(requireActivity(), getString(R.string.reward_redeemed))
+                StudentRewardStatus.CantRedeem -> toastMessage(requireActivity(), getString(R.string.student_not_prepared))
+                StudentRewardStatus.Error -> toastMessage(requireActivity(), getString(R.string.error_redeeming_reward))
+                else -> {}
             }
+        }
+    }
 
-            override fun onCancelled(error: DatabaseError) {
-                Log.w(TAG, "Failed to read value.", error.toException())
+    private fun observeStudentTimerStatus() {
+        viewModel.studentTimerStatus.observe(viewLifecycleOwner) { status ->
+            if (status == null) return@observe
+            when (status) {
+                StudentTimerStatus.Started -> toastMessage(requireActivity(), getString(R.string.timer_started))
+                StudentTimerStatus.Stopped -> toastMessage(requireActivity(), getString(R.string.timer_stopped))
+                StudentTimerStatus.Error -> toastMessage(requireActivity(), getString(R.string.error_starting_timer))
             }
-        })
+        }
     }
 
     private fun checkCameraPermission(): Boolean = checkSelfPermission(
@@ -131,42 +108,21 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
         Manifest.permission.CAMERA,
     ) == PERMISSION_GRANTED
 
-    private fun scanQRCode() {
-        if (checkCameraPermission()) {
-            startScanner()
-        } else {
+    private fun startScanner(actionForStudent: (String) -> Unit) {
+        if (!checkCameraPermission()) {
             requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            return
         }
-    }
-
-    private fun startScanner() {
-        val options = GmsBarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-            .build()
-        val scanner = GmsBarcodeScanning.getClient(requireContext(), options)
         scanner.startScan()
             .addOnSuccessListener { barcode ->
                 val rawValue = barcode.rawValue
                 if (rawValue != null) {
-                    if (currentScanIsForTimer) {
-                        startStudentTimer(rawValue)
-                    } else {
-                        redeemStudentReward(rawValue)
-                    }
+                    actionForStudent(rawValue)
                 } else {
-                    Toast.makeText(requireContext(), "No barcode found", Toast.LENGTH_SHORT).show()
+                    toastMessage(requireActivity(), getString(R.string.no_barcode_found))
                 }
             }
-            .addOnCanceledListener {
-                Toast.makeText(requireContext(), "Scan cancelled", Toast.LENGTH_SHORT).show()
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(requireContext(), "Scan failed: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
-            }
-    }
-
-    companion object {
-        private val TAG: String = AdminHomeFragment::class.java.simpleName
+            .addOnCanceledListener { toastMessage(requireActivity(), getString(R.string.scan_cancelled)) }
+            .addOnFailureListener { e -> toastMessage(requireContext(), getString(R.string.scan_failed, e.message)) }
     }
 }

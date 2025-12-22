@@ -69,25 +69,26 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
 
     fun addPoints(points: Int) {
         val updatedPoints = parseInt(userPoints.value!!) + points
-        userRepo.updateField(_userEmailFlow.value, "points", updatedPoints.toString())
+        userRepo.updateField(hashFunction(_userEmailFlow.value), "points", updatedPoints.toString())
     }
 
     fun updatePoints(points: String) {
-        userRepo.updateField(_userEmailFlow.value, "points", points)
+        userRepo.updateField(hashFunction(_userEmailFlow.value), "points", points)
     }
 
     fun updateStudying(studying: String) {
-        userRepo.updateField(_userEmailFlow.value, "studying", studying)
+        userRepo.updateField(hashFunction(_userEmailFlow.value), "studying", studying)
     }
 
     fun updateRedeemingReward(points: String) {
-        userRepo.updateField(_userEmailFlow.value, "redeemingReward", points)
+        userRepo.updateField(hashFunction(_userEmailFlow.value), "redeemingReward", points)
     }
 
     fun setUser(email: String) {
+        val id = hashFunction(email)
         viewModelScope.launch {
             try {
-                _user.postValue(userRepo.getUser(email))
+                _user.postValue(userRepo.getUser(id))
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to get user: ${e.message}")
             }

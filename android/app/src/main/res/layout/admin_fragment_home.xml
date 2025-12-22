@@ -57,7 +57,7 @@
             android:layout_gravity="center"
             android:layout_marginTop="@dimen/_5sdp"
             android:background="@drawable/rounded_shape"
-            android:text="@string/scan_to_start_timer"
+            android:text="@string/scan_to_toggle_timer"
             android:textColor="@color/colorWhite"
             android:textSize="@dimen/_12ssp" />
 
@@ -124,13 +124,13 @@
             android:orientation="horizontal">
 
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/startTimerButton"
+                android:id="@+id/toggleTimerButton"
                 android:layout_width="@dimen/_95sdp"
                 android:layout_height="@dimen/_30sdp"
                 android:layout_gravity="center"
                 android:layout_marginEnd="@dimen/_5sdp"
                 android:background="@drawable/rounded_shape"
-                android:text="@string/startTimer"
+                android:text="@string/toggleTimer"
                 android:textAllCaps="true"
                 android:textColor="@color/colorWhite"
                 android:textSize="@dimen/_10ssp" />
