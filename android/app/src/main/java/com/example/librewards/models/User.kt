@@ -31,14 +31,4 @@ data class User(
             )
         }
     }
-
-    fun toMap(): Map<String, Any> = mapOf(
-        "firstname" to firstname,
-        "surname" to surname,
-        "email" to email,
-        "university" to university,
-        "studying" to studying,
-        "redeemingReward" to redeemingReward,
-        "points" to points,
-    )
 }

@@ -19,7 +19,7 @@
         <shape>
             <padding android:top="1.5dp" />
             <solid android:color="#02000000" />
-            <corners android:radius="70dp"/>
+            <corners android:radius="70dp" />
         </shape>
     </item>
     <item>
@@ -74,14 +74,14 @@
 
     <!-- White Top color -->
     <item android:top="0dp">
-        <shape >
+        <shape>
             <gradient
                 android:angle="90"
                 android:endColor="@color/colorLightOrangeGrey"
                 android:startColor="@color/colorWhite" />
             <corners
                 android:topLeftRadius="70dp"
-                android:topRightRadius="70dp"/>
+                android:topRightRadius="70dp" />
         </shape>
     </item>
 </layer-list>

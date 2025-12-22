@@ -39,13 +39,11 @@
     <string name="go_back">Go back</string>
     <string name="click_to_scroll">Click to scroll</string>
     <string name="reward_product_image">Reward product image</string>
-    <string name="reward_text">Reward</string>
     <string name="librewards_logo">LibRewards logo</string>
     <string name="havent_got_an_account">Haven\'t got an account?</string>
     <string name="register_here">Register here</string>
     <string name="chosen_image_for_product_upload">Chosen image for product upload</string>
     <string name="image_of_the_product">Image of the product</string>
-    <string name="select_university">Select university</string>
     <string name="scan_to_toggle_timer">Scan to toggle timer</string>
     <string name="edit_product">Edit product</string>
     <string name="congrats_message">Well done, you spent %1$d %2$s at the library and have earned %3$d points!\nYour new points balance is: %4$d</string>

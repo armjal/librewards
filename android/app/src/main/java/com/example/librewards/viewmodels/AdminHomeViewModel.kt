@@ -47,6 +47,7 @@ class AdminHomeViewModel(val userRepo: UserRepository) : ViewModel() {
                     userRepo.updateField(studentId, "redeemingReward", "1")
                     _studentRewardStatus.value = StudentRewardStatus.Redeemed
                 }
+
                 else -> {
                     _studentRewardStatus.value = StudentRewardStatus.CantRedeem
                 }
@@ -67,6 +68,7 @@ class AdminHomeViewModel(val userRepo: UserRepository) : ViewModel() {
                     userRepo.updateField(studentNumber, "studying", "1")
                     _studentTimerStatus.value = StudentTimerStatus.Started
                 }
+
                 "1" -> {
                     userRepo.updateField(studentNumber, "studying", "0")
                     _studentTimerStatus.value = StudentTimerStatus.Stopped

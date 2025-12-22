@@ -4,10 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingTop="10dp"
     android:paddingLeft="10dp"
-    android:paddingBottom="10dp"
+    android:paddingTop="10dp"
     android:paddingRight="10dp"
+    android:paddingBottom="10dp"
     tools:context=".RewardsFragment">
 
     <TextView
@@ -25,7 +25,6 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/adminRewardsText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/_10sdp"
@@ -40,13 +39,13 @@
         android:id="@+id/addAProduct"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/_10sdp"
         android:layout_marginTop="@dimen/_10sdp"
+        android:layout_marginEnd="@dimen/_10sdp"
+        android:contentDescription="@string/add_a_product"
         android:src="@drawable/add_products"
         app:layout_constraintEnd_toEndOf="@id/adminRewardsContainer"
         app:layout_constraintTop_toBottomOf="@id/adminRewardsPointsViewer"
-        app:tint= "@color/colorOrange"
-        android:contentDescription="@string/add_a_product" />
+        app:tint="@color/colorOrange" />
 
     <ImageView
         android:id="@+id/adminRewardsPointsViewer"
@@ -65,9 +64,9 @@
         android:layout_height="match_parent"
         android:layout_marginTop="90dp"
         android:layout_marginBottom="13dp"
+        app:layout_constraintBottom_toBottomOf="@+id/adminRewardsContainer"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintBottom_toBottomOf="@+id/adminRewardsContainer" />
+        app:layout_constraintRight_toRightOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

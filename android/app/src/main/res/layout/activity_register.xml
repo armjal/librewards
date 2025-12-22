@@ -2,10 +2,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:fitsSystemWindows="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/gradient_white"
+    android:fitsSystemWindows="true"
     tools:context=".Register">
 
     <RelativeLayout
@@ -24,7 +24,6 @@
             android:background="@drawable/layout_bg" />
 
         <RelativeLayout
-            android:id="@+id/registrationContainerHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
@@ -35,73 +34,72 @@
                 android:contentDescription="@string/registrationContainerHeader" />
 
             <TextView
-                android:id="@+id/registrationText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
                 android:layout_centerVertical="true"
                 android:text="@string/registration"
-                android:textSize="32sp"/>
+                android:textSize="32sp" />
         </RelativeLayout>
 
         <LinearLayout
             android:layout_width="@dimen/_200sdp"
             android:layout_height="match_parent"
+            android:layout_alignTop="@+id/registerContainer"
             android:layout_centerHorizontal="true"
             android:gravity="center"
-            android:orientation="vertical"
-            android:layout_alignTop="@+id/registerContainer">
+            android:orientation="vertical">
 
             <EditText
                 android:id="@+id/registrationFirstName"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/_30sdp"
                 android:layout_gravity="center_horizontal"
-                android:importantForAutofill="no"
-                android:paddingStart="@dimen/_10sdp"
-                android:paddingEnd="0dp"
                 android:background="@drawable/rounded_shape_outline"
                 android:hint="@string/first_name"
-                android:inputType="textEmailAddress" />
+                android:importantForAutofill="no"
+                android:inputType="textEmailAddress"
+                android:paddingStart="@dimen/_10sdp"
+                android:paddingEnd="0dp" />
 
             <EditText
                 android:id="@+id/registrationLastName"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/_30sdp"
-                android:importantForAutofill="no"
-                android:paddingStart="@dimen/_10sdp"
-                android:paddingEnd="0dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="@dimen/_10sdp"
                 android:background="@drawable/rounded_shape_outline"
                 android:hint="@string/last_name"
-                android:inputType="textEmailAddress" />
+                android:importantForAutofill="no"
+                android:inputType="textEmailAddress"
+                android:paddingStart="@dimen/_10sdp"
+                android:paddingEnd="0dp" />
 
             <EditText
                 android:id="@+id/registrationEmail"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/_30sdp"
-                android:importantForAutofill="no"
-                android:paddingStart="@dimen/_10sdp"
-                android:paddingEnd="0dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="@dimen/_10sdp"
                 android:background="@drawable/rounded_shape_outline"
                 android:hint="@string/email"
-                android:inputType="textEmailAddress"/>
+                android:importantForAutofill="no"
+                android:inputType="textEmailAddress"
+                android:paddingStart="@dimen/_10sdp"
+                android:paddingEnd="0dp" />
 
             <EditText
                 android:id="@+id/registrationPassword"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/_30sdp"
-                android:importantForAutofill="no"
-                android:paddingStart="@dimen/_10sdp"
-                android:paddingEnd="0dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="@dimen/_10sdp"
                 android:background="@drawable/rounded_shape_outline"
                 android:hint="@string/password"
-                android:inputType="textPassword"/>
+                android:importantForAutofill="no"
+                android:inputType="textPassword"
+                android:paddingStart="@dimen/_10sdp"
+                android:paddingEnd="0dp" />
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -134,19 +132,20 @@
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/registerHereButton"
-                android:background="@drawable/rounded_shape"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginTop="@dimen/_10sdp"
-                android:textColor="@color/colorWhite"
+                android:background="@drawable/rounded_shape"
                 android:text="@string/register"
+                android:textColor="@color/colorWhite"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent" />
 
         </LinearLayout>
     </RelativeLayout>
+
     <ImageView
         android:id="@+id/backToLogin"
         android:layout_width="wrap_content"

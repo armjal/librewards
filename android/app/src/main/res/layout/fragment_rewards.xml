@@ -4,10 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingTop="@dimen/_10sdp"
     android:paddingLeft="10dp"
-    android:paddingBottom="10dp"
+    android:paddingTop="@dimen/_10sdp"
     android:paddingRight="10dp"
+    android:paddingBottom="10dp"
     tools:context=".RewardsFragment">
 
     <TextView
@@ -49,7 +49,6 @@
         app:layout_constraintTop_toTopOf="@+id/rewardsPointsViewer" />
 
     <TextView
-        android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/pointsRewardsText"
@@ -75,8 +74,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="120dp"
+        app:layout_constraintBottom_toBottomOf="@+id/rewardsContainer"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintBottom_toBottomOf="@+id/rewardsContainer" />
+        app:layout_constraintRight_toRightOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

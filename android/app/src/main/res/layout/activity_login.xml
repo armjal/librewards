@@ -4,22 +4,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:background="@drawable/gradient_white"
+    android:fitsSystemWindows="true"
     android:padding="@dimen/box_inset_layout_padding"
     tools:context=".Login">
 
     <ImageView
         android:layout_width="@dimen/_80sdp"
         android:layout_height="@dimen/_80sdp"
-        android:src="@drawable/logo"
         android:contentDescription="@string/librewards_logo"
+        android:src="@drawable/logo"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <RelativeLayout
-        android:id="@+id/relativeLayout2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingStart="@dimen/_30sdp"
@@ -39,7 +38,6 @@
             android:background="@drawable/layout_bg" />
 
         <RelativeLayout
-            android:id="@+id/registrationContainerHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
@@ -50,7 +48,6 @@
                 android:contentDescription="@string/registrationContainerHeader" />
 
             <TextView
-                android:id="@+id/registrationText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
@@ -109,14 +106,15 @@
             </androidx.cardview.widget.CardView>
 
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignBottom="@id/registerContainer"
+            android:layout_centerHorizontal="true"
             android:layout_marginStart="@dimen/_20sdp"
             android:layout_marginEnd="@dimen/_20sdp"
             android:layout_marginBottom="@dimen/_20sdp"
-            android:layout_centerHorizontal="true"
             android:orientation="horizontal">
 
             <TextView

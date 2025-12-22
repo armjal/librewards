@@ -87,6 +87,7 @@ class MainActivity : AppCompatActivity() {
                 LoginStatus.LoggedOut -> {
                     startLibRewardsActivity(Login::class.java, isLogOut = true)
                 }
+
                 else -> {}
             }
         }
