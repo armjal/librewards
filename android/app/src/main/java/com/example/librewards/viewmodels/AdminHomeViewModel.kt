@@ -54,7 +54,7 @@ class AdminHomeViewModel(val userRepo: UserRepository) : ViewModel() {
         }
     }
 
-    fun startStudentTimer(studentNumber: String) {
+    fun toggleStudentTimer(studentNumber: String) {
         var student: User?
         viewModelScope.launch {
             student = userRepo.getUser(studentNumber)

@@ -16,7 +16,7 @@
     <string name="login">Login</string>
     <string name="username">Username</string>
     <string name="qrCodeNumber">Qr Code Number</string>
-    <string name="startTimer">Start Timer</string>
+    <string name="toggleTimer">Toggle Timer</string>
     <string name="redeemReward">Redeem Reward</string>
     <string name="productCost"><i>Product Cost</i></string>
     <string name="productName"><i>Product Name</i></string>
@@ -46,7 +46,7 @@
     <string name="chosen_image_for_product_upload">Chosen image for product upload</string>
     <string name="image_of_the_product">Image of the product</string>
     <string name="select_university">Select university</string>
-    <string name="scan_to_start_timer">Scan to start timer</string>
+    <string name="scan_to_toggle_timer">Scan to toggle timer</string>
     <string name="edit_product">Edit product</string>
     <string name="congrats_message">Well done, you spent %1$d %2$s at the library and have earned %3$d points!\nYour new points balance is: %4$d</string>
     <string name="no_stop_code_entered">No stop code was entered for 24 hours. The timer has been reset</string>

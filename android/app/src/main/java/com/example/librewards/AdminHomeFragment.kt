@@ -79,7 +79,7 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
             scanQRCode()
         }
 
-        binding.startTimerButton.setOnClickListener { viewModel.startStudentTimer(binding.enterQr.text.toString()) }
+        binding.toggleTimerButton.setOnClickListener { viewModel.toggleStudentTimer(binding.enterQr.text.toString()) }
         binding.redeemRewardButton.setOnClickListener { viewModel.redeemRewardForStudent(binding.enterQr.text.toString()) }
     }
 
@@ -133,7 +133,7 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
                 val rawValue = barcode.rawValue
                 if (rawValue != null) {
                     if (currentScanIsForTimer) {
-                        viewModel.startStudentTimer(rawValue)
+                        viewModel.toggleStudentTimer(rawValue)
                     } else {
                         viewModel.redeemRewardForStudent(rawValue)
                     }
