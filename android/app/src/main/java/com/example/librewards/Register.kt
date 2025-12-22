@@ -46,7 +46,7 @@ class Register : AppCompatActivity() {
 
     private fun setupButtonListeners() {
         binding.backToLogin.setOnClickListener {
-            startLibRewardsActivity(this, Login::class.java)
+            startLibRewardsActivity(Login::class.java)
         }
 
         binding.registerHereButton.setOnClickListener {

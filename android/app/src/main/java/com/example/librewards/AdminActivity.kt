@@ -56,7 +56,7 @@ class AdminActivity : AppCompatActivity() {
         val auth = Firebase.auth
         if (auth.currentUser != null) {
             auth.signOut()
-            startLibRewardsActivity(this, Login::class.java)
+            startLibRewardsActivity(Login::class.java, isLogOut = true)
         }
     }
 }

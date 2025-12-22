@@ -30,10 +30,13 @@ fun showPopup(context: Context, text: String?) {
     popup.show()
 }
 
-fun startLibRewardsActivity(activityContext: Activity, activityToStart: Class<*>) {
-    val intent = Intent(activityContext, activityToStart)
-    activityContext.startActivity(intent)
-    activityContext.finish()
+fun Activity.startLibRewardsActivity(activityToStart: Class<*>, isLogOut: Boolean = false) {
+    val intent = Intent(this, activityToStart)
+    if (isLogOut) {
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+    }
+    startActivity(intent)
+    finish()
 }
 
 fun ViewPager2.setupWithFragments(
@@ -43,7 +46,7 @@ fun ViewPager2.setupWithFragments(
 ) {
     val viewPagerAdapter = ViewPagerAdapter(activity)
     this.adapter = viewPagerAdapter
-
+    viewPagerAdapter.addFragments(fragments)
     TabLayoutMediator(tabLayout, this) { tab, position ->
         tab.icon = getDrawable(activity, fragments[position].icon)
     }.attach()

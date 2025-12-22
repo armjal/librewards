@@ -1,19 +1,17 @@
 package com.example.librewards
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import com.example.librewards.adapters.ViewPagerAdapter
 import com.example.librewards.databinding.ActivityMainBinding
 import com.example.librewards.repositories.UserRepository
+import com.example.librewards.utils.setupWithFragments
+import com.example.librewards.utils.startLibRewardsActivity
 import com.example.librewards.viewmodels.LoginStatus
 import com.example.librewards.viewmodels.LoginViewModel
 import com.example.librewards.viewmodels.LoginViewModelFactory
 import com.example.librewards.viewmodels.MainSharedViewModel
 import com.example.librewards.viewmodels.MainViewModelFactory
-import com.google.android.material.tabs.TabLayoutMediator
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -41,16 +39,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupFragmentsView() {
-        val timerFragment = TimerFragment()
-        val rewardsFragment = RewardsFragment()
-
-        val viewPagerAdapter = ViewPagerAdapter(this)
-        binding.viewPager.adapter = viewPagerAdapter
-        val fragments = listOf(timerFragment, rewardsFragment)
-        viewPagerAdapter.addFragments(fragments)
-        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
-            tab.icon = ContextCompat.getDrawable(this, fragments[position].icon)
-        }.attach()
+        val fragments = listOf(TimerFragment(), RewardsFragment())
+        binding.viewPager.setupWithFragments(this, binding.tabLayout, fragments)
     }
 
     private fun setupLogoutListener() {
@@ -95,18 +85,10 @@ class MainActivity : AppCompatActivity() {
         loginViewModel.loginState.observe(this) { status ->
             when (status) {
                 LoginStatus.LoggedOut -> {
-                    exitActivity()
+                    startLibRewardsActivity(Login::class.java, isLogOut = true)
                 }
                 else -> {}
             }
         }
-    }
-
-    private fun exitActivity() {
-        val intent = Intent(this, Login::class.java)
-        intent.flags =
-            Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-        startActivity(intent)
-        finish()
     }
 }

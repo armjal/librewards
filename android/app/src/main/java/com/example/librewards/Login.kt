@@ -36,7 +36,7 @@ class Login : AppCompatActivity() {
 
     private fun setupRegistrationButtonListener() {
         binding.registerButton.setOnClickListener {
-            startLibRewardsActivity(this, Register::class.java)
+            startLibRewardsActivity(Register::class.java)
         }
     }
 
@@ -70,9 +70,9 @@ class Login : AppCompatActivity() {
         loginViewModel.isAdmin.observe(this) { isAdmin ->
             if (isAdmin == null) return@observe
             if (isAdmin) {
-                startLibRewardsActivity(this, AdminActivity::class.java)
+                startLibRewardsActivity(AdminActivity::class.java)
             } else {
-                startLibRewardsActivity(this, MainActivity::class.java)
+                startLibRewardsActivity(MainActivity::class.java)
             }
         }
     }
