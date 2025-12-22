@@ -25,20 +25,16 @@ class UserRepository(val database: DatabaseReference) {
         return database.child("users").child(id).setValue(user)
     }
 
-    fun updateField(email: String, field: String, value: String) {
-        val id = hashFunction(email)
-        database.child("users").child(id).child(field).setValue(value)
+    fun updateField(userId: String, field: String, value: String) {
+        database.child("users").child(userId).child(field).setValue(value)
     }
 
-    suspend fun getUser(email: String): User? {
-        val id = hashFunction(email)
-        return try {
-            val dbValue = database.child("users").child(id).get().await()
-            dbValue.getValue(User::class.java)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to get user for email $email: ${e.message}", e)
-            null
-        }
+    suspend fun getUser(userId: String): User? = try {
+        val dbValue = database.child("users").child(userId).get().await()
+        dbValue.getValue(User::class.java)
+    } catch (e: Exception) {
+        Log.e(TAG, "Failed to get user for id $userId: ${e.message}", e)
+        null
     }
 
     fun listenForUserField(email: String, field: String): Flow<String?> = callbackFlow {
