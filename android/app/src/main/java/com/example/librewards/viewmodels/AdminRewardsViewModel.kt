@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.asLiveData
 import com.example.librewards.models.ImageFile
 import com.example.librewards.models.Product
 import com.example.librewards.models.ProductEntry
@@ -22,16 +23,7 @@ class AdminRewardsViewModel(
     val productRepo: ProductRepository,
     val storageRepo: StorageRepository,
 ) : ViewModel() {
-    val productEntries: LiveData<List<ProductEntry>> = productRepo.productEntriesLiveData
-
-    init {
-        productRepo.startListeningForProducts()
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        productRepo.stopListeningForProducts()
-    }
+    val productEntries: LiveData<List<ProductEntry>> = productRepo.listenForProducts().asLiveData()
 
     fun addProductEntry(product: Product, imageFilePath: Uri?): Flow<UiEvent> = flow {
         val imageFile = ImageFile(name = generateIdFromKey(product.productName), uri = imageFilePath)
@@ -43,7 +35,7 @@ class AdminRewardsViewModel(
 
             product.productImageUrl = uploadedImageDownloadUrl
 
-            productRepo.addProductToDb(productEntry).await()
+            productRepo.addProductToDb(productEntry)
             emit(UiEvent.Success("Product successfully added"))
         } catch (e: StorageException) {
             Log.e(TAG, "Failed to upload image: ${e.message}")
@@ -64,7 +56,7 @@ class AdminRewardsViewModel(
 
     fun updateProductEntry(productEntry: ProductEntry): Flow<UiEvent> = flow {
         try {
-            productRepo.updateProduct(productEntry).await()
+            productRepo.updateProduct(productEntry)
             emit(UiEvent.Success("Product successfully updated"))
         } catch (e: Exception) {
             Log.e(TAG, "Failed to update product: ${e.message}")
@@ -74,7 +66,7 @@ class AdminRewardsViewModel(
 
     fun deleteProductEntry(productId: String): Flow<UiEvent> = flow {
         try {
-            productRepo.deleteProduct(productId).await()
+            productRepo.deleteProduct(productId)
             emit(UiEvent.Success("Product successfully deleted"))
         } catch (e: Exception) {
             Log.e(TAG, "Failed to delete product: ${e.message}")
