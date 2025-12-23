@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.asLiveData
 import com.example.librewards.models.ProductEntry
 import com.example.librewards.repositories.ProductRepository
 import java.lang.Integer.parseInt
@@ -19,7 +20,7 @@ sealed class RewardsEvent() {
 }
 
 class RewardsViewModel(val mainSharedViewModel: MainSharedViewModel, val productRepo: ProductRepository) : ViewModel() {
-    val productEntries: LiveData<List<ProductEntry>> = productRepo.productEntriesLiveData
+    val productEntries: LiveData<List<ProductEntry>> = productRepo.listenForProducts().asLiveData()
     private var _rewardStatus = MutableLiveData<RewardsEvent>(RewardsEvent.Neutral)
     val rewardStatus: LiveData<RewardsEvent> get() = _rewardStatus
 
@@ -28,7 +29,6 @@ class RewardsViewModel(val mainSharedViewModel: MainSharedViewModel, val product
     }
 
     init {
-        productRepo.startListeningForProducts()
         mainSharedViewModel.redeemingRewardStatus.observeForever(redeemingStatusObserver)
     }
 
@@ -59,7 +59,6 @@ class RewardsViewModel(val mainSharedViewModel: MainSharedViewModel, val product
 
     override fun onCleared() {
         super.onCleared()
-        productRepo.stopListeningForProducts()
         mainSharedViewModel.redeemingRewardStatus.removeObserver(redeemingStatusObserver)
     }
 }
