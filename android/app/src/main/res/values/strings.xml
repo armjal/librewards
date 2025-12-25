@@ -1,78 +1,86 @@
 <resources>
+    <!-- General -->
     <string name="app_name">LibRewards</string>
-    <string name="stopwatch"> Stopwatch </string>
-    <string name="map"> Check yourself out on the map </string>
-    <string name="pointsRewards">Rewards Points</string>
-    <string name="pointsRewardsText">Points</string>
-    <string name="pointsHolder">pointsHolder</string>
-    <string name="pointsTimer">Timer Points</string>
-    <string name="pointsTextTimer">Points</string>
-    <string name="pointsHolderTimer">pointsHolderTimer</string>
-    <string name="closeButton">close button</string>
     <string name="spinner_title">Spinner</string>
-    <string name="adminScanQr">Scan student\'s QR Code</string>
-    <string name="scanQrToStart">Get your QR Code scanned to start earning</string>
-    <string name="qrCode">QR Code</string>
+
+    <!-- Authentication -->
     <string name="login">Login</string>
-    <string name="username">Username</string>
-    <string name="qrCodeNumber">Qr Code Number</string>
-    <string name="toggleTimer">Toggle Timer</string>
-    <string name="redeemReward">Redeem Reward</string>
-    <string name="productCost"><i>Product Cost</i></string>
-    <string name="productName"><i>Product Name</i></string>
-    <string name="chooseButton">Choose Image</string>
-    <string name="uploadButton">Add Product</string>
-    <string name="adminRewards">Manage your university products</string>
-    <string name="add_a_product">Add a product</string>
-    <string name="deleteButton">Delete</string>
-    <string name="updateButton">Update</string>
-    <string name="enter_qr"><i>Enter QR Number</i></string>
-    <string name="redeemStudentsReward">Scan to redeem reward</string>
-    <string name="or">Or</string>
-    <string name="password"><i>Password</i></string>
-    <string name="email"><i>Email</i></string>
-    <string name="last_name"><i>Last Name</i></string>
-    <string name="first_name"><i>First Name</i></string>
-    <string name="registrationContainerHeader">Registration Container Header</string>
-    <string name="registration">Registration</string>
     <string name="register">Register</string>
     <string name="go_back">Go back</string>
-    <string name="click_to_scroll">Click to scroll</string>
-    <string name="reward_product_image">Reward product image</string>
-    <string name="librewards_logo">LibRewards logo</string>
+    <string name="registration">Registration</string>
     <string name="havent_got_an_account">Haven\'t got an account?</string>
     <string name="register_here">Register here</string>
-    <string name="chosen_image_for_product_upload">Chosen image for product upload</string>
-    <string name="image_of_the_product">Image of the product</string>
-    <string name="scan_to_toggle_timer">Scan to toggle timer</string>
-    <string name="edit_product">Edit product</string>
-    <string name="congrats_message">Well done, you spent %1$d %2$s at the library and have earned %3$d points!\nYour new points balance is: %4$d</string>
-    <string name="no_stop_code_entered">No stop code was entered for 24 hours. The timer has been reset</string>
-    <string name="insufficient_funds">You do not have sufficient points for this purchase</string>
-    <string name="rewards_from_university">See rewards from %s</string>
-    <string name="location_permission_not_enabled">Location permission is required to use the timer feature</string>
+    <string name="username">Username</string>
+    <string name="password"><i>Password</i></string>
+    <string name="email"><i>Email</i></string>
+    <string name="first_name"><i>First Name</i></string>
+    <string name="last_name"><i>Last Name</i></string>
     <string name="auth_failed">Authentication failed</string>
     <string name="error_msg_empty_fields">Please ensure all fields are correctly filled out</string>
     <string name="choose_uni">Please choose a University</string>
     <string name="selected_uni">User selected university: %s</string>
-    <string name="product_upload_failed">Product upload failed</string>
-    <string name="product_update_failed">Product update failed</string>
-    <string name="product_deletion_failed">Product deletion failed</string>
-    <string name="choose_image">Please choose an image</string>
-    <string name="product_img_path">products//%s//images//</string>
-    <string name="product_details_path">products//%s//</string>
-    <string name="camera_permission_required">Camera permission is required to scan barcodes.</string>
-    <string name="reward_redeemed">Reward redeemed for student</string>
-    <string name="student_not_prepared">Student not prepared to redeem reward</string>
-    <string name="error_redeeming_reward">Error redeeming reward</string>
-    <string name="timer_started">Student timer started</string>
-    <string name="timer_stopped">Student timer stopped</string>
-    <string name="error_starting_timer">Error starting student timer</string>
-    <string name="no_barcode_found">No barcode found</string>
-    <string name="scan_cancelled">Scan cancelled</string>
-    <string name="scan_failed">Scan failed: %s</string>
+
+    <!-- Timer & Points -->
+    <string name="pointsRewards">Rewards Points</string>
+    <string name="pointsTimer">Timer Points</string>
+    <string name="qrCodeNumber">Qr Code Number</string>
+    <string name="adminScanQr">Scan student\'s QR Code</string>
+    <string name="points">Points</string>
+    <string name="stopwatch"> Stopwatch </string>
+    <string name="map"> Check yourself out on the map </string>
+    <string name="scanQrToStart">Get your QR Code scanned to start earning</string>
+    <string name="congrats_message">Well done, you spent %1$d %2$s at the library and have earned %3$d points!\nYour new points balance is: %4$d</string>
+    <string name="no_stop_code_entered">No stop code was entered for 24 hours. The timer has been reset</string>
+    <string name="location_permission_not_enabled">Location permission is required to use the timer feature</string>
     <plurals name="minutes_plural">
         <item quantity="one">minute</item>
         <item quantity="other">minutes</item>
     </plurals>
+
+    <!-- Rewards & Products -->
+    <string name="redeemReward">Redeem Reward</string>
+    <string name="rewards_from_university">See rewards from %s</string>
+    <string name="insufficient_funds">You do not have sufficient points for this purchase</string>
+    <string name="productCost"><i>Product Cost</i></string>
+    <string name="productName"><i>Product Name</i></string>
+    <string name="redeemStudentsReward">Scan to redeem reward</string>
+    <string name="reward_redeemed">Reward redeemed for student</string>
+    <string name="student_not_prepared">Student not prepared to redeem reward</string>
+    <string name="error_redeeming_reward">Error redeeming reward</string>
+
+    <!-- Admin Timer & Product Management -->
+    <string name="adminRewards">Manage your university products</string>
+    <string name="chooseButton">Choose Image</string>
+    <string name="uploadButton">Add Product</string>
+    <string name="deleteButton">Delete</string>
+    <string name="updateButton">Update</string>
+    <string name="edit_product">Edit product</string>
+    <string name="product_upload_failed">Product upload failed</string>
+    <string name="product_update_failed">Product update failed</string>
+    <string name="product_deletion_failed">Product deletion failed</string>
+    <string name="choose_image">Please choose an image</string>
+    <string name="or">Or</string>
+    <string name="toggleTimer">Toggle Timer</string>
+    <string name="timer_started">Student timer started</string>
+    <string name="timer_stopped">Student timer stopped</string>
+    <string name="error_starting_timer">Error starting student timer</string>
+    <string name="enter_qr"><i>Enter QR Number</i></string>
+    <string name="camera_permission_required">Camera permission is required to scan barcodes.</string>
+    <string name="no_barcode_found">No barcode found</string>
+    <string name="scan_cancelled">Scan cancelled</string>
+    <string name="scan_failed">Scan failed: %s</string>
+
+    <!-- Accessibility -->
+    <string name="librewards_logo">LibRewards logo</string>
+    <string name="closeButton">close button</string>
+    <string name="click_to_scroll">Click to scroll</string>
+    <string name="registrationContainerHeader">Registration Container Header</string>
+    <string name="pointsHolder">pointsHolder</string>
+    <string name="pointsHolderTimer">pointsHolderTimer</string>
+    <string name="scan_to_toggle_timer">Scan to toggle timer</string>
+    <string name="qrCode">QR Code</string>
+    <string name="reward_product_image">Reward product image</string>
+    <string name="add_a_product">Add a product</string>
+    <string name="chosen_image_for_product_upload">Chosen image for product upload</string>
+    <string name="image_of_the_product">Image of the product</string>
 </resources>
