@@ -13,11 +13,11 @@ import com.example.librewards.data.models.User
 import com.example.librewards.data.repositories.UserRepository
 import com.example.librewards.data.resources.universities
 import com.example.librewards.databinding.ActivityRegisterBinding
+import com.example.librewards.utils.getDbReference
 import com.example.librewards.utils.startLibRewardsActivity
 import com.example.librewards.utils.toastMessage
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import com.google.firebase.database.FirebaseDatabase
 
 class RegisterActivity : AppCompatActivity() {
     companion object {
@@ -25,8 +25,7 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private val registerViewModel: RegisterViewModel by viewModels {
-        val database = FirebaseDatabase.getInstance().reference
-        val userRepo = UserRepository(database)
+        val userRepo = UserRepository(getDbReference("users"))
         RegisterViewModelFactory(Firebase.auth, userRepo)
     }
     private lateinit var binding: ActivityRegisterBinding

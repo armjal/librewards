@@ -3,7 +3,6 @@ package com.example.librewards.data.repositories
 import android.util.Log
 import com.example.librewards.data.models.Product
 import com.example.librewards.data.models.ProductEntry
-import com.example.librewards.ui.main.RewardsFragment
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference

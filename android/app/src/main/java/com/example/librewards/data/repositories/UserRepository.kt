@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
-class UserRepository(val database: DatabaseReference) {
+class UserRepository(val usersDbRef: DatabaseReference) {
     private val activeListeners = mutableMapOf<DatabaseReference, ValueEventListener>()
 
     companion object {
@@ -22,15 +22,15 @@ class UserRepository(val database: DatabaseReference) {
 
     fun addUser(user: User): Task<Void?> {
         val id = generateIdFromKey(user.email)
-        return database.child("users").child(id).setValue(user)
+        return usersDbRef.child(id).setValue(user)
     }
 
     fun updateField(userId: String, field: String, value: String) {
-        database.child("users").child(userId).child(field).setValue(value)
+        usersDbRef.child(userId).child(field).setValue(value)
     }
 
     suspend fun getUser(userId: String): User? = try {
-        val dbValue = database.child("users").child(userId).get().await()
+        val dbValue = usersDbRef.child(userId).get().await()
         dbValue.getValue(User::class.java)
     } catch (e: Exception) {
         Log.e(TAG, "Failed to get user for id $userId: ${e.message}", e)
@@ -39,7 +39,7 @@ class UserRepository(val database: DatabaseReference) {
 
     fun listenForUserField(email: String, field: String): Flow<String?> = callbackFlow {
         val userId = generateIdFromKey(email)
-        val userRef = database.child("users").child(userId).child(field)
+        val userRef = usersDbRef.child(userId).child(field)
 
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {

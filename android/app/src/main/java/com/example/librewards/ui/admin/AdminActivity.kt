@@ -8,11 +8,11 @@ import com.example.librewards.data.repositories.StorageRepository
 import com.example.librewards.data.repositories.UserRepository
 import com.example.librewards.databinding.ActivityAdminBinding
 import com.example.librewards.ui.auth.LoginActivity
+import com.example.librewards.utils.getDbReference
 import com.example.librewards.utils.setupWithFragments
 import com.example.librewards.utils.startLibRewardsActivity
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.storage
 
 class AdminActivity : AppCompatActivity() {
@@ -21,10 +21,10 @@ class AdminActivity : AppCompatActivity() {
     }
 
     private val viewModel: AdminSharedViewModel by viewModels {
-        val userRepo = UserRepository(FirebaseDatabase.getInstance().reference)
-        val productRepo = ProductRepository(FirebaseDatabase.getInstance().reference.child("products"))
+        val userRepo = UserRepository(getDbReference("users"))
+        val productRepo = ProductRepository(getDbReference("products"))
         val storageRepo = StorageRepository(Firebase.storage.reference)
-        AdminViewModelFactory(userRepo, productRepo, storageRepo)
+        AdminSharedViewModelFactory(userRepo, productRepo, storageRepo)
     }
 
     private lateinit var binding: ActivityAdminBinding
