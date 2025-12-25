@@ -9,13 +9,12 @@ import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat.checkSelfPermission
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import com.example.librewards.R
-import com.example.librewards.data.repositories.UserRepository
 import com.example.librewards.databinding.AdminFragmentHomeBinding
 import com.example.librewards.utils.FragmentExtended
 import com.example.librewards.utils.toastMessage
-import com.google.firebase.database.FirebaseDatabase
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanner
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
@@ -23,8 +22,8 @@ import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 
 class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExtended() {
     private val viewModel: AdminHomeViewModel by viewModels {
-        val database = FirebaseDatabase.getInstance().reference
-        AdminHomeViewModelFactory(UserRepository(database))
+        val adminSharedViewModel: AdminSharedViewModel by activityViewModels()
+        AdminHomeViewModelFactory(adminSharedViewModel)
     }
 
     private lateinit var requestCameraPermissionLauncher: ActivityResultLauncher<String>

@@ -9,8 +9,6 @@ import androidx.lifecycle.asLiveData
 import com.example.librewards.data.models.ImageFile
 import com.example.librewards.data.models.Product
 import com.example.librewards.data.models.ProductEntry
-import com.example.librewards.data.repositories.ProductRepository
-import com.example.librewards.data.repositories.StorageRepository
 import com.example.librewards.ui.main.UiEvent
 import com.example.librewards.utils.generateIdFromKey
 import com.google.firebase.database.DatabaseException
@@ -21,10 +19,9 @@ import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 class AdminRewardsViewModel(
-    val productRepo: ProductRepository,
-    val storageRepo: StorageRepository,
+    val adminSharedViewModel: AdminSharedViewModel,
 ) : ViewModel() {
-    val productEntries: LiveData<List<ProductEntry>> = productRepo.listenForProducts().asLiveData()
+    val productEntries: LiveData<List<ProductEntry>> = adminSharedViewModel.productRepo.listenForProducts().asLiveData()
 
     fun addProductEntry(product: Product, imageFilePath: Uri?): Flow<UiEvent> = flow {
         val imageFile = ImageFile(name = generateIdFromKey(product.productName), uri = imageFilePath)
@@ -36,7 +33,7 @@ class AdminRewardsViewModel(
 
             product.productImageUrl = uploadedImageDownloadUrl
 
-            productRepo.addProductToDb(productEntry)
+            adminSharedViewModel.productRepo.addProductToDb(productEntry)
             emit(UiEvent.Success("Product successfully added"))
         } catch (e: StorageException) {
             Log.e(TAG, "Failed to upload image: ${e.message}")
@@ -51,13 +48,13 @@ class AdminRewardsViewModel(
     }
 
     private suspend fun uploadImage(imageFile: ImageFile): String {
-        val uploadedImageData = storageRepo.uploadImage(imageFile).await()
+        val uploadedImageData = adminSharedViewModel.storageRepo.uploadImage(imageFile).await()
         return uploadedImageData.storage.downloadUrl.await().toString()
     }
 
     fun updateProductEntry(productEntry: ProductEntry): Flow<UiEvent> = flow {
         try {
-            productRepo.updateProduct(productEntry)
+            adminSharedViewModel.productRepo.updateProduct(productEntry)
             emit(UiEvent.Success("Product successfully updated"))
         } catch (e: Exception) {
             Log.e(TAG, "Failed to update product: ${e.message}")
@@ -67,7 +64,7 @@ class AdminRewardsViewModel(
 
     fun deleteProductEntry(productId: String): Flow<UiEvent> = flow {
         try {
-            productRepo.deleteProduct(productId)
+            adminSharedViewModel.productRepo.deleteProduct(productId)
             emit(UiEvent.Success("Product successfully deleted"))
         } catch (e: Exception) {
             Log.e(TAG, "Failed to delete product: ${e.message}")
@@ -83,12 +80,11 @@ class AdminRewardsViewModel(
 private fun generateProductId(): String = "PROD-" + UUID.randomUUID().toString()
 
 class AdminRewardsViewModelFactory(
-    private val productRepo: ProductRepository,
-    private val storageRepo: StorageRepository,
+    private val adminSharedViewModel: AdminSharedViewModel,
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T = if (modelClass.isAssignableFrom(AdminRewardsViewModel::class.java)) {
         @Suppress("UNCHECKED_CAST")
-        AdminRewardsViewModel(productRepo, storageRepo) as T
+        AdminRewardsViewModel(adminSharedViewModel) as T
     } else {
         throw IllegalArgumentException("ViewModel Not Found")
     }

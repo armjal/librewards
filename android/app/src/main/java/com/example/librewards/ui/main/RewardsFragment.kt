@@ -14,13 +14,11 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.librewards.R
 import com.example.librewards.data.models.Product
-import com.example.librewards.data.repositories.ProductRepository
 import com.example.librewards.databinding.FragmentRewardsBinding
 import com.example.librewards.databinding.PopupLayoutBinding
 import com.example.librewards.ui.adapters.RecyclerAdapter
 import com.example.librewards.utils.FragmentExtended
 import com.example.librewards.utils.toastMessage
-import com.google.firebase.database.FirebaseDatabase
 import com.squareup.picasso.Picasso
 
 class RewardsFragment(override val icon: Int = R.drawable.reward) :
@@ -32,11 +30,7 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
 
     private val mainSharedViewModel: MainSharedViewModel by activityViewModels()
     private val rewardsViewModel: RewardsViewModel by viewModels {
-        val productDatabase = FirebaseDatabase.getInstance().reference
-            .child("products")
-            .child(mainSharedViewModel.user.value?.university!!)
-        val productRepo = ProductRepository(productDatabase)
-        RewardsViewModelFactory(mainSharedViewModel, productRepo)
+        RewardsViewModelFactory(mainSharedViewModel)
     }
 
     private var _binding: FragmentRewardsBinding? = null

@@ -21,8 +21,6 @@ import androidx.viewbinding.ViewBinding
 import com.example.librewards.R
 import com.example.librewards.data.models.Product
 import com.example.librewards.data.models.ProductEntry
-import com.example.librewards.data.repositories.ProductRepository
-import com.example.librewards.data.repositories.StorageRepository
 import com.example.librewards.databinding.AddProductPopupBinding
 import com.example.librewards.databinding.AdminFragmentRewardsBinding
 import com.example.librewards.databinding.ManageProductPopupBinding
@@ -30,8 +28,6 @@ import com.example.librewards.ui.adapters.RecyclerAdapter
 import com.example.librewards.ui.main.UiEvent
 import com.example.librewards.utils.FragmentExtended
 import com.example.librewards.utils.toastMessage
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -42,17 +38,10 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
     }
 
     private val viewModel: AdminRewardsViewModel by viewModels {
-        val adminUniversity = adminViewModel.user.value?.university!!
-        val database = FirebaseDatabase.getInstance().reference.child(
-            getString(R.string.product_details_path, adminUniversity),
-        )
-        val storageReference = FirebaseStorage.getInstance().reference.child(
-            getString(R.string.product_img_path, adminUniversity),
-        )
-        AdminRewardsViewModelFactory(ProductRepository(database), StorageRepository(storageReference))
+        val adminSharedViewModel: AdminSharedViewModel by activityViewModels()
+        AdminRewardsViewModelFactory(adminSharedViewModel)
     }
 
-    private val adminViewModel: AdminViewModel by activityViewModels()
     private var currentDialog: Dialog? = null
     private var imageLocalFilePath: Uri? = null
     private var _binding: AdminFragmentRewardsBinding? = null
