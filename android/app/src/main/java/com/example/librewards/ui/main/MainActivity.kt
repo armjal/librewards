@@ -11,18 +11,18 @@ import com.example.librewards.ui.auth.LoginActivity
 import com.example.librewards.ui.auth.LoginStatus
 import com.example.librewards.ui.auth.LoginViewModel
 import com.example.librewards.ui.auth.LoginViewModelFactory
+import com.example.librewards.utils.getDbReference
 import com.example.librewards.utils.setupWithFragments
 import com.example.librewards.utils.startLibRewardsActivity
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
-import com.google.firebase.database.FirebaseDatabase
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     val mainSharedViewModel: MainSharedViewModel by viewModels {
-        val userRepo = UserRepository(FirebaseDatabase.getInstance().reference)
-        val productRepo = ProductRepository(FirebaseDatabase.getInstance().reference.child("products"))
+        val userRepo = UserRepository(getDbReference("users"))
+        val productRepo = ProductRepository(getDbReference("products"))
         MainViewModelFactory(userRepo, productRepo)
     }
     val loginViewModel: LoginViewModel by viewModels {

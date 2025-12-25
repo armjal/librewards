@@ -41,7 +41,7 @@ class AdminSharedViewModel(
     }
 }
 
-class AdminViewModelFactory(
+class AdminSharedViewModelFactory(
     private val userRepo: UserRepository,
     private val productRepo: ProductRepository,
     private val storageRepo: StorageRepository,
