@@ -3,6 +3,8 @@ package com.example.librewards.ui.admin
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import com.example.librewards.data.repositories.ProductRepository
+import com.example.librewards.data.repositories.StorageRepository
 import com.example.librewards.data.repositories.UserRepository
 import com.example.librewards.databinding.ActivityAdminBinding
 import com.example.librewards.ui.auth.LoginActivity
@@ -11,15 +13,18 @@ import com.example.librewards.utils.startLibRewardsActivity
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.storage.storage
 
 class AdminActivity : AppCompatActivity() {
     companion object {
         val TAG: String = AdminActivity::class.java.simpleName
     }
 
-    private val viewModel: AdminViewModel by viewModels {
+    private val viewModel: AdminSharedViewModel by viewModels {
         val userRepo = UserRepository(FirebaseDatabase.getInstance().reference)
-        AdminViewModelFactory(userRepo)
+        val productRepo = ProductRepository(FirebaseDatabase.getInstance().reference.child("products"))
+        val storageRepo = StorageRepository(Firebase.storage.reference)
+        AdminViewModelFactory(userRepo, productRepo, storageRepo)
     }
 
     private lateinit var binding: ActivityAdminBinding
@@ -31,7 +36,7 @@ class AdminActivity : AppCompatActivity() {
 
         setupButtonListeners()
         setupFragmentsView()
-        viewModel.setUser(Firebase.auth.currentUser?.email!!)
+        viewModel.initialiseStateOnUserRetrieval(Firebase.auth.currentUser?.email!!)
         observeUser()
     }
 
@@ -41,7 +46,10 @@ class AdminActivity : AppCompatActivity() {
     }
 
     private fun setupButtonListeners() {
-        binding.adminProfileImage.setOnClickListener { logoutApp() }
+        binding.adminProfileImage.setOnClickListener {
+            viewModel.stopListeningToData()
+            logoutApp()
+        }
     }
 
     private fun observeUser() {

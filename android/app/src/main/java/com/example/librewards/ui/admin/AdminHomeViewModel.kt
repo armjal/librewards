@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.librewards.data.models.User
-import com.example.librewards.data.repositories.UserRepository
 import kotlinx.coroutines.launch
 
 sealed class StudentRewardStatus {
@@ -27,7 +26,7 @@ sealed class StudentTimerStatus {
     object Error : StudentTimerStatus()
 }
 
-class AdminHomeViewModel(val userRepo: UserRepository) : ViewModel() {
+class AdminHomeViewModel(val adminSharedViewModel: AdminSharedViewModel) : ViewModel() {
     private var _studentRewardStatus: MutableLiveData<StudentRewardStatus> = MutableLiveData(StudentRewardStatus.NotRedeemed)
     val studentRewardStatus: LiveData<StudentRewardStatus> = _studentRewardStatus
 
@@ -37,14 +36,14 @@ class AdminHomeViewModel(val userRepo: UserRepository) : ViewModel() {
     fun redeemRewardForStudent(studentId: String) {
         var student: User?
         viewModelScope.launch {
-            student = userRepo.getUser(studentId)
+            student = adminSharedViewModel.userRepo.getUser(studentId)
             if (student == null) {
                 _studentRewardStatus.value = StudentRewardStatus.Error
                 return@launch
             }
             when (student?.redeemingReward) {
                 "0" -> {
-                    userRepo.updateField(studentId, "redeemingReward", "1")
+                    adminSharedViewModel.userRepo.updateField(studentId, "redeemingReward", "1")
                     _studentRewardStatus.value = StudentRewardStatus.Redeemed
                 }
 
@@ -58,19 +57,19 @@ class AdminHomeViewModel(val userRepo: UserRepository) : ViewModel() {
     fun toggleStudentTimer(studentNumber: String) {
         var student: User?
         viewModelScope.launch {
-            student = userRepo.getUser(studentNumber)
+            student = adminSharedViewModel.userRepo.getUser(studentNumber)
             if (student == null) {
                 _studentTimerStatus.value = StudentTimerStatus.Error
                 return@launch
             }
             when (student?.studying) {
                 "0", "2" -> {
-                    userRepo.updateField(studentNumber, "studying", "1")
+                    adminSharedViewModel.userRepo.updateField(studentNumber, "studying", "1")
                     _studentTimerStatus.value = StudentTimerStatus.Started
                 }
 
                 "1" -> {
-                    userRepo.updateField(studentNumber, "studying", "0")
+                    adminSharedViewModel.userRepo.updateField(studentNumber, "studying", "0")
                     _studentTimerStatus.value = StudentTimerStatus.Stopped
                 }
             }
@@ -79,11 +78,11 @@ class AdminHomeViewModel(val userRepo: UserRepository) : ViewModel() {
 }
 
 class AdminHomeViewModelFactory(
-    private val userRepo: UserRepository,
+    private val adminSharedViewModel: AdminSharedViewModel,
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T = if (modelClass.isAssignableFrom(AdminHomeViewModel::class.java)) {
         @Suppress("UNCHECKED_CAST")
-        AdminHomeViewModel(userRepo) as T
+        AdminHomeViewModel(adminSharedViewModel) as T
     } else {
         throw IllegalArgumentException("ViewModel Not Found")
     }

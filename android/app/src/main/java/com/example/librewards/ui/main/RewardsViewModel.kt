@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import com.example.librewards.data.models.ProductEntry
-import com.example.librewards.data.repositories.ProductRepository
 import java.lang.Integer.parseInt
 
 sealed class RewardsEvent() {
@@ -19,8 +18,8 @@ sealed class RewardsEvent() {
     object InsufficientFunds : RewardsEvent()
 }
 
-class RewardsViewModel(val mainSharedViewModel: MainSharedViewModel, val productRepo: ProductRepository) : ViewModel() {
-    val productEntries: LiveData<List<ProductEntry>> = productRepo.listenForProducts().asLiveData()
+class RewardsViewModel(val mainSharedViewModel: MainSharedViewModel) : ViewModel() {
+    val productEntries: LiveData<List<ProductEntry>> = mainSharedViewModel.productRepo.listenForProducts().asLiveData()
     private var _rewardStatus = MutableLiveData<RewardsEvent>(RewardsEvent.Neutral)
     val rewardStatus: LiveData<RewardsEvent> get() = _rewardStatus
 
@@ -64,11 +63,11 @@ class RewardsViewModel(val mainSharedViewModel: MainSharedViewModel, val product
 }
 
 class RewardsViewModelFactory(
-    private val mainSharedViewModel: MainSharedViewModel, private val productRepo: ProductRepository,
+    private val mainSharedViewModel: MainSharedViewModel,
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T = if (modelClass.isAssignableFrom(RewardsViewModel::class.java)) {
         @Suppress("UNCHECKED_CAST")
-        RewardsViewModel(mainSharedViewModel, productRepo) as T
+        RewardsViewModel(mainSharedViewModel) as T
     } else {
         throw IllegalArgumentException("ViewModel Not Found")
     }

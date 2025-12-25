@@ -3,6 +3,7 @@ package com.example.librewards.data.repositories
 import android.util.Log
 import com.example.librewards.data.models.Product
 import com.example.librewards.data.models.ProductEntry
+import com.example.librewards.ui.main.RewardsFragment
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -12,7 +13,18 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
-class ProductRepository(private val database: DatabaseReference) {
+class ProductRepository(private val productDbRef: DatabaseReference) {
+    private val activeListeners = mutableMapOf<DatabaseReference, ValueEventListener>()
+    lateinit var universityRef: DatabaseReference
+
+    fun setUniversityScope(university: String) {
+        universityRef = productDbRef.child(university)
+    }
+
+    companion object {
+        val TAG: String = ProductRepository::class.java.simpleName
+    }
+
     fun listenForProducts(): Flow<List<ProductEntry>> = callbackFlow {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -35,30 +47,36 @@ class ProductRepository(private val database: DatabaseReference) {
             }
         }
 
-        database.addValueEventListener(listener)
+        universityRef.addValueEventListener(listener)
+        activeListeners[universityRef] = listener
 
         awaitClose {
             Log.d(TAG, "Removing products listener")
-            database.removeEventListener(listener)
+            universityRef.removeEventListener(listener)
+            activeListeners.remove(universityRef)
         }
     }
 
     suspend fun addProductToDb(productEntry: ProductEntry) {
-        val productRef = database.child(productEntry.id)
+        val productRef = universityRef.child(productEntry.id)
         productRef.setValue(productEntry.product).await()
     }
 
     suspend fun updateProduct(productEntry: ProductEntry) {
-        val productRef = database.child(productEntry.id)
+        val productRef = universityRef.child(productEntry.id)
         productRef.updateChildren(productEntry.product.toMap()).await()
     }
 
     suspend fun deleteProduct(productId: String) {
-        val productRef = database.child(productId)
+        val productRef = universityRef.child(productId)
         productRef.removeValue().await()
     }
 
-    companion object {
-        const val TAG = "ProductRepository"
+    fun stopAllListeners() {
+        Log.d(TAG, "Stopping all ${activeListeners.size} active listeners")
+        activeListeners.forEach { (ref, listener) ->
+            ref.removeEventListener(listener)
+        }
+        activeListeners.clear()
     }
 }
