@@ -22,7 +22,7 @@ class ProductRepository(private val productDbRef: DatabaseReference) {
     }
 
     companion object {
-        val TAG: String = RewardsFragment::class.java.simpleName
+        val TAG: String = ProductRepository::class.java.simpleName
     }
 
     fun listenForProducts(): Flow<List<ProductEntry>> = callbackFlow {
