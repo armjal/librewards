@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.librewards.data.models.User
+import com.example.librewards.data.repositories.ProductRepository
 import com.example.librewards.data.repositories.UserRepository
 import com.example.librewards.utils.QRCodeGenerator
 import com.example.librewards.utils.generateIdFromKey
@@ -23,7 +24,7 @@ data class UserQRCode(
     val number: String,
 )
 
-class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
+class MainSharedViewModel(val userRepo: UserRepository, val productRepo: ProductRepository) : ViewModel() {
     companion object {
         val TAG: String = MainSharedViewModel::class.java.simpleName
     }
@@ -57,7 +58,7 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
     fun startObservingUser(email: String) {
         Log.d(TAG, "Starting to observe user: $email")
         _userEmailFlow.value = email
-        setUser(email)
+        initialiseStateOnUserRetrieval(email)
     }
 
     fun createQRCode() {
@@ -84,30 +85,32 @@ class MainSharedViewModel(val userRepo: UserRepository) : ViewModel() {
         userRepo.updateField(generateIdFromKey(_userEmailFlow.value), "redeemingReward", points)
     }
 
-    fun setUser(email: String) {
+    fun initialiseStateOnUserRetrieval(email: String) {
         val id = generateIdFromKey(email)
         viewModelScope.launch {
-            try {
-                _user.postValue(userRepo.getUser(id))
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to get user: ${e.message}")
+            val user = userRepo.getUser(id)
+            if (user == null) {
+                Log.e(TAG, "Failed to get user for id $id")
+                return@launch
             }
+            _user.postValue(user)
+            productRepo.setUniversityScope(user.university)
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        Log.d(TAG, "MainSharedViewModel is being cleared. Stopping all repository listeners.")
+    fun stopListeningToData() {
         userRepo.stopAllListeners()
+        productRepo.stopAllListeners()
     }
 }
 
 class MainViewModelFactory(
     private val userRepo: UserRepository,
+    private val productRepo: ProductRepository,
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T = if (modelClass.isAssignableFrom(MainSharedViewModel::class.java)) {
         @Suppress("UNCHECKED_CAST")
-        MainSharedViewModel(userRepo) as T
+        MainSharedViewModel(userRepo, productRepo) as T
     } else {
         throw IllegalArgumentException("ViewModel Not Found")
     }

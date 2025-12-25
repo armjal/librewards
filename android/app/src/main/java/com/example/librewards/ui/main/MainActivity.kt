@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.ViewGroup
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import com.example.librewards.data.repositories.ProductRepository
 import com.example.librewards.data.repositories.UserRepository
 import com.example.librewards.databinding.ActivityMainBinding
 import com.example.librewards.ui.auth.LoginActivity
@@ -19,9 +20,10 @@ import com.google.firebase.database.FirebaseDatabase
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    val userRepo = UserRepository(FirebaseDatabase.getInstance().reference)
     val mainSharedViewModel: MainSharedViewModel by viewModels {
-        MainViewModelFactory(userRepo)
+        val userRepo = UserRepository(FirebaseDatabase.getInstance().reference)
+        val productRepo = ProductRepository(FirebaseDatabase.getInstance().reference.child("products"))
+        MainViewModelFactory(userRepo, productRepo)
     }
     val loginViewModel: LoginViewModel by viewModels {
         LoginViewModelFactory(Firebase.auth)
@@ -45,7 +47,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupLogoutListener() {
         binding.profileImage.setOnClickListener {
-            mainSharedViewModel.userRepo.stopAllListeners()
+            mainSharedViewModel.stopListeningToData()
             loginViewModel.logout()
         }
     }
