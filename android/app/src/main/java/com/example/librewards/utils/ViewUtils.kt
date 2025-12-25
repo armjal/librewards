@@ -11,8 +11,8 @@ import androidx.core.content.ContextCompat.getDrawable
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.widget.ViewPager2
-import com.example.librewards.adapters.ViewPagerAdapter
 import com.example.librewards.databinding.PopupLayoutBinding
+import com.example.librewards.ui.adapters.ViewPagerAdapter
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 

@@ -7,7 +7,7 @@
     android:background="@drawable/gradient_white"
     android:fitsSystemWindows="true"
     android:padding="@dimen/box_inset_layout_padding"
-    tools:context=".Login">
+    tools:context="com.example.librewards.ui.auth.LoginActivity">
 
     <ImageView
         android:layout_width="@dimen/_80sdp"

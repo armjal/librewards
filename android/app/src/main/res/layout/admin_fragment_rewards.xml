@@ -8,7 +8,7 @@
     android:paddingTop="10dp"
     android:paddingRight="10dp"
     android:paddingBottom="10dp"
-    tools:context=".RewardsFragment">
+    tools:context="com.example.librewards.ui.admin.AdminRewardsFragment">
 
     <TextView
         android:id="@+id/adminRewardsContainer"

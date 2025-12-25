@@ -33,7 +33,7 @@
             android:value='@string/google_maps_key' />
 
         <activity
-            android:name=".Login"
+            android:name="com.example.librewards.ui.auth.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -41,11 +41,11 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".AdminActivity" />
+        <activity android:name=".ui.admin.AdminActivity" />
 
-        <activity android:name=".Register" />
+        <activity android:name=".ui.auth.RegisterActivity" />
 
-        <activity android:name=".MainActivity" />
+        <activity android:name="com.example.librewards.ui.main.MainActivity" />
 
     </application>
 
