@@ -10,7 +10,7 @@
     app:umanoOverlay="true"
     app:umanoPanelHeight="@dimen/_45sdp"
     app:umanoShadowHeight="0dp"
-    tools:context=".TimerFragment">
+    tools:context="com.example.librewards.ui.main.TimerFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
