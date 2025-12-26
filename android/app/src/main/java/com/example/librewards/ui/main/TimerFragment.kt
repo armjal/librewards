@@ -155,7 +155,11 @@ class TimerFragment(
     private fun observeForMapDrawing() {
         mapsViewModel.hasChosenLocation.observe(viewLifecycleOwner) { hasChosenLocation ->
             if (hasChosenLocation) {
-                drawMapCircle(mapsViewModel.currentLatLng.value!!, googleMap!!)
+                googleMap?.let { map ->
+                    mapsViewModel.currentLatLng.value?.let { latLng ->
+                        drawMapCircle(latLng, map)
+                    }
+                }
             } else {
                 googleMap?.stopAnimation()
                 if (this::mapCircle.isInitialized) {
@@ -169,7 +173,7 @@ class TimerFragment(
         mapsViewModel.currentLatLng.observe(viewLifecycleOwner) { latLng ->
             if (marker == null) {
                 val markerOptions = MarkerOptions().position(latLng).title("I am here.")
-                marker = googleMap?.addMarker(markerOptions)!!
+                marker = googleMap?.addMarker(markerOptions)
             } else {
                 marker?.position = latLng
             }
@@ -224,8 +228,8 @@ class TimerFragment(
 
     fun setupChronometerDurationListener() {
         binding.stopwatch.onChronometerTickListener = OnChronometerTickListener {
-            val twentyFourHoursMs = 864000
-            if (SystemClock.elapsedRealtime() - binding.stopwatch.base >= twentyFourHoursMs) {
+            val twentyFourHoursMs = 86400000
+            if ((SystemClock.elapsedRealtime() - binding.stopwatch.base) >= twentyFourHoursMs) {
                 resetTimerState()
                 showPopup(
                     requireActivity(), getString(R.string.no_stop_code_entered),
