@@ -2,7 +2,7 @@ package com.example.librewards.repositories
 
 import com.example.librewards.data.models.User
 import com.example.librewards.data.repositories.UserRepository
-import com.google.android.gms.tasks.OnCompleteListener
+import com.example.librewards.utils.TestUtils
 import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
@@ -20,9 +20,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
-import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
-import java.util.concurrent.Executor
 
 @ExperimentalCoroutinesApi
 class UserRepositoryTest {
@@ -53,15 +51,7 @@ class UserRepositoryTest {
         `when`(mockDbRef.child(anyString())).thenReturn(mockUserRef)
         `when`(mockUserRef.child(anyString())).thenReturn(mockFieldRef)
 
-        `when`(mockVoidTask.isComplete).thenReturn(true)
-        `when`(mockVoidTask.isCanceled).thenReturn(false)
-        `when`(mockVoidTask.isSuccessful).thenReturn(true)
-        `when`(mockVoidTask.exception).thenReturn(null)
-        `when`(mockVoidTask.addOnCompleteListener(any<Executor>(), any())).thenAnswer { invocation ->
-            val listener = invocation.getArgument<OnCompleteListener<Void?>>(1)
-            listener.onComplete(mockVoidTask)
-            mockVoidTask
-        }
+        TestUtils.mockTask(mockVoidTask)
     }
 
     @Test
@@ -93,17 +83,9 @@ class UserRepositoryTest {
         val userId = "123"
         val user = User("First", "Last", "test@example.com", "Uni")
 
+        TestUtils.mockTask(mockUserTask)
         `when`(mockUserRef.get()).thenReturn(mockUserTask)
-        `when`(mockUserTask.isComplete).thenReturn(true)
-        `when`(mockUserTask.isCanceled).thenReturn(false)
-        `when`(mockUserTask.isSuccessful).thenReturn(true)
         `when`(mockUserTask.result).thenReturn(mockDataSnapshot)
-        `when`(mockUserTask.addOnCompleteListener(any<Executor>(), any())).thenAnswer { invocation ->
-            val listener = invocation.getArgument<OnCompleteListener<DataSnapshot>>(1)
-            listener.onComplete(mockUserTask)
-            mockUserTask
-        }
-
         `when`(mockDataSnapshot.getValue(User::class.java)).thenReturn(user)
 
         val result = repository.getUser(userId)

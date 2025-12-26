@@ -133,8 +133,6 @@ class AdminHomeFragmentTest : BaseUiTest() {
         verify(mockScanner).startScan()
     }
 
-    // Helpers
-
     private fun setupFirebaseMocks() {
         `when`(firebaseTestRule.mockRootRef.child("products")).thenReturn(mockProductsRef)
         `when`(mockProductsRef.child(anyString())).thenReturn(mockProductsRef)

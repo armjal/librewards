@@ -6,7 +6,6 @@ import android.os.Build
 import androidx.test.core.app.ActivityScenario
 import com.example.librewards.data.models.Product
 import com.example.librewards.data.models.User
-import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
@@ -28,7 +27,6 @@ import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
-import java.util.concurrent.Executor
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P], instrumentedPackages = ["androidx.loader.content"])
@@ -65,10 +63,9 @@ abstract class BaseUiTest {
         Mockito.`when`(firebaseTestRule.mockSpecificUserRef.child("points")).thenReturn(mockPointsRef)
 
         Mockito.`when`(firebaseTestRule.mockSpecificUserRef.get()).thenReturn(mockUserTask)
-        Mockito.`when`(mockUserTask.isComplete).thenReturn(true)
-        Mockito.`when`(mockUserTask.isSuccessful).thenReturn(true)
-        Mockito.`when`(mockUserTask.result).thenReturn(mockUserSnapshot)
         mockTask(mockUserTask)
+        Mockito.`when`(mockUserTask.result).thenReturn(mockUserSnapshot)
+
         Mockito.`when`(mockUserSnapshot.getValue(User::class.java))
             .thenReturn(User("Test", "User", "test@example.com", "Test Uni"))
     }
@@ -117,31 +114,10 @@ abstract class BaseUiTest {
         }
     }
 
-    fun createMockProductSnapshot(key: String, product: Product): DataSnapshot {
-        val snapshot = Mockito.mock(DataSnapshot::class.java)
-        Mockito.`when`(snapshot.key).thenReturn(key)
-        Mockito.`when`(snapshot.getValue(Product::class.java)).thenReturn(product)
-
-        val idSnapshot = Mockito.mock(DataSnapshot::class.java)
-        Mockito.`when`(idSnapshot.value).thenReturn(key)
-        Mockito.`when`(snapshot.child("id")).thenReturn(idSnapshot)
-        return snapshot
-    }
+    fun createMockProductSnapshot(key: String, product: Product): DataSnapshot = TestUtils.createMockProductSnapshot(key, product)
 
     fun <T> mockTask(task: Task<T>) {
-        Mockito.`when`(task.addOnCompleteListener(any<Executor>(), any())).thenAnswer {
-            val listener = it.getArgument<OnCompleteListener<T>>(1)
-            listener.onComplete(task)
-            task
-        }
-        Mockito.`when`(task.addOnCompleteListener(any())).thenAnswer {
-            val listener = it.getArgument<OnCompleteListener<T>>(0)
-            listener.onComplete(task)
-            task
-        }
-        Mockito.`when`(task.addOnSuccessListener(any())).thenReturn(task)
-        Mockito.`when`(task.addOnCanceledListener(any())).thenReturn(task)
-        Mockito.`when`(task.addOnFailureListener(any())).thenReturn(task)
+        TestUtils.mockTask(task)
     }
 
     inline fun <reified T : Activity> launchActivity(crossinline block: (T) -> Unit) {

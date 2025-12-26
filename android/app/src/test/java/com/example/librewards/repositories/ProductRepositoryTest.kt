@@ -3,7 +3,7 @@ package com.example.librewards.repositories
 import com.example.librewards.data.models.Product
 import com.example.librewards.data.models.ProductEntry
 import com.example.librewards.data.repositories.ProductRepository
-import com.google.android.gms.tasks.OnCompleteListener
+import com.example.librewards.utils.TestUtils
 import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
@@ -22,7 +22,6 @@ import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
-import java.util.concurrent.Executor
 
 @ExperimentalCoroutinesApi
 class ProductRepositoryTest {
@@ -47,15 +46,7 @@ class ProductRepositoryTest {
         `when`(mockDbRef.child(anyString())).thenReturn(mockUniversityRef)
         `when`(mockUniversityRef.child(anyString())).thenReturn(mockProductRef)
 
-        `when`(mockVoidTask.isComplete).thenReturn(true)
-        `when`(mockVoidTask.isCanceled).thenReturn(false)
-        `when`(mockVoidTask.isSuccessful).thenReturn(true)
-        `when`(mockVoidTask.exception).thenReturn(null)
-        `when`(mockVoidTask.addOnCompleteListener(any<Executor>(), any())).thenAnswer { invocation ->
-            val listener = invocation.getArgument<OnCompleteListener<Void>>(1)
-            listener.onComplete(mockVoidTask)
-            mockVoidTask
-        }
+        TestUtils.mockTask(mockVoidTask)
     }
 
     @Test
@@ -70,12 +61,10 @@ class ProductRepositoryTest {
         repository.setUniversityScope("TestUni")
 
         val mockSnapshot = mock(DataSnapshot::class.java)
-        val mockChildSnapshot = mock(DataSnapshot::class.java)
         val product = Product("Name", "10", "Url")
+        val mockChildSnapshot = TestUtils.createMockProductSnapshot("1", product)
 
         `when`(mockSnapshot.children).thenReturn(listOf(mockChildSnapshot))
-        `when`(mockChildSnapshot.getValue(Product::class.java)).thenReturn(product)
-        `when`(mockChildSnapshot.key).thenReturn("1")
 
         val captor = argumentCaptor<ValueEventListener>()
 

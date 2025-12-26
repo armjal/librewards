@@ -8,7 +8,7 @@ import com.example.librewards.data.repositories.ProductRepository
 import com.example.librewards.data.repositories.StorageRepository
 import com.example.librewards.ui.main.UiEvent
 import com.example.librewards.utils.MainDispatcherRule
-import com.google.android.gms.tasks.OnCompleteListener
+import com.example.librewards.utils.TestUtils
 import com.google.android.gms.tasks.Task
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
@@ -25,7 +25,6 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
-import java.util.concurrent.Executor
 
 @ExperimentalCoroutinesApi
 class AdminRewardsViewModelTest {
@@ -72,25 +71,13 @@ class AdminRewardsViewModelTest {
         `when`(mockProductRepo.listenForProducts()).thenReturn(flowOf(emptyList()))
 
         // Mock Task<Uri> (Download URL)
-        `when`(mockUriTask.isComplete).thenReturn(true)
-        `when`(mockUriTask.isSuccessful).thenReturn(true)
+        TestUtils.mockTask(mockUriTask)
         `when`(mockUriTask.result).thenReturn(mockUri)
         `when`(mockUri.toString()).thenReturn("http://download.url")
-        `when`(mockUriTask.addOnCompleteListener(any<Executor>(), any())).thenAnswer { invocation ->
-            val listener = invocation.getArgument<OnCompleteListener<Uri>>(1)
-            listener.onComplete(mockUriTask)
-            mockUriTask
-        }
 
         // Mock UploadTask (which is a Task<UploadTask.TaskSnapshot>)
-        `when`(mockUploadTaskTask.isComplete).thenReturn(true)
-        `when`(mockUploadTaskTask.isSuccessful).thenReturn(true)
+        TestUtils.mockTask(mockUploadTaskTask)
         `when`(mockUploadTaskTask.result).thenReturn(mockUploadTask)
-        `when`(mockUploadTaskTask.addOnCompleteListener(any<Executor>(), any())).thenAnswer { invocation ->
-            val listener = invocation.getArgument<OnCompleteListener<UploadTask.TaskSnapshot>>(1)
-            listener.onComplete(mockUploadTaskTask)
-            mockUploadTaskTask
-        }
 
         // Mock chain: upload -> snapshot -> storageRef -> downloadUrl -> task
         `when`(mockUploadTask.storage).thenReturn(mockStorageRef)
