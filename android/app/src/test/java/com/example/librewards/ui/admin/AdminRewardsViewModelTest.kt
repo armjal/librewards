@@ -7,6 +7,7 @@ import com.example.librewards.data.models.ProductEntry
 import com.example.librewards.data.repositories.ProductRepository
 import com.example.librewards.data.repositories.StorageRepository
 import com.example.librewards.ui.main.UiEvent
+import com.example.librewards.utils.MainDispatcherRule
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.storage.StorageReference
@@ -24,7 +25,6 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
-import utils.MainDispatcherRule
 import java.util.concurrent.Executor
 
 @ExperimentalCoroutinesApi

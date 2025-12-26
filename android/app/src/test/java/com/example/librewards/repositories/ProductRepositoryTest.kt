@@ -1,7 +1,8 @@
-package com.example.librewards.data.repositories
+package com.example.librewards.repositories
 
 import com.example.librewards.data.models.Product
 import com.example.librewards.data.models.ProductEntry
+import com.example.librewards.data.repositories.ProductRepository
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot

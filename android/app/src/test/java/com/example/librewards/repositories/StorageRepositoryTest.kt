@@ -1,7 +1,8 @@
-package com.example.librewards.data.repositories
+package com.example.librewards.repositories
 
 import android.net.Uri
 import com.example.librewards.data.models.ImageFile
+import com.example.librewards.data.repositories.StorageRepository
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
 import org.junit.Before

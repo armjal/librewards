@@ -3,6 +3,8 @@ package com.example.librewards.ui.auth
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.example.librewards.data.models.User
 import com.example.librewards.data.repositories.UserRepository
+import com.example.librewards.utils.MainDispatcherRule
+import com.example.librewards.utils.getOrAwaitValue
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.AuthResult
@@ -17,8 +19,6 @@ import org.mockito.Mockito.any
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
-import utils.MainDispatcherRule
-import utils.getOrAwaitValue
 import java.util.concurrent.Executor
 
 @ExperimentalCoroutinesApi

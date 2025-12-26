@@ -5,6 +5,8 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.example.librewards.data.models.User
 import com.example.librewards.data.repositories.ProductRepository
 import com.example.librewards.data.repositories.UserRepository
+import com.example.librewards.utils.MainDispatcherRule
+import com.example.librewards.utils.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -12,14 +14,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.ArgumentMatchers
 import org.mockito.Mock
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.mockStatic
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
-import utils.MainDispatcherRule
-import utils.getOrAwaitValue
+import org.mockito.kotlin.eq
 
 @ExperimentalCoroutinesApi
 class MainSharedViewModelTest {
@@ -73,7 +75,7 @@ class MainSharedViewModelTest {
         val email = "test@example.com"
         val points = "100"
 
-        `when`(mockUserRepo.listenForUserField(anyString(), org.mockito.kotlin.eq("points")))
+        `when`(mockUserRepo.listenForUserField(anyString(), eq("points")))
             .thenReturn(flowOf(points))
 
         viewModel.startObservingUser(email)
@@ -88,7 +90,7 @@ class MainSharedViewModelTest {
         val currentPoints = "100"
         val pointsToAdd = 50
 
-        `when`(mockUserRepo.listenForUserField(anyString(), org.mockito.kotlin.eq("points")))
+        `when`(mockUserRepo.listenForUserField(anyString(), eq("points")))
             .thenReturn(flowOf(currentPoints))
 
         viewModel.startObservingUser(email)
@@ -96,7 +98,7 @@ class MainSharedViewModelTest {
 
         viewModel.addPoints(pointsToAdd)
 
-        verify(mockUserRepo).updateField(anyString(), org.mockito.kotlin.eq("points"), org.mockito.kotlin.eq("150"))
+        verify(mockUserRepo).updateField(anyString(), eq("points"), eq("150"))
     }
 
     @Test
@@ -109,9 +111,9 @@ class MainSharedViewModelTest {
         try {
             mockedBitmapStatic.`when`<Bitmap> {
                 Bitmap.createBitmap(
-                    org.mockito.ArgumentMatchers.anyInt(),
-                    org.mockito.ArgumentMatchers.anyInt(),
-                    org.mockito.ArgumentMatchers.any(Bitmap.Config::class.java),
+                    ArgumentMatchers.anyInt(),
+                    ArgumentMatchers.anyInt(),
+                    ArgumentMatchers.any(Bitmap.Config::class.java),
                 )
             }.thenReturn(mockBitmap)
 

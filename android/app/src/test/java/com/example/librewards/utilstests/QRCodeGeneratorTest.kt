@@ -1,6 +1,7 @@
-package com.example.librewards.utils
+package com.example.librewards.utilstests
 
 import android.graphics.Bitmap
+import com.example.librewards.utils.QRCodeGenerator
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
@@ -10,7 +11,6 @@ import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.mockStatic
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 
 class QRCodeGeneratorTest {

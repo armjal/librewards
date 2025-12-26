@@ -1,4 +1,4 @@
-package utils
+package com.example.librewards.utils
 
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LiveData

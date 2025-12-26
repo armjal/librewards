@@ -1,5 +1,6 @@
-package com.example.librewards.utils
+package com.example.librewards.utilstests
 
+import com.example.librewards.utils.calculatePointsFromTime
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

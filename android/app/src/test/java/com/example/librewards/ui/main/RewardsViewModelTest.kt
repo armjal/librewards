@@ -3,6 +3,8 @@ package com.example.librewards.ui.main
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.MutableLiveData
 import com.example.librewards.data.repositories.ProductRepository
+import com.example.librewards.utils.MainDispatcherRule
+import com.example.librewards.utils.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertEquals
@@ -13,8 +15,6 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
-import utils.MainDispatcherRule
-import utils.getOrAwaitValue
 
 @ExperimentalCoroutinesApi
 class RewardsViewModelTest {

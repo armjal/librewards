@@ -1,5 +1,6 @@
-package com.example.librewards.utils
+package com.example.librewards.utilstests
 
+import com.example.librewards.utils.getDbReference
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import org.junit.Assert.assertEquals

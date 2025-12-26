@@ -1,6 +1,8 @@
 package com.example.librewards.ui.auth
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.example.librewards.utils.MainDispatcherRule
+import com.example.librewards.utils.getOrAwaitValue
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.tasks.Task
@@ -20,8 +22,6 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
-import utils.MainDispatcherRule
-import utils.getOrAwaitValue
 import java.util.concurrent.Executor
 
 @ExperimentalCoroutinesApi

@@ -3,10 +3,13 @@ package com.example.librewards.ui.main
 import android.content.Intent
 import android.os.Build
 import android.view.View
+import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
+import androidx.viewpager2.widget.ViewPager2
 import com.example.librewards.R
 import com.example.librewards.data.models.User
 import com.example.librewards.ui.auth.LoginActivity
+import com.example.librewards.utils.MainDispatcherRule
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseApp
@@ -24,6 +27,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers
 import org.mockito.Mock
 import org.mockito.MockedStatic
 import org.mockito.Mockito.any
@@ -35,7 +39,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper.runUiThreadTasks
-import utils.MainDispatcherRule
 import java.util.concurrent.Executor
 
 @RunWith(RobolectricTestRunner::class)
@@ -97,7 +100,7 @@ class MainActivityTest {
         // Mock DB references structure
         `when`(mockRootRef.child("users")).thenReturn(mockUsersRef)
         `when`(mockRootRef.child("products")).thenReturn(mockProductsRef)
-        `when`(mockUsersRef.child(org.mockito.ArgumentMatchers.anyString())).thenReturn(mockSpecificUserRef)
+        `when`(mockUsersRef.child(ArgumentMatchers.anyString())).thenReturn(mockSpecificUserRef)
 
         // Mock getUser() call chain
         `when`(mockSpecificUserRef.get()).thenReturn(mockUserSnapshotTask)
@@ -129,7 +132,7 @@ class MainActivityTest {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
                 assert(activity != null)
-                val viewPager = activity.findViewById<androidx.viewpager2.widget.ViewPager2>(R.id.viewPager)
+                val viewPager = activity.findViewById<ViewPager2>(R.id.viewPager)
                 assertEquals(2, viewPager.adapter?.itemCount)
             }
         }
@@ -158,7 +161,7 @@ class MainActivityTest {
 
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
-                val usernameText = activity.findViewById<android.widget.TextView>(R.id.username)
+                val usernameText = activity.findViewById<TextView>(R.id.username)
 
                 // Let the UI update loop run
                 runUiThreadTasks()
@@ -177,7 +180,7 @@ class MainActivityTest {
 
                 val shadowOverlay = activity.findViewById<View>(R.id.shadowOverlay)
                 val profileImage = activity.findViewById<View>(R.id.profileImage)
-                val viewPager = activity.findViewById<androidx.viewpager2.widget.ViewPager2>(R.id.viewPager)
+                val viewPager = activity.findViewById<ViewPager2>(R.id.viewPager)
 
                 // shadowAlpha = (0.5 * 0.6).coerceIn(0, 0.6) = 0.3
                 assertEquals(0.3f, shadowOverlay.alpha, 0.01f)
