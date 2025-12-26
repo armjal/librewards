@@ -79,6 +79,9 @@ abstract class BaseUiTest {
             listener.onComplete(task)
             task
         }
+        Mockito.`when`(task.addOnSuccessListener(any())).thenReturn(task)
+        Mockito.`when`(task.addOnCanceledListener(any())).thenReturn(task)
+        Mockito.`when`(task.addOnFailureListener(any())).thenReturn(task)
     }
 
     inline fun <reified T : Activity> launchActivity(crossinline block: (T) -> Unit) {
