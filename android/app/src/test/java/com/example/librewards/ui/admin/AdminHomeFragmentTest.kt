@@ -8,7 +8,6 @@ import com.example.librewards.data.models.User
 import com.example.librewards.utils.BaseUiTest
 import com.example.librewards.utils.generateIdFromKey
 import com.google.android.gms.tasks.Task
-import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.storage.StorageReference
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -19,7 +18,6 @@ import org.junit.After
 import org.junit.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mock
 import org.mockito.MockedStatic
 import org.mockito.Mockito
@@ -189,17 +187,6 @@ class AdminHomeFragmentTest : BaseUiTest() {
             performAction(activity, buttonId, nonExistentId)
             assertToast(activity, expectedToastId)
         }
-    }
-
-    private fun setupUser(id: String, user: User?, mockRef: DatabaseReference = Mockito.mock(DatabaseReference::class.java)) {
-        val mockTask = Mockito.mock(Task::class.java) as Task<DataSnapshot>
-        val mockSnapshot = Mockito.mock(DataSnapshot::class.java)
-
-        `when`(firebaseTestRule.mockUsersRef.child(eq(id))).thenReturn(mockRef)
-        `when`(mockRef.get()).thenReturn(mockTask)
-        mockTask(mockTask)
-        `when`(mockTask.result).thenReturn(mockSnapshot)
-        `when`(mockSnapshot.getValue(User::class.java)).thenReturn(user)
     }
 
     private fun assertToast(activity: AdminActivity, messageResId: Int) {

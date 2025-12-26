@@ -10,13 +10,10 @@ import com.example.librewards.utils.BaseUiTest
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
-import com.squareup.picasso.Picasso
-import com.squareup.picasso.RequestCreator
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
 import org.junit.After
 import org.junit.Test
-import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.Mockito.atLeastOnce
@@ -37,20 +34,12 @@ class RewardsFragmentTest : BaseUiTest() {
 
     @Mock private lateinit var mockProductsSnapshot: DataSnapshot
 
-    @Mock private lateinit var mockProductSnapshot1: DataSnapshot
-
-    @Mock private lateinit var mockProductSnapshot2: DataSnapshot
-
     @Mock private lateinit var mockRedeemingSnapshot: DataSnapshot
-
-    @Mock private lateinit var mockPicasso: Picasso
-
-    @Mock private lateinit var mockRequestCreator: RequestCreator
 
     override fun setup() {
         super.setup()
         setupFirebase()
-        setupPicasso()
+        setupPicassoMock()
     }
 
     private fun setupFirebase() {
@@ -61,38 +50,15 @@ class RewardsFragmentTest : BaseUiTest() {
         `when`(mockProductsRef.child(any())).thenReturn(mockUniversityRef)
         `when`(userRef.child("redeemingReward")).thenReturn(mockRedeemingRef)
 
-        `when`(mockProductsSnapshot.children).thenReturn(listOf(mockProductSnapshot1, mockProductSnapshot2))
-        setupProduct(mockProductSnapshot1, "p1", Product("Coffee", "50", "url"))
-        setupProduct(mockProductSnapshot2, "p2", Product("Muffin", "100", "url"))
-    }
+        val p1 = createMockProductSnapshot("p1", Product("Coffee", "50", "url"))
+        val p2 = createMockProductSnapshot("p2", Product("Muffin", "100", "url"))
 
-    private fun setupProduct(snapshot: DataSnapshot, key: String, product: Product) {
-        `when`(snapshot.key).thenReturn(key)
-        `when`(snapshot.getValue(Product::class.java)).thenReturn(product)
-    }
-
-    private fun setupPicasso() {
-        `when`(mockPicasso.load(anyString())).thenReturn(mockRequestCreator)
-        try {
-            Picasso.setSingletonInstance(mockPicasso)
-        } catch (e: Exception) {
-            Picasso::class.java.getDeclaredField("singleton").apply {
-                isAccessible = true
-                set(null, null)
-            }
-            Picasso.setSingletonInstance(mockPicasso)
-        }
+        `when`(mockProductsSnapshot.children).thenReturn(listOf(p1, p2))
     }
 
     @After
     fun tearDown() {
-        try {
-            Picasso::class.java.getDeclaredField("singleton").apply {
-                isAccessible = true
-                set(null, null)
-            }
-        } catch (_: Exception) {
-        }
+        resetPicassoMock()
     }
 
     @Test
