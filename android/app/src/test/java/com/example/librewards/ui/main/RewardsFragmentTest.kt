@@ -1,17 +1,12 @@
 package com.example.librewards.ui.main
 
-import android.os.Build
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import com.example.librewards.R
 import com.example.librewards.data.models.Product
-import com.example.librewards.data.models.User
 import com.example.librewards.ui.adapters.RecyclerAdapter
-import com.example.librewards.utils.FirebaseTestRule
-import com.example.librewards.utils.MainDispatcherRule
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.gms.tasks.Task
+import com.example.librewards.utils.BaseUiTest
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
@@ -19,41 +14,24 @@ import com.squareup.picasso.Picasso
 import com.squareup.picasso.RequestCreator
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.After
-import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowDialog
 import org.robolectric.shadows.ShadowLooper
 import org.robolectric.shadows.ShadowToast
-import java.util.concurrent.Executor
 
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [Build.VERSION_CODES.P], instrumentedPackages = ["androidx.loader.content"])
-@ExperimentalCoroutinesApi
-class RewardsFragmentTest {
-    @get:Rule val mainDispatcherRule = MainDispatcherRule()
-
-    @get:Rule val firebaseTestRule = FirebaseTestRule()
-
+class RewardsFragmentTest : BaseUiTest() {
     @Mock private lateinit var mockProductsRef: DatabaseReference
 
     @Mock private lateinit var mockUniversityRef: DatabaseReference
-
-    @Mock private lateinit var mockPointsRef: DatabaseReference
 
     @Mock private lateinit var mockRedeemingRef: DatabaseReference
 
@@ -63,21 +41,14 @@ class RewardsFragmentTest {
 
     @Mock private lateinit var mockProductSnapshot2: DataSnapshot
 
-    @Mock private lateinit var mockPointsSnapshot: DataSnapshot
-
     @Mock private lateinit var mockRedeemingSnapshot: DataSnapshot
-
-    @Mock private lateinit var mockUserTask: Task<DataSnapshot>
-
-    @Mock private lateinit var mockUserSnapshot: DataSnapshot
 
     @Mock private lateinit var mockPicasso: Picasso
 
     @Mock private lateinit var mockRequestCreator: RequestCreator
 
-    @Before
-    fun setup() {
-        MockitoAnnotations.openMocks(this)
+    override fun setup() {
+        super.setup()
         setupFirebase()
         setupPicasso()
     }
@@ -88,23 +59,11 @@ class RewardsFragmentTest {
 
         `when`(root.child("products")).thenReturn(mockProductsRef)
         `when`(mockProductsRef.child(any())).thenReturn(mockUniversityRef)
-        `when`(userRef.child("points")).thenReturn(mockPointsRef)
         `when`(userRef.child("redeemingReward")).thenReturn(mockRedeemingRef)
-        `when`(userRef.child("studying")).thenReturn(Mockito.mock(DatabaseReference::class.java))
 
         `when`(mockProductsSnapshot.children).thenReturn(listOf(mockProductSnapshot1, mockProductSnapshot2))
         setupProduct(mockProductSnapshot1, "p1", Product("Coffee", "50", "url"))
         setupProduct(mockProductSnapshot2, "p2", Product("Muffin", "100", "url"))
-
-        `when`(userRef.get()).thenReturn(mockUserTask)
-        `when`(mockUserTask.isComplete).thenReturn(true)
-        `when`(mockUserTask.isSuccessful).thenReturn(true)
-        `when`(mockUserTask.result).thenReturn(mockUserSnapshot)
-        `when`(mockUserTask.addOnCompleteListener(any<Executor>(), any<OnCompleteListener<DataSnapshot>>())).thenAnswer {
-            it.getArgument<OnCompleteListener<DataSnapshot>>(1).onComplete(mockUserTask)
-            mockUserTask
-        }
-        `when`(mockUserSnapshot.getValue(User::class.java)).thenReturn(User("Test", "User", "test@example.com", "Test Uni"))
     }
 
     private fun setupProduct(snapshot: DataSnapshot, key: String, product: Product) {
@@ -144,7 +103,7 @@ class RewardsFragmentTest {
     }
 
     @Test
-    fun `student clicks product and is shown product details`() = launchFragment { fragment ->
+    fun `clicking product shows popup details`() = launchFragment { fragment ->
         (fragment as RecyclerAdapter.OnProductListener).onProductClick(0)
         ShadowLooper.runUiThreadTasks()
 
@@ -155,7 +114,7 @@ class RewardsFragmentTest {
     }
 
     @Test
-    fun `student redeems reward successfully and updates points`() = launchFragment { fragment ->
+    fun `redeeming status updates points`() = launchFragment { fragment ->
         setupPoints("100")
 
         val redeemingCaptor = argumentCaptor<ValueEventListener>()
@@ -171,8 +130,7 @@ class RewardsFragmentTest {
     }
 
     @Test
-    fun `student tries to redeem reward but insufficient funds shows toast`() = launchFragment { fragment ->
-        // Setup user with 10 points (Product cost is 50)
+    fun `insufficient funds shows toast`() = launchFragment { fragment ->
         setupPoints("10")
 
         val redeemingCaptor = argumentCaptor<ValueEventListener>()
@@ -210,13 +168,5 @@ class RewardsFragmentTest {
                 block(fragment)
             }
         }
-    }
-
-    private fun setupPoints(points: String) {
-        val captor = argumentCaptor<ValueEventListener>()
-        verify(mockPointsRef, atLeastOnce()).addValueEventListener(captor.capture())
-        `when`(mockPointsSnapshot.value).thenReturn(points)
-        captor.allValues.last().onDataChange(mockPointsSnapshot)
-        ShadowLooper.runUiThreadTasks()
     }
 }

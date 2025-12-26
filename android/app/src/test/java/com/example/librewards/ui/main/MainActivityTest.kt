@@ -9,69 +9,31 @@ import androidx.viewpager2.widget.ViewPager2
 import com.example.librewards.R
 import com.example.librewards.data.models.User
 import com.example.librewards.ui.auth.LoginActivity
-import com.example.librewards.utils.FirebaseTestRule
-import com.example.librewards.utils.MainDispatcherRule
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.gms.tasks.Task
-import com.google.firebase.database.DataSnapshot
+import com.example.librewards.utils.BaseUiTest
+import com.google.android.material.tabs.TabLayout
 import com.google.firebase.database.DatabaseReference
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mock
-import org.mockito.Mockito.any
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
-import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper.runUiThreadTasks
-import java.util.concurrent.Executor
 
-@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P], instrumentedPackages = ["androidx.loader.content"])
 @ExperimentalCoroutinesApi
-class MainActivityTest {
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
-
-    @get:Rule
-    val firebaseTestRule = FirebaseTestRule()
-
+class MainActivityTest : BaseUiTest() {
     @Mock
     private lateinit var mockProductsRef: DatabaseReference
 
-    @Mock
-    private lateinit var mockUserSnapshotTask: Task<DataSnapshot>
-
-    @Mock
-    private lateinit var mockDataSnapshot: DataSnapshot
-
-    @Before
-    fun setup() {
-        MockitoAnnotations.openMocks(this)
-
-        // Mock DB references structure
+    override fun setup() {
+        super.setup()
         `when`(firebaseTestRule.mockRootRef.child("products")).thenReturn(mockProductsRef)
-
-        // Mock getUser() call chain
-        `when`(firebaseTestRule.mockSpecificUserRef.get()).thenReturn(mockUserSnapshotTask)
-
-        // Mock Task completion
-        `when`(mockUserSnapshotTask.isComplete).thenReturn(true)
-        `when`(mockUserSnapshotTask.isSuccessful).thenReturn(true)
-        `when`(mockUserSnapshotTask.result).thenReturn(mockDataSnapshot)
-        `when`(mockUserSnapshotTask.addOnCompleteListener(any<Executor>(), any())).thenAnswer { invocation ->
-            val listener = invocation.getArgument<OnCompleteListener<DataSnapshot>>(1)
-            listener.onComplete(mockUserSnapshotTask)
-            mockUserSnapshotTask
-        }
     }
 
     @Test
@@ -81,6 +43,18 @@ class MainActivityTest {
                 assert(activity != null)
                 val viewPager = activity.findViewById<ViewPager2>(R.id.viewPager)
                 assertEquals(2, viewPager.adapter?.itemCount)
+
+                val tabLayout = activity.findViewById<TabLayout>(R.id.tabLayout)
+                assertEquals(2, tabLayout.tabCount)
+
+                val tab0 = tabLayout.getTabAt(0)
+                val tab1 = tabLayout.getTabAt(1)
+
+                assertNotNull(tab0?.icon)
+                assertNotNull(tab1?.icon)
+
+                assertEquals(R.drawable.timer, shadowOf(tab0!!.icon).createdFromResId)
+                assertEquals(R.drawable.reward, shadowOf(tab1!!.icon).createdFromResId)
             }
         }
     }
@@ -104,7 +78,7 @@ class MainActivityTest {
     @Test
     fun `username updates when user data received`() {
         val user = User("John", "Doe", "test@example.com", "Test Uni")
-        `when`(mockDataSnapshot.getValue(User::class.java)).thenReturn(user)
+        `when`(mockUserSnapshot.getValue(User::class.java)).thenReturn(user)
 
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
