@@ -9,17 +9,13 @@ import androidx.viewpager2.widget.ViewPager2
 import com.example.librewards.R
 import com.example.librewards.data.models.User
 import com.example.librewards.ui.auth.LoginActivity
+import com.example.librewards.utils.FirebaseTestRule
 import com.example.librewards.utils.MainDispatcherRule
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
-import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -27,11 +23,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
 import org.mockito.Mock
-import org.mockito.MockedStatic
 import org.mockito.Mockito.any
-import org.mockito.Mockito.mockStatic
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
@@ -48,26 +41,11 @@ class MainActivityTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    @Mock
-    private lateinit var mockFirebaseAuth: FirebaseAuth
-
-    @Mock
-    private lateinit var mockFirebaseUser: FirebaseUser
-
-    @Mock
-    private lateinit var mockFirebaseDatabase: FirebaseDatabase
-
-    @Mock
-    private lateinit var mockRootRef: DatabaseReference
-
-    @Mock
-    private lateinit var mockUsersRef: DatabaseReference
+    @get:Rule
+    val firebaseTestRule = FirebaseTestRule()
 
     @Mock
     private lateinit var mockProductsRef: DatabaseReference
-
-    @Mock
-    private lateinit var mockSpecificUserRef: DatabaseReference
 
     @Mock
     private lateinit var mockUserSnapshotTask: Task<DataSnapshot>
@@ -75,35 +53,15 @@ class MainActivityTest {
     @Mock
     private lateinit var mockDataSnapshot: DataSnapshot
 
-    @Mock
-    private lateinit var mockFirebaseApp: FirebaseApp
-
-    private lateinit var mockedAuth: MockedStatic<FirebaseAuth>
-    private lateinit var mockedDb: MockedStatic<FirebaseDatabase>
-    private lateinit var mockedApp: MockedStatic<FirebaseApp>
-
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
 
-        // Mock Firebase Auth Static
-        mockedAuth = mockStatic(FirebaseAuth::class.java)
-        mockedAuth.`when`<FirebaseAuth> { FirebaseAuth.getInstance() }.thenReturn(mockFirebaseAuth)
-        `when`(mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser)
-        `when`(mockFirebaseUser.email).thenReturn("test@example.com")
-
-        // Mock Firebase Database Static
-        mockedDb = mockStatic(FirebaseDatabase::class.java)
-        mockedDb.`when`<FirebaseDatabase> { FirebaseDatabase.getInstance() }.thenReturn(mockFirebaseDatabase)
-        `when`(mockFirebaseDatabase.reference).thenReturn(mockRootRef)
-
         // Mock DB references structure
-        `when`(mockRootRef.child("users")).thenReturn(mockUsersRef)
-        `when`(mockRootRef.child("products")).thenReturn(mockProductsRef)
-        `when`(mockUsersRef.child(ArgumentMatchers.anyString())).thenReturn(mockSpecificUserRef)
+        `when`(firebaseTestRule.mockRootRef.child("products")).thenReturn(mockProductsRef)
 
         // Mock getUser() call chain
-        `when`(mockSpecificUserRef.get()).thenReturn(mockUserSnapshotTask)
+        `when`(firebaseTestRule.mockSpecificUserRef.get()).thenReturn(mockUserSnapshotTask)
 
         // Mock Task completion
         `when`(mockUserSnapshotTask.isComplete).thenReturn(true)
@@ -114,17 +72,6 @@ class MainActivityTest {
             listener.onComplete(mockUserSnapshotTask)
             mockUserSnapshotTask
         }
-
-        // Mock Firebase App (for Firebase.auth extension if needed)
-        mockedApp = mockStatic(FirebaseApp::class.java)
-        mockedApp.`when`<FirebaseApp> { FirebaseApp.getInstance() }.thenReturn(mockFirebaseApp)
-    }
-
-    @After
-    fun tearDown() {
-        mockedAuth.close()
-        mockedDb.close()
-        mockedApp.close()
     }
 
     @Test
@@ -145,7 +92,7 @@ class MainActivityTest {
                 val profileImage = activity.findViewById<View>(R.id.profileImage)
                 profileImage.performClick()
 
-                verify(mockFirebaseAuth).signOut()
+                verify(firebaseTestRule.mockFirebaseAuth).signOut()
 
                 val expectedIntent = Intent(activity, LoginActivity::class.java)
                 val actualIntent = shadowOf(activity).nextStartedActivity

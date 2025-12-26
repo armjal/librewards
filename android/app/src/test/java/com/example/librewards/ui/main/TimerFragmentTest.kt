@@ -7,12 +7,14 @@ import android.graphics.Color
 import android.location.Location
 import android.os.Build
 import android.os.Looper
+import android.os.SystemClock
 import android.widget.Chronometer
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.example.librewards.R
+import com.example.librewards.utils.FirebaseTestRule
 import com.example.librewards.utils.MainDispatcherRule
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -24,12 +26,8 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.Circle
 import com.google.android.gms.maps.model.Marker
-import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import junit.framework.TestCase.assertEquals
@@ -68,23 +66,8 @@ class TimerFragmentTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    @Mock
-    private lateinit var mockFirebaseAuth: FirebaseAuth
-
-    @Mock
-    private lateinit var mockFirebaseUser: FirebaseUser
-
-    @Mock
-    private lateinit var mockFirebaseDatabase: FirebaseDatabase
-
-    @Mock
-    private lateinit var mockDbRef: DatabaseReference
-
-    @Mock
-    private lateinit var mockUsersRef: DatabaseReference
-
-    @Mock
-    private lateinit var mockSpecificUserRef: DatabaseReference
+    @get:Rule
+    val firebaseTestRule = FirebaseTestRule()
 
     @Mock
     private lateinit var mockStudyingRef: DatabaseReference
@@ -116,34 +99,19 @@ class TimerFragmentTest {
     @Mock
     private lateinit var mockMarker: Marker
 
-    private lateinit var mockedAuth: MockedStatic<FirebaseAuth>
-    private lateinit var mockedDb: MockedStatic<FirebaseDatabase>
     private lateinit var mockedLocationServices: MockedStatic<LocationServices>
-    private lateinit var mockedApp: MockedStatic<FirebaseApp>
     private lateinit var mockedCameraUpdateFactory: MockedStatic<CameraUpdateFactory>
 
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
 
-        // Mock Firebase
-        mockedAuth = mockStatic(FirebaseAuth::class.java)
-        mockedAuth.`when`<FirebaseAuth> { FirebaseAuth.getInstance() }.thenReturn(mockFirebaseAuth)
-        `when`(mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser)
-        `when`(mockFirebaseUser.email).thenReturn("test@example.com")
-
-        mockedDb = mockStatic(FirebaseDatabase::class.java)
-        mockedDb.`when`<FirebaseDatabase> { FirebaseDatabase.getInstance() }.thenReturn(mockFirebaseDatabase)
-        `when`(mockFirebaseDatabase.reference).thenReturn(mockDbRef)
-
-        // Mock DB Structure
-        `when`(mockDbRef.child("users")).thenReturn(mockUsersRef)
-        `when`(mockDbRef.child("products"))
+        // Mock DB Structure using rule
+        `when`(firebaseTestRule.mockRootRef.child("products"))
             .thenReturn(Mockito.mock(DatabaseReference::class.java))
-        `when`(mockUsersRef.child(ArgumentMatchers.anyString())).thenReturn(mockSpecificUserRef)
-        `when`(mockSpecificUserRef.child("studying")).thenReturn(mockStudyingRef)
-        `when`(mockSpecificUserRef.child("points")).thenReturn(mockPointsRef)
-        `when`(mockSpecificUserRef.child("redeemingReward"))
+        `when`(firebaseTestRule.mockSpecificUserRef.child("studying")).thenReturn(mockStudyingRef)
+        `when`(firebaseTestRule.mockSpecificUserRef.child("points")).thenReturn(mockPointsRef)
+        `when`(firebaseTestRule.mockSpecificUserRef.child("redeemingReward"))
             .thenReturn(Mockito.mock(DatabaseReference::class.java))
 
         // Mock LocationServices for MapsViewModel
@@ -151,13 +119,6 @@ class TimerFragmentTest {
         mockedLocationServices.`when`<FusedLocationProviderClient> {
             LocationServices.getFusedLocationProviderClient(ArgumentMatchers.any(Activity::class.java))
         }.thenReturn(mockFusedLocationClient)
-
-        mockedApp = mockStatic(FirebaseApp::class.java)
-        mockedApp.`when`<FirebaseApp> { FirebaseApp.getInstance() }.thenReturn(
-            mock(
-                FirebaseApp::class.java,
-            ),
-        )
 
         mockedCameraUpdateFactory = mockStatic(CameraUpdateFactory::class.java)
         mockedCameraUpdateFactory.`when`<CameraUpdate> {
@@ -167,10 +128,7 @@ class TimerFragmentTest {
 
     @After
     fun tearDown() {
-        mockedAuth.close()
-        mockedDb.close()
         mockedLocationServices.close()
-        mockedApp.close()
         mockedCameraUpdateFactory.close()
     }
 
@@ -221,18 +179,15 @@ class TimerFragmentTest {
                     pointsCaptor.firstValue.onDataChange(mockPointsSnapshot)
                     ShadowLooper.runUiThreadTasks()
 
-                    // 2. Start timer (studying = "1")
-                    val studyingCaptor = argumentCaptor<ValueEventListener>()
-                    verify(mockStudyingRef, Mockito.atLeastOnce()).addValueEventListener(studyingCaptor.capture())
-
-                    `when`(mockStudyingSnapshot.value).thenReturn("1")
-                    studyingCaptor.firstValue.onDataChange(mockStudyingSnapshot)
-                    ShadowLooper.runUiThreadTasks()
+                    // 2. Start timer
+                    startTimer()
 
                     // 3. Advance time
                     ShadowSystemClock.advanceBy(Duration.ofSeconds(params.durationSeconds))
 
                     // 4. Stop timer (studying = "0")
+                    val studyingCaptor = argumentCaptor<ValueEventListener>()
+                    verify(mockStudyingRef, Mockito.atLeastOnce()).addValueEventListener(studyingCaptor.capture())
                     `when`(mockStudyingSnapshot.value).thenReturn("0")
                     studyingCaptor.firstValue.onDataChange(mockStudyingSnapshot)
                     ShadowLooper.runUiThreadTasks()
@@ -338,11 +293,7 @@ class TimerFragmentTest {
                 callbackCaptor.firstValue.onLocationResult(LocationResult.create(listOf(mockLocation1)))
 
                 // 3. Start timer
-                val studyingCaptor = argumentCaptor<ValueEventListener>()
-                verify(mockStudyingRef, Mockito.atLeastOnce()).addValueEventListener(studyingCaptor.capture())
-                `when`(mockStudyingSnapshot.value).thenReturn("1")
-                studyingCaptor.firstValue.onDataChange(mockStudyingSnapshot)
-                ShadowLooper.runUiThreadTasks()
+                startTimer()
 
                 // Verify circle color is blue (inside zone)
                 verify(mockCircle).fillColor = Color.parseColor("#4d318ce7")
@@ -378,17 +329,15 @@ class TimerFragmentTest {
             scenario.onActivity { activity ->
                 ShadowDialog.reset()
 
-                // Start timer
-                val studyingCaptor = argumentCaptor<ValueEventListener>()
-                verify(mockStudyingRef, Mockito.atLeastOnce()).addValueEventListener(studyingCaptor.capture())
-                `when`(mockStudyingSnapshot.value).thenReturn("1")
-                studyingCaptor.firstValue.onDataChange(mockStudyingSnapshot)
-                ShadowLooper.runUiThreadTasks()
+                startTimer()
+
                 val stopwatch = activity.findViewById<Chronometer>(R.id.stopwatch)
 
                 // Advance time past 24 hours
-                val twentyFourHoursInMillis = Duration.ofHours(24).toMillis() + 1000
-                stopwatch.base = ShadowSystemClock.currentTimeMillis() - twentyFourHoursInMillis
+                val twentyFourHoursInMillis = 86400000L
+                stopwatch.base = SystemClock.elapsedRealtime() - twentyFourHoursInMillis
+
+                ShadowSystemClock.advanceBy(Duration.ofSeconds(2))
 
                 // Verify Popup
                 val latestDialog = ShadowDialog.getLatestDialog()
@@ -403,5 +352,13 @@ class TimerFragmentTest {
                 assertNull(stopwatch.onChronometerTickListener)
             }
         }
+    }
+
+    private fun startTimer() {
+        val studyingCaptor = argumentCaptor<ValueEventListener>()
+        verify(mockStudyingRef, Mockito.atLeastOnce()).addValueEventListener(studyingCaptor.capture())
+        `when`(mockStudyingSnapshot.value).thenReturn("1")
+        studyingCaptor.firstValue.onDataChange(mockStudyingSnapshot)
+        ShadowLooper.runUiThreadTasks()
     }
 }
