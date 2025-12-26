@@ -21,8 +21,10 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
 
+      - uses: gradle/actions/setup-gradle@v3
+
       - name: Run unit tests
-        run: bash -c "cd android && ./gradlew testDebugUnitTest"
+        run: bash -c "cd android && ./gradlew testDebugUnitTest --no-daemon"
 
       - name: Upload test report
         uses: actions/upload-artifact@v4.6.2
