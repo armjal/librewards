@@ -14,6 +14,10 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4
 
+      - name: Create local.properties for test usage
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
 
