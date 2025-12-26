@@ -39,10 +39,6 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
                     toastMessage(requireActivity(), getString(R.string.camera_permission_required))
                 }
             }
-        val options = GmsBarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-            .build()
-        scanner = GmsBarcodeScanning.getClient(requireContext(), options)
     }
 
     override fun onCreateView(
@@ -105,6 +101,11 @@ class AdminHomeFragment(override val icon: Int = R.drawable.home) : FragmentExte
     ) == PERMISSION_GRANTED
 
     private fun startScanner(actionForStudent: (String) -> Unit) {
+        val options = GmsBarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+            .build()
+        scanner = GmsBarcodeScanning.getClient(requireContext(), options)
+
         if (!checkCameraPermission()) {
             requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
             return
