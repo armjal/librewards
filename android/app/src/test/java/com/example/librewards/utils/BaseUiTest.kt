@@ -1,6 +1,8 @@
 package com.example.librewards.utils
 
+import android.app.Activity
 import android.os.Build
+import androidx.test.core.app.ActivityScenario
 import com.example.librewards.data.models.User
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
@@ -53,15 +55,7 @@ abstract class BaseUiTest {
         Mockito.`when`(mockUserTask.isComplete).thenReturn(true)
         Mockito.`when`(mockUserTask.isSuccessful).thenReturn(true)
         Mockito.`when`(mockUserTask.result).thenReturn(mockUserSnapshot)
-        Mockito.`when`(
-            mockUserTask.addOnCompleteListener(
-                any<Executor>(),
-                any<OnCompleteListener<DataSnapshot>>(),
-            ),
-        ).thenAnswer {
-            it.getArgument<OnCompleteListener<DataSnapshot>>(1).onComplete(mockUserTask)
-            mockUserTask
-        }
+        mockTask(mockUserTask)
         Mockito.`when`(mockUserSnapshot.getValue(User::class.java))
             .thenReturn(User("Test", "User", "test@example.com", "Test Uni"))
     }
@@ -72,5 +66,26 @@ abstract class BaseUiTest {
         Mockito.`when`(mockPointsSnapshot.value).thenReturn(points)
         captor.allValues.last().onDataChange(mockPointsSnapshot)
         ShadowLooper.runUiThreadTasks()
+    }
+
+    fun <T> mockTask(task: Task<T>) {
+        Mockito.`when`(task.addOnCompleteListener(any<Executor>(), any())).thenAnswer {
+            val listener = it.getArgument<OnCompleteListener<T>>(1)
+            listener.onComplete(task)
+            task
+        }
+        Mockito.`when`(task.addOnCompleteListener(any())).thenAnswer {
+            val listener = it.getArgument<OnCompleteListener<T>>(0)
+            listener.onComplete(task)
+            task
+        }
+    }
+
+    inline fun <reified T : Activity> launchActivity(crossinline block: (T) -> Unit) {
+        ActivityScenario.launch(T::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                block(activity)
+            }
+        }
     }
 }
