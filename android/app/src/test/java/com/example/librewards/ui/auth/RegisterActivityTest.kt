@@ -6,6 +6,7 @@ import android.widget.ImageView
 import android.widget.Spinner
 import android.widget.TextView
 import com.example.librewards.R
+import com.example.librewards.data.resources.universities
 import com.example.librewards.utils.BaseUiTest
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.AuthResult
@@ -63,12 +64,15 @@ class RegisterActivityTest : BaseUiTest() {
     @Test
     fun `spinner selection updates selected university`() = launchActivity<RegisterActivity> {
         val spinner = it.findViewById<Spinner>(R.id.registrationSpinner)
-        spinner.setSelection(1) // Select first real university
+        val randomUniversityIndex = (1 until universities.size).random()
+        spinner.setSelection(randomUniversityIndex)
 
         ShadowLooper.runUiThreadTasks()
 
-        val toast = ShadowToast.getLatestToast()
-        assert(toast != null)
+        assertEquals(
+            it.getString(R.string.selected_uni, universities[randomUniversityIndex - 1]),
+            ShadowToast.getTextOfLatestToast(),
+        )
     }
 
     @Test
