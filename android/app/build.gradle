@@ -35,7 +35,7 @@ android {
         }
 
         // Inject the Google Maps API key as a string resource
-        resValue "string", "google_maps_key", localProperties.getProperty("maps.api_key")
+        resValue "string", "google_maps_key", localProperties.getProperty("maps.api_key") ?: ""
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
