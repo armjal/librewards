@@ -1,0 +1,33 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  unit-test:
+    name: Perform unit testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Create local.properties for test usage
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x android/gradlew
+
+      - uses: gradle/actions/setup-gradle@v3
+
+      - name: Run unit tests
+        run: bash -c "cd android && ./gradlew testDebugUnitTest --no-daemon"
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: unit_test_report
+          path: android/app/build/reports/test/testDebugUnitTest/
