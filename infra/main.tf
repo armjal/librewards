@@ -31,7 +31,6 @@ module "database" {
 module "storage" {
   source     = "./modules/storage"
   project_id = module.project.project_id
-
 }
 
 module "api_keys" {
@@ -52,7 +51,22 @@ module "iam" {
   project_id = module.project.project_id
 }
 
+module "github_actions" {
+  source                = "./modules/github_actions"
+  project_id            = module.project.project_id
+  github_repo           = var.github_repo
+  service_account_email = module.iam.auth_service_account_email
+}
+
 output "android_maps_api_key_string" {
   value     = module.api_keys.android_maps_api_key_string
   sensitive = true
+}
+
+output "workload_identity_provider_name" {
+  value = module.github_actions.workload_identity_provider_name
+}
+
+output "auth_service_account_email" {
+  value = module.iam.auth_service_account_email
 }
