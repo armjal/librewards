@@ -64,14 +64,14 @@ jobs:
           echo "Waiting for local-admin-server to start..."
           timeout 30 sh -c 'until curl -s http://localhost:8080/ > /dev/null; do sleep 1; done' || (echo "Server failed to start. Logs:" && cat android/local-admin-server/build/install/local-admin-server/bin/hs_err_pid*.log 2>/dev/null)
 
-      - name: Setup Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Run Tests on Firebase Test Lab
-        run: |
-          gcloud firebase test android run \
-            --app android/app/build/outputs/apk/debug/app-debug.apk \
-            --test android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
-            --device model=Pixel6,version=33,locale=en_US,orientation=portrait \
-            --use-orchestrator \
-            --timeout 10m
+      - name: Run Instrumentation Tests on Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: |
+            ./android/gradlew -p android :app:connectedAndroidTest \
+              -Pandroid.testInstrumentationRunnerArguments.SERVER_URL=http://10.0.2.2:8080
