@@ -72,6 +72,6 @@ jobs:
           # Start the server in the background
           ./android/gradlew :local-admin-server:run -p android &
 
-          # Wait for server to be ready
+          # Wait for server to be ready (increased timeout to 120s)
           echo "Waiting for local-admin-server to start..."
-          timeout 30 sh -c 'until curl -s http://localhost:8080/ > /dev/null; do sleep 1; done' || echo "Server might not have health check, proceeding..."
+          timeout 120 sh -c 'until curl -s http://localhost:8080/ > /dev/null; do sleep 2; done' || echo "Server did not start within 120s"
