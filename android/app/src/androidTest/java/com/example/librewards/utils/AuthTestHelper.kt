@@ -21,6 +21,17 @@ object AuthTestHelper {
         val auth = FirebaseAuth.getInstance()
         val user = auth.currentUser
 
-        Tasks.await(user!!.delete(), 10, TimeUnit.SECONDS)
+        if (user != null) {
+            try {
+                Tasks.await(user.delete(), 10, TimeUnit.SECONDS)
+            } catch (e: Exception) {
+                // Failed to delete, just sign out
+            }
+        }
+
+        // Ensure we are signed out
+        if (auth.currentUser != null) {
+            auth.signOut()
+        }
     }
 }

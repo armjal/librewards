@@ -30,7 +30,10 @@ object DbTestHelper {
         val userId = generateIdFromKey(email)
 
         val task = usersRef.child(userId).removeValue()
-
-        Tasks.await(task, 10, TimeUnit.SECONDS)
+        try {
+            Tasks.await(task, 10, TimeUnit.SECONDS)
+        } catch (e: Exception) {
+            // Ignore failure during cleanup
+        }
     }
 }
