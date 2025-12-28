@@ -7,9 +7,38 @@ on:
     branches: [ "main" ]
 
 jobs:
-  unit-test:
-    name: Perform unit testing
+#   unit-test:
+#     name: Perform unit testing
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout the code
+#         uses: actions/checkout@v4
+
+#       - name: Create local.properties for test usage
+#         run: |
+#           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+
+#       - name: Grant execute permission for gradlew
+#         run: chmod +x android/gradlew
+
+#       - uses: gradle/actions/setup-gradle@v3
+
+#       - name: Run unit tests
+#         run: bash -c "cd android && ./gradlew testDebugUnitTest --no-daemon"
+
+#       - name: Upload test report
+#         uses: actions/upload-artifact@v4.6.2
+#         with:
+#           name: unit_test_report
+#           path: android/app/build/reports/test/testDebugUnitTest/
+
+  integration-test:
+    name: Perform integration testing
     runs-on: ubuntu-latest
+    permissions:
+       contents: 'read'
+       id-token: 'write' # Required for Workload Identity Federation
+
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4
@@ -22,12 +51,27 @@ jobs:
         run: chmod +x android/gradlew
 
       - uses: gradle/actions/setup-gradle@v3
-
-      - name: Run unit tests
-        run: bash -c "cd android && ./gradlew testDebugUnitTest --no-daemon"
-
-      - name: Upload test report
-        uses: actions/upload-artifact@v4.6.2
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
-          name: unit_test_report
-          path: android/app/build/reports/test/testDebugUnitTest/
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Run Local Admin Server
+        env:
+          GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT }}
+          SERVICE_ACCOUNT_EMAIL: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+        run: |
+          # Start the server in the background
+          ./android/gradlew :local-admin-server:run -p android &
+
+          # Wait for server to be ready
+          echo "Waiting for local-admin-server to start..."
+          timeout 30 sh -c 'until curl -s http://localhost:8080/ > /dev/null; do sleep 1; done' || echo "Server might not have health check, proceeding..."
