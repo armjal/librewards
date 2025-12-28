@@ -10,7 +10,7 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.response.respond
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.io.FileInputStream
 
@@ -32,6 +32,9 @@ fun main() {
     embeddedServer(Netty, 8080) {
         install(ContentNegotiation) { json() }
         routing {
+            get("/") {
+                call.respondText("OK")
+            }
             post("/generate-token-for-admin") {
                 val email = call.request.queryParameters["email"] ?: return@post call.respond(mapOf("error" to "Missing email"))
                 runCatching {
@@ -39,7 +42,6 @@ fun main() {
                     val uid = auth.getUserByEmail(email).uid
                     auth.setCustomUserClaims(uid, mapOf("admin" to true))
                     call.respond(mapOf("customToken" to auth.createCustomToken(uid, mapOf("admin" to true))))
-                    print("Successfully generated token for $email")
                 }.onFailure { call.respond(mapOf("error" to it.message)) }
             }
         }
