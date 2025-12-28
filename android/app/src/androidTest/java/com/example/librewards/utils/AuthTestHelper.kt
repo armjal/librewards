@@ -3,6 +3,9 @@ package com.example.librewards.utils
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.concurrent.TimeUnit
 
 object AuthTestHelper {
@@ -33,5 +36,34 @@ object AuthTestHelper {
         if (auth.currentUser != null) {
             auth.signOut()
         }
+    }
+
+    fun setUserAsAdmin(email: String) {
+        try {
+            val customToken = getCustomTokenFromLocalHelper(email)
+
+            // Sign in with the custom token to apply the admin claim
+            val auth = FirebaseAuth.getInstance()
+            Tasks.await(auth.signInWithCustomToken(customToken), 10, TimeUnit.SECONDS)
+        } catch (e: Exception) {
+            throw RuntimeException("Failed to set admin via local server. Ensure :local-admin-server is running.", e)
+        }
+    }
+
+    private fun getCustomTokenFromLocalHelper(email: String): String {
+        // Connect to local server running on host machine
+        val url = URL("http://10.0.2.2:8080/generate-token-for-admin?email=$email")
+        val connection = url.openConnection() as HttpURLConnection
+        connection.requestMethod = "POST"
+        connection.connectTimeout = 5000
+        connection.readTimeout = 5000
+
+        val responseCode = connection.responseCode
+        if (responseCode != 200) {
+            throw RuntimeException("Local helper returned code $responseCode")
+        }
+
+        val responseText = connection.inputStream.bufferedReader().readText()
+        return JSONObject(responseText).getString("customToken")
     }
 }

@@ -15,6 +15,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import com.example.librewards.R
+import com.example.librewards.ui.admin.AdminActivity
 import com.example.librewards.ui.main.MainActivity
 import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.DbTestHelper
@@ -75,7 +76,7 @@ class LoginActivityIntegrationTest {
     }
 
     @Test
-    fun login_withValidCredentials_navigatesToMainActivity() {
+    fun login_withStudentCredentials_navigatesToAdminActivity() {
         val email = "test@example.com"
         val password = "password123"
         testUserEmail = email
@@ -92,6 +93,27 @@ class LoginActivityIntegrationTest {
         Thread.sleep(1000)
 
         intended(hasComponent(MainActivity::class.java.name))
+    }
+
+    @Test
+    fun login_withAdminCredentials_navigatesToAdminActivity() {
+        val email = "admin@example.com"
+        val password = "password123"
+        testUserEmail = email
+
+        AuthTestHelper.createUser(email, password)
+        AuthTestHelper.setUserAsAdmin(email)
+        DbTestHelper.createTestUser(email)
+        FirebaseAuth.getInstance().signOut()
+
+        onView(withId(R.id.loginEmail)).check(matches(isDisplayed())).perform(replaceText(email))
+        onView(withId(R.id.loginPassword)).check(matches(isDisplayed())).perform(replaceText(password))
+        onView(withId(R.id.loginButton)).check(matches(isDisplayed())).perform(forceClick())
+
+        // Wait for async login network call
+        Thread.sleep(1000)
+
+        intended(hasComponent(AdminActivity::class.java.name))
     }
 
     private fun finishAllActivities() {
