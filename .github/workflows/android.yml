@@ -64,14 +64,18 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      - name: Build Local Admin Server
+        run: ./android/gradlew :local-admin-server:installDist -p android
+
       - name: Run Local Admin Server
         env:
           GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT }}
           SERVICE_ACCOUNT_EMAIL: ${{ secrets.GCP_SERVICE_ACCOUNT }}
         run: |
-          # Start the server in the background
-          ./android/gradlew :local-admin-server:run -p android &
+          # Start the server using the built script (avoids Gradle daemon overhead)
 
-          # Wait for server to be ready (increased timeout to 120s)
+          ./android/local-admin-server/build/install/local-admin-server/bin/local-admin-server &
+
+          # Wait for server to be ready
           echo "Waiting for local-admin-server to start..."
-          timeout 120 sh -c 'until curl -s http://localhost:8080/ > /dev/null; do sleep 2; done' || echo "Server did not start within 120s"
+          timeout 30 sh -c 'until curl -s http://localhost:8080/ > /dev/null; do sleep 1; done' || (echo "Server failed to start. Logs:" && cat android/local-admin-server/build/install/local-admin-server/bin/hs_err_pid*.log 2>/dev/null)
