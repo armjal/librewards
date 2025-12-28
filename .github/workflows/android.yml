@@ -7,31 +7,6 @@ on:
     branches: [ "main" ]
 
 jobs:
-#   unit-test:
-#     name: Perform unit testing
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout the code
-#         uses: actions/checkout@v4
-
-#       - name: Create local.properties for test usage
-#         run: |
-#           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
-
-#       - name: Grant execute permission for gradlew
-#         run: chmod +x android/gradlew
-
-#       - uses: gradle/actions/setup-gradle@v3
-
-#       - name: Run unit tests
-#         run: bash -c "cd android && ./gradlew testDebugUnitTest --no-daemon"
-
-#       - name: Upload test report
-#         uses: actions/upload-artifact@v4.6.2
-#         with:
-#           name: unit_test_report
-#           path: android/app/build/reports/test/testDebugUnitTest/
-
   integration-test:
     name: Perform integration testing
     runs-on: ubuntu-latest
@@ -43,6 +18,17 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4
 
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          build-root-directory: android
+
       - name: Create local.properties for test usage
         run: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
@@ -50,41 +36,38 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
 
-      - uses: gradle/actions/setup-gradle@v3
+      - name: Create google-services.json
+        run: echo ${{ secrets.GOOGLE_SERVICES_JSON }} | base64 -d > android/app/google-services.json
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: Build Local Admin Server
-        run: ./android/gradlew :local-admin-server:installDist -p android
+      - name: Build Everything (Server & APKs)
+        run: ./android/gradlew :local-admin-server:installDist :app:assembleDebug :app:assembleAndroidTest -p android
 
       - name: Run Local Admin Server
         env:
           GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT }}
           SERVICE_ACCOUNT_EMAIL: ${{ secrets.GCP_SERVICE_ACCOUNT }}
         run: |
-          # Start the server using the built script (avoids Gradle daemon overhead)
-
+          # Start the server using the built script
           ./android/local-admin-server/build/install/local-admin-server/bin/local-admin-server &
 
           # Wait for server to be ready
           echo "Waiting for local-admin-server to start..."
           timeout 30 sh -c 'until curl -s http://localhost:8080/ > /dev/null; do sleep 1; done' || (echo "Server failed to start. Logs:" && cat android/local-admin-server/build/install/local-admin-server/bin/hs_err_pid*.log 2>/dev/null)
 
-      - name: Run Android Tests
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          name: unit_test_report
-          path: android/app/build/reports/test/testDebugUnitTest/
-          api-level: 29
-          working-directory: android
-          script: ./gradlew connectedAndroidTest --no-daemon
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Run Tests on Firebase Test Lab
+        run: |
+          gcloud firebase test android run \
+            --app android/app/build/outputs/apk/debug/app-debug.apk \
+            --test android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
+            --device model=Pixel2,version=28,locale=en,orientation=portrait \
+            --use-orchestrator \
+            --timeout 10m

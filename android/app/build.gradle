@@ -32,6 +32,7 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments clearPackageData: 'true'
 
         def localProperties = new Properties()
         def localPropertiesFile = rootProject.file("local.properties")
@@ -67,7 +68,9 @@ android {
     testOptions {
         unitTests.returnDefaultValues = true
         unitTests.includeAndroidResources = true
+        execution 'ANDROIDX_TEST_ORCHESTRATOR'
     }
+
     namespace 'com.example.librewards'
 }
 
@@ -128,6 +131,9 @@ dependencies {
     androidTestImplementation "androidx.test:runner:1.7.0"
     androidTestImplementation "androidx.test:rules:1.7.0"
     androidTestImplementation "androidx.test:core:1.7.0"
+
+    // Android Test Orchestrator
+    androidTestUtil "androidx.test:orchestrator:1.5.1"
 }
 repositories {
     google()
