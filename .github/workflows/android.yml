@@ -72,6 +72,6 @@ jobs:
           gcloud firebase test android run \
             --app android/app/build/outputs/apk/debug/app-debug.apk \
             --test android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
-            --device model=Pixel2,version=28,locale=en,orientation=portrait \
+            --device model=Pixel6,version=33,locale=en_US,orientation=portrait \
             --use-orchestrator \
             --timeout 10m
