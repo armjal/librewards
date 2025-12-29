@@ -4,9 +4,11 @@ import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -83,5 +85,27 @@ class RegisterActivityIntegrationTest {
         Thread.sleep(2000)
 
         intended(hasComponent(MainActivity::class.java.name))
+    }
+
+    @Test
+    fun registration_whenPasswordNotInAcceptableFormat_remainsOnRegistrationPage() {
+        val email = "test@example.com"
+        val invalidPassword = "1"
+        testUserEmail = email
+
+        onView(withId(R.id.registrationFirstName)).perform(replaceText("test"))
+        onView(withId(R.id.registrationLastName)).perform(replaceText("user"))
+        onView(withId(R.id.registrationEmail)).perform(replaceText(email))
+        onView(withId(R.id.registrationPassword)).perform(replaceText(invalidPassword))
+
+        onView(withId(R.id.registrationSpinner)).perform(click())
+        onData(allOf(`is`(instanceOf(String::class.java)), `is`("Abertay University"))).perform(click())
+
+        onView(withId(R.id.registerHereButton)).perform(forceClick())
+
+        // Wait for async registration network call
+        Thread.sleep(2000)
+
+        onView(withId(R.id.registrationSpinner)).check(matches(isDisplayed()))
     }
 }
