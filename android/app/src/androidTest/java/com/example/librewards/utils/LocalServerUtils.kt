@@ -20,4 +20,10 @@ object LocalServerUtils {
 
         return ServerResponse(responseCode, connection.inputStream.bufferedReader().readText())
     }
+
+    fun delete(url: URL): ServerResponse {
+        val connection = url.openConnection() as HttpURLConnection
+        connection.requestMethod = "DELETE"
+        return ServerResponse(connection.responseCode, connection.responseMessage)
+    }
 }

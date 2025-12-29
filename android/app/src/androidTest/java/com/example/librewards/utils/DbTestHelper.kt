@@ -3,6 +3,8 @@ package com.example.librewards.utils
 import com.example.librewards.data.models.User
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.database.FirebaseDatabase
+import org.json.JSONObject
+import java.net.URL
 import java.util.concurrent.TimeUnit
 
 object DbTestHelper {
@@ -29,9 +31,12 @@ object DbTestHelper {
     }
 
     fun deleteTestUser(email: String) {
-        val db = FirebaseDatabase.getInstance()
-        val usersRef = db.reference.child("users")
-        val userId = generateIdFromKey(email)
+        val url = URL("http://10.0.2.2:8080/${generateIdFromKey(email)}/user")
+        val serverResponse = LocalServerUtils.delete(url)
+        if (serverResponse.status != 200) {
+            throw RuntimeException("Local helper returned code ${serverResponse.status}")
+        }
+    }
 
         val task = usersRef.child(userId).removeValue()
         try {

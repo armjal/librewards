@@ -15,7 +15,6 @@ import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.DbTestHelper
 import com.example.librewards.utils.ViewUtils.collapseSlidingPanel
 import com.example.librewards.utils.ViewUtils.expandSlidingPanel
-import com.example.librewards.utils.ViewUtils.finishAllActivities
 import org.hamcrest.Matchers.containsString
 import org.junit.After
 import org.junit.Before
@@ -40,10 +39,9 @@ class MainIntegrationTest {
 
     @After
     fun tearDown() {
-        finishAllActivities()
         testUserEmail?.let { email ->
+            AuthTestHelper.deleteAuth(email)
             DbTestHelper.deleteTestUser(email)
-            AuthTestHelper.deleteUser()
         }
     }
 

@@ -48,6 +48,11 @@ class LoginActivityIntegrationTest {
 
     @After
     fun tearDown() {
+        testUserEmail?.let {
+            AuthTestHelper.deleteAuth(it)
+            DbTestHelper.deleteTestUser(it)
+        }
+
         Intents.release()
     }
 
@@ -84,11 +89,6 @@ class LoginActivityIntegrationTest {
         Thread.sleep(1000)
 
         intended(hasComponent(MainActivity::class.java.name))
-
-        testUserEmail?.let { email ->
-            DbTestHelper.deleteTestUser(email)
-            AuthTestHelper.deleteUser()
-        }
     }
 
     @Test
@@ -110,10 +110,5 @@ class LoginActivityIntegrationTest {
         Thread.sleep(1000)
 
         intended(hasComponent(AdminActivity::class.java.name))
-
-        testUserEmail?.let { email ->
-            DbTestHelper.deleteTestUser(email)
-            AuthTestHelper.deleteUser()
-        }
     }
 }

@@ -19,21 +19,11 @@ object AuthTestHelper {
         return result.user
     }
 
-    fun deleteUser() {
-        val auth = FirebaseAuth.getInstance()
-        val user = auth.currentUser
-
-        if (user != null) {
-            try {
-                Tasks.await(user.delete(), 10, TimeUnit.SECONDS)
-            } catch (e: Exception) {
-                // Failed to delete, just sign out
-            }
-        }
-
-        // Ensure we are signed out
-        if (auth.currentUser != null) {
-            auth.signOut()
+    fun deleteAuth(email: String) {
+        val url = URL("http://10.0.2.2:8080/$email/auth")
+        val serverResponse = LocalServerUtils.delete(url)
+        if (serverResponse.status != 200) {
+            throw RuntimeException("Local helper returned code ${serverResponse.status}")
         }
     }
 
