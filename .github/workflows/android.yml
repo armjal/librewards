@@ -76,4 +76,5 @@ jobs:
         with:
           api-level: 29
           ram-size: 2048M
-          script: ./android/gradlew connectedCheck --stacktrace
+          cores: 4
+          script: cd android && ./gradlew connectedCheck --stacktrace
