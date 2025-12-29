@@ -43,7 +43,7 @@ class UserRepository(val usersDbRef: DatabaseReference) {
 
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                trySend(snapshot.value as String)
+                trySend(snapshot.value as? String)
             }
 
             override fun onCancelled(error: DatabaseError) {

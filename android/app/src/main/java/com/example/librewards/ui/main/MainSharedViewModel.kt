@@ -40,15 +40,15 @@ class MainSharedViewModel(val userRepo: UserRepository, val productRepo: Product
     val user: LiveData<User> = _user
 
     val userPoints: LiveData<String> = _userEmailFlow.flatMapLatest { email ->
-        userRepo.listenForUserField(email, "points").map { it!! }
+        userRepo.listenForUserField(email, "points").map { it ?: "0" }
     }.asLiveData()
 
     val studyingStatus: LiveData<String> = _userEmailFlow.flatMapLatest { email ->
-        userRepo.listenForUserField(email, "studying").map { it!! }
+        userRepo.listenForUserField(email, "studying").map { it ?: "2" }
     }.asLiveData()
 
     val redeemingRewardStatus: LiveData<String> = _userEmailFlow.flatMapLatest { email ->
-        userRepo.listenForUserField(email, "redeemingReward").map { it!! }
+        userRepo.listenForUserField(email, "redeemingReward").map { it ?: "2" }
     }.asLiveData()
 
     fun onPanelSlide(offset: Float) {
@@ -69,7 +69,14 @@ class MainSharedViewModel(val userRepo: UserRepository, val productRepo: Product
     }
 
     fun addPoints(points: Int) {
-        val updatedPoints = parseInt(userPoints.value!!) + points
+        val currentPoints = userPoints.value?.let {
+            try {
+                parseInt(it)
+            } catch (e: Exception) {
+                0
+            }
+        } ?: 0
+        val updatedPoints = currentPoints + points
         userRepo.updateField(generateIdFromKey(_userEmailFlow.value), "points", updatedPoints.toString())
     }
 
