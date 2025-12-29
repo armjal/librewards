@@ -53,7 +53,7 @@ class RegisterActivityIntegrationTest {
     }
 
     @Test
-    fun registerAndLogin_withValidCredentials_navigatesToMainActivity() {
+    fun registration_whenSuccessfullyRegistered_navigatesToMainActivity() {
         val email = "test@example.com"
         val password = "password123"
         testUserEmail = email
