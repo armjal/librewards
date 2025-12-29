@@ -17,7 +17,6 @@ import com.example.librewards.ui.admin.AdminActivity
 import com.example.librewards.ui.main.MainActivity
 import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.DbTestHelper
-import com.example.librewards.utils.ViewUtils.finishAllActivities
 import com.example.librewards.utils.ViewUtils.forceClick
 import com.google.firebase.auth.FirebaseAuth
 import org.junit.After
@@ -38,7 +37,6 @@ class LoginActivityIntegrationTest {
     @Before
     fun setup() {
         Intents.init()
-
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val packageName = instrumentation.targetContext.packageName
         val uiAutomation = instrumentation.uiAutomation
@@ -51,12 +49,6 @@ class LoginActivityIntegrationTest {
     @After
     fun tearDown() {
         Intents.release()
-        finishAllActivities()
-
-        testUserEmail?.let { email ->
-            DbTestHelper.deleteTestUser(email)
-            AuthTestHelper.deleteUser()
-        }
     }
 
     @Test
@@ -75,7 +67,7 @@ class LoginActivityIntegrationTest {
     }
 
     @Test
-    fun login_withStudentCredentials_navigatesToAdminActivity() {
+    fun login_withStudentCredentials_navigatesToMainActivity() {
         val email = "test@example.com"
         val password = "password123"
         testUserEmail = email
@@ -92,6 +84,11 @@ class LoginActivityIntegrationTest {
         Thread.sleep(1000)
 
         intended(hasComponent(MainActivity::class.java.name))
+
+        testUserEmail?.let { email ->
+            DbTestHelper.deleteTestUser(email)
+            AuthTestHelper.deleteUser()
+        }
     }
 
     @Test
@@ -113,5 +110,10 @@ class LoginActivityIntegrationTest {
         Thread.sleep(1000)
 
         intended(hasComponent(AdminActivity::class.java.name))
+
+        testUserEmail?.let { email ->
+            DbTestHelper.deleteTestUser(email)
+            AuthTestHelper.deleteUser()
+        }
     }
 }
