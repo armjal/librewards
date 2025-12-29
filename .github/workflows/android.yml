@@ -37,33 +37,33 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
 
-      # - name: Create google-services.json
-      #   run: |
-      #     # Write the multi-line JSON secret directly to the file
-      #     cat > android/app/google-services.json << 'EOF'
-      #     ${{ secrets.GOOGLE_SERVICES_JSON }}
-      #     EOF
+      - name: Create google-services.json
+        run: |
+          # Write the multi-line JSON secret directly to the file
+          cat > android/app/google-services.json << 'EOF'
+          ${{ secrets.GOOGLE_SERVICES_JSON }}
+          EOF
 
-      # - name: Authenticate to Google Cloud
-      #   uses: google-github-actions/auth@v2
-      #   with:
-      #     workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-      #     service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      # - name: Build Everything (Server & APKs)
-      #   run: ./android/gradlew :local-admin-server:installDist :app:assembleDebug :app:assembleAndroidTest -p android
+      - name: Build Local Admin Server
+        run: ./android/gradlew -p android :local-admin-server:installDist
 
-      # - name: Run Local Admin Server
-      #   env:
-      #     GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT }}
-      #     SERVICE_ACCOUNT_EMAIL: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-      #   run: |
-      #     # Start the server using the built script
-      #     ./android/local-admin-server/build/install/local-admin-server/bin/local-admin-server &
+      - name: Run Local Admin Server
+        env:
+          GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT }}
+          SERVICE_ACCOUNT_EMAIL: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+        run: |
+          # Start the server using the built script
+          ./android/local-admin-server/build/install/local-admin-server/bin/local-admin-server &
 
-      #     # Wait for server to be ready
-      #     echo "Waiting for local-admin-server to start..."
-      #     timeout 30 sh -c 'until curl -s http://localhost:8080/ > /dev/null; do sleep 1; done' || (echo "Server failed to start. Logs:" && cat android/local-admin-server/build/install/local-admin-server/bin/hs_err_pid*.log 2>/dev/null)
+          # Wait for server to be ready
+          echo "Waiting for local-admin-server to start..."
+          timeout 30 sh -c 'until curl -s http://localhost:8080/ > /dev/null; do sleep 1; done' || (echo "Server failed to start. Logs:" && cat android/local-admin-server/build/install/local-admin-server/bin/hs_err_pid*.log 2>/dev/null)
 
       - name: Enable KVM group perms
         run: |
