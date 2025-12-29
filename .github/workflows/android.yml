@@ -71,5 +71,4 @@ jobs:
           api-level: 29
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: |
-            ./android/gradlew -p android :app:connectedAndroidTest \
-              -Pandroid.testInstrumentationRunnerArguments.SERVER_URL=http://10.0.2.2:8080
+            ./android/gradlew -p android :app:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.SERVER_URL=http://10.0.2.2:8080
