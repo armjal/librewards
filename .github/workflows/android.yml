@@ -26,7 +26,7 @@ jobs:
           cache: 'gradle'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
           build-root-directory: android
 
@@ -68,7 +68,8 @@ jobs:
       - name: Run Instrumentation Tests on Android Emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 29
+          api-level: 35
+          arch: x86_64
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: |
-            ./android/gradlew -p android :app:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.SERVER_URL=http://10.0.2.2:8080
+            ./android/gradlew -p android :app:connectedDebugAndroidTest --stacktrace
