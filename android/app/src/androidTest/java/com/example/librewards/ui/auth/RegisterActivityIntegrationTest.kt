@@ -1,6 +1,8 @@
 package com.example.librewards.ui.auth
 
+import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
@@ -13,13 +15,14 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.librewards.R
-import com.example.librewards.ui.admin.AdminActivity
 import com.example.librewards.ui.main.MainActivity
 import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.DbTestHelper
 import com.example.librewards.utils.ViewUtils.finishAllActivities
 import com.example.librewards.utils.ViewUtils.forceClick
-import com.google.firebase.auth.FirebaseAuth
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.instanceOf
+import org.hamcrest.Matchers.`is`
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -28,17 +31,16 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
-class LoginActivityIntegrationTest {
+class RegisterActivityIntegrationTest {
     @Rule
     @JvmField
-    val scenarioRule = ActivityScenarioRule(LoginActivity::class.java)
+    val scenarioRule = ActivityScenarioRule(RegisterActivity::class.java)
 
     private var testUserEmail: String? = null
 
     @Before
     fun setup() {
         Intents.init()
-
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val packageName = instrumentation.targetContext.packageName
         val uiAutomation = instrumentation.uiAutomation
@@ -52,7 +54,6 @@ class LoginActivityIntegrationTest {
     fun tearDown() {
         Intents.release()
         finishAllActivities()
-
         testUserEmail?.let { email ->
             DbTestHelper.deleteTestUser(email)
             AuthTestHelper.deleteUser()
@@ -60,58 +61,51 @@ class LoginActivityIntegrationTest {
     }
 
     @Test
-    fun login_withInvalidCredentials_staysOnLoginScreen() {
-        onView(withId(R.id.loginEmail))
-            .perform(replaceText("test@test.com"))
-
-        onView(withId(R.id.loginPassword))
-            .perform(replaceText("Password123"))
-
-        onView(withId(R.id.loginButton))
-            .perform(forceClick())
-
-        Thread.sleep(1000)
-        onView(withId(R.id.loginEmail)).check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun login_withStudentCredentials_navigatesToAdminActivity() {
+    fun registration_whenSuccessfullyRegistered_navigatesToMainActivity() {
         val email = "test@example.com"
         val password = "password123"
         testUserEmail = email
 
-        AuthTestHelper.createUser(email, password)
-        DbTestHelper.createTestUser(email)
-        FirebaseAuth.getInstance().signOut()
+        onView(withId(R.id.registrationFirstName)).perform(replaceText("test"))
+        onView(withId(R.id.registrationLastName)).perform(replaceText("user"))
+        onView(withId(R.id.registrationEmail)).perform(replaceText(email))
+        onView(withId(R.id.registrationPassword)).perform(replaceText(password))
 
-        onView(withId(R.id.loginEmail)).check(matches(isDisplayed())).perform(replaceText(email))
-        onView(withId(R.id.loginPassword)).check(matches(isDisplayed())).perform(replaceText(password))
-        onView(withId(R.id.loginButton)).check(matches(isDisplayed())).perform(forceClick())
+        onView(withId(R.id.registrationSpinner)).perform(click())
+        onData(allOf(`is`(instanceOf(String::class.java)), `is`("Abertay University"))).perform(click())
+
+        onView(withId(R.id.registerHereButton)).perform(forceClick())
+
+        // Wait for async registration network call
+        Thread.sleep(2000)
+
+        intended(hasComponent(LoginActivity::class.java.name))
 
         // Wait for async login network call
-        Thread.sleep(1000)
+        Thread.sleep(2000)
 
         intended(hasComponent(MainActivity::class.java.name))
     }
 
     @Test
-    fun login_withAdminCredentials_navigatesToAdminActivity() {
-        val email = "admin@example.com"
-        val password = "password123"
+    fun registration_whenPasswordNotInAcceptableFormat_remainsOnRegistrationPage() {
+        val email = "test@example.com"
+        val invalidPassword = "1"
         testUserEmail = email
 
-        AuthTestHelper.createUser(email, password)
-        AuthTestHelper.setUserAsAdmin(email)
-        DbTestHelper.createTestUser(email)
-        FirebaseAuth.getInstance().signOut()
+        onView(withId(R.id.registrationFirstName)).perform(replaceText("test"))
+        onView(withId(R.id.registrationLastName)).perform(replaceText("user"))
+        onView(withId(R.id.registrationEmail)).perform(replaceText(email))
+        onView(withId(R.id.registrationPassword)).perform(replaceText(invalidPassword))
 
-        onView(withId(R.id.loginEmail)).check(matches(isDisplayed())).perform(replaceText(email))
-        onView(withId(R.id.loginPassword)).check(matches(isDisplayed())).perform(replaceText(password))
-        onView(withId(R.id.loginButton)).check(matches(isDisplayed())).perform(forceClick())
+        onView(withId(R.id.registrationSpinner)).perform(click())
+        onData(allOf(`is`(instanceOf(String::class.java)), `is`("Abertay University"))).perform(click())
 
-        // Wait for async login network call
-        Thread.sleep(1000)
+        onView(withId(R.id.registerHereButton)).perform(forceClick())
 
-        intended(hasComponent(AdminActivity::class.java.name))
+        // Wait for async registration network call
+        Thread.sleep(2000)
+
+        onView(withId(R.id.registrationSpinner)).check(matches(isDisplayed()))
     }
 }
