@@ -1,3 +1,11 @@
+terraform {
+  required_providers {
+    google-beta = {
+      source = "hashicorp/google-beta"
+    }
+  }
+}
+
 resource "random_id" "service_account" {
   byte_length = 4
 }
@@ -22,8 +30,4 @@ resource "google_project_iam_member" "service_account_roles" {
   project = var.project_id
   role    = each.value
   member  = "serviceAccount:${google_service_account.auth_service_account.email}"
-}
-
-output "auth_service_account_email" {
-  value = google_service_account.auth_service_account.email
 }

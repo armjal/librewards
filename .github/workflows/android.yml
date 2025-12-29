@@ -17,17 +17,86 @@ jobs:
       - name: Create local.properties for test usage
         run: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
-
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
 
       - uses: gradle/actions/setup-gradle@v3
-
       - name: Run unit tests
         run: bash -c "cd android && ./gradlew testDebugUnitTest --no-daemon"
-
       - name: Upload test report
         uses: actions/upload-artifact@v4.6.2
         with:
           name: unit_test_report
           path: android/app/build/reports/test/testDebugUnitTest/
+
+  integration-test:
+    name: Perform integration testing
+    runs-on: ubuntu-latest
+    permissions:
+       contents: 'read'
+       id-token: 'write' # Required for Workload Identity Federation
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          build-root-directory: android
+
+      - name: Create local.properties for test usage
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x android/gradlew
+
+      - name: Create google-services.json
+        run: |
+          # Write the multi-line JSON secret directly to the file
+          cat > android/app/google-services.json << 'EOF'
+          ${{ secrets.GOOGLE_SERVICES_JSON }}
+          EOF
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Build Local Admin Server
+        run: ./android/gradlew -p android :local-admin-server:installDist
+
+      - name: Run Local Admin Server
+        env:
+          GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT }}
+          SERVICE_ACCOUNT_EMAIL: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+        run: |
+          # Start the server using the built script
+          ./android/local-admin-server/build/install/local-admin-server/bin/local-admin-server &
+
+          # Wait for server to be ready
+          echo "Waiting for local-admin-server to start..."
+          timeout 30 sh -c 'until curl -s http://localhost:8080/ > /dev/null; do sleep 1; done' || (echo "Server failed to start. Logs:" && cat android/local-admin-server/build/install/local-admin-server/bin/hs_err_pid*.log 2>/dev/null)
+
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run Instrumentation Tests on Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          ram-size: 2048M
+          cores: 4
+          script: cd android && ./gradlew connectedCheck --stacktrace

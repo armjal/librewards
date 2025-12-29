@@ -12,3 +12,8 @@ variable "app_sha1_fingerprint" {
   description = "The SHA1 fingerprint of the app"
   type        = string
 }
+
+variable "github_repo" {
+  description = "The GitHub repository (format: owner/repo)"
+  type        = string
+}
