@@ -12,13 +12,12 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
-import androidx.test.runner.lifecycle.Stage
 import com.example.librewards.R
 import com.example.librewards.ui.admin.AdminActivity
 import com.example.librewards.ui.main.MainActivity
 import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.DbTestHelper
+import com.example.librewards.utils.ViewUtils.finishAllActivities
 import com.example.librewards.utils.ViewUtils.forceClick
 import com.google.firebase.auth.FirebaseAuth
 import org.junit.After
@@ -114,16 +113,5 @@ class LoginActivityIntegrationTest {
         Thread.sleep(1000)
 
         intended(hasComponent(AdminActivity::class.java.name))
-    }
-
-    private fun finishAllActivities() {
-        InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            val activities = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
-            for (activity in activities) {
-                if (!activity.isFinishing) {
-                    activity.finish()
-                }
-            }
-        }
     }
 }

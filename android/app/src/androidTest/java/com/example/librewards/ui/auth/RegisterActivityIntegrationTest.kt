@@ -12,12 +12,11 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
-import androidx.test.runner.lifecycle.Stage
 import com.example.librewards.R
 import com.example.librewards.ui.main.MainActivity
 import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.DbTestHelper
+import com.example.librewards.utils.ViewUtils.finishAllActivities
 import com.example.librewards.utils.ViewUtils.forceClick
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.instanceOf
@@ -40,6 +39,13 @@ class RegisterActivityIntegrationTest {
     @Before
     fun setup() {
         Intents.init()
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val packageName = instrumentation.targetContext.packageName
+        val uiAutomation = instrumentation.uiAutomation
+
+        // Grant location permissions
+        uiAutomation.executeShellCommand("pm grant $packageName android.permission.ACCESS_FINE_LOCATION")
+        uiAutomation.executeShellCommand("pm grant $packageName android.permission.ACCESS_COARSE_LOCATION")
     }
 
     @After
@@ -73,24 +79,9 @@ class RegisterActivityIntegrationTest {
 
         intended(hasComponent(LoginActivity::class.java.name))
 
-        onView(withId(R.id.loginEmail)).perform(replaceText(email))
-        onView(withId(R.id.loginPassword)).perform(replaceText(password))
-        onView(withId(R.id.loginButton)).perform(forceClick())
-
         // Wait for async login network call
         Thread.sleep(2000)
 
         intended(hasComponent(MainActivity::class.java.name))
-    }
-
-    private fun finishAllActivities() {
-        InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            val activities = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
-            for (activity in activities) {
-                if (!activity.isFinishing) {
-                    activity.finish()
-                }
-            }
-        }
     }
 }
