@@ -7,9 +7,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.isClickable
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
-import androidx.test.runner.lifecycle.Stage
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matcher
@@ -43,17 +40,6 @@ object ViewUtils {
 
         override fun perform(uiController: UiController, view: View) {
             (view as SlidingUpPanelLayout).panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
-        }
-    }
-
-    fun finishAllActivities() {
-        InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            val activities = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
-            for (activity in activities) {
-                if (!activity.isFinishing) {
-                    activity.finish()
-                }
-            }
         }
     }
 }

@@ -30,6 +30,14 @@ object DbTestHelper {
         Tasks.await(task, 10, TimeUnit.SECONDS)
     }
 
+    fun updateUserField(email: String, field: String, value: String) {
+        val requestBody = JSONObject().apply {
+            put("field", field)
+            put("value", value)
+        }
+        updateUserFieldThroughLocalServer(generateIdFromKey(email), requestBody)
+    }
+
     fun deleteTestUser(email: String) {
         val url = URL("http://10.0.2.2:8080/${generateIdFromKey(email)}/user")
         val serverResponse = LocalServerUtils.delete(url)
@@ -38,11 +46,13 @@ object DbTestHelper {
         }
     }
 
-        val task = usersRef.child(userId).removeValue()
-        try {
-            Tasks.await(task, 10, TimeUnit.SECONDS)
-        } catch (e: Exception) {
-            // Ignore failure during cleanup
+    private fun updateUserFieldThroughLocalServer(uid: String, requestBody: JSONObject) {
+        // Connect to local server running on host machine
+        val url = URL("http://10.0.2.2:8080/$uid/update-user-field")
+        val serverResponse = LocalServerUtils.post(url, requestBody)
+
+        if (serverResponse.status != 200) {
+            throw RuntimeException("Local helper returned code ${serverResponse.status}")
         }
     }
 }

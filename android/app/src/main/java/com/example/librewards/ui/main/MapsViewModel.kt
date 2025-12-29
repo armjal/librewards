@@ -14,16 +14,16 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
 
+class CurrentLocation(var location: Location) {
+    var latLng = LatLng(location.latitude, location.longitude)
+}
+
 class MapsViewModel(val fusedLocationClient: FusedLocationProviderClient) : ViewModel() {
-    private var _chosenLocation: Location? = null
-    private var _hasChosenLocation = MutableLiveData(false)
-    val hasChosenLocation: LiveData<Boolean> = _hasChosenLocation
-
-    private var _currentLocation: Location? = null
-
-    private var _currentLocationLatLng = MutableLiveData<LatLng>()
-    val currentLatLng: LiveData<LatLng> get() = _currentLocationLatLng
-
+    private var _chosenLocation = MutableLiveData<CurrentLocation?>(null)
+    val chosenLocation: LiveData<CurrentLocation?> = _chosenLocation
+    private var _hasChosenLocation = false
+    private var _currentLocation = MutableLiveData<CurrentLocation>()
+    val currentLocation: LiveData<CurrentLocation> = _currentLocation
     private var _distanceFromChosenLocation = MutableLiveData<Float>()
     val distance: LiveData<Float> get() = _distanceFromChosenLocation
 
@@ -31,12 +31,15 @@ class MapsViewModel(val fusedLocationClient: FusedLocationProviderClient) : View
         override fun onLocationResult(result: LocationResult) {
             result.locations.forEach { location ->
                 if (location != null) {
-                    if (_chosenLocation == null) {
-                        _chosenLocation = location
+                    if (_hasChosenLocation && _chosenLocation.value == null) {
+                        _chosenLocation.value = CurrentLocation(location)
                     }
-                    _distanceFromChosenLocation.value = _chosenLocation!!.distanceTo(location)
-                    _currentLocationLatLng.value = LatLng(location.latitude, location.longitude)
-                    _currentLocation = location
+
+                    _chosenLocation.value?.let {
+                        _distanceFromChosenLocation.value = it.location.distanceTo(location)
+                    }
+
+                    _currentLocation.value = CurrentLocation(location)
                 }
             }
         }
@@ -52,14 +55,21 @@ class MapsViewModel(val fusedLocationClient: FusedLocationProviderClient) : View
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
     }
 
+    @SuppressLint("MissingPermission")
     fun setChosenLocation() {
-        _chosenLocation = _currentLocation
-        _hasChosenLocation.value = true
-        _distanceFromChosenLocation.value = 0F
+        _hasChosenLocation = true
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null).addOnSuccessListener { location ->
+            if (location != null && _chosenLocation.value == null) {
+                _chosenLocation.value = CurrentLocation(location)
+                _distanceFromChosenLocation.value = 0f
+            }
+        }
     }
 
     fun reset() {
-        _hasChosenLocation.value = false
+        _hasChosenLocation = false
+        _chosenLocation.value = null
+        _distanceFromChosenLocation.value = 0F
     }
 
     override fun onCleared() {
