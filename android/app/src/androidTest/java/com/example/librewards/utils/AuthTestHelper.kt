@@ -4,7 +4,6 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import org.json.JSONObject
-import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.TimeUnit
 
@@ -53,17 +52,7 @@ object AuthTestHelper {
     private fun getCustomTokenFromLocalHelper(email: String): String {
         // Connect to local server running on host machine
         val url = URL("http://10.0.2.2:8080/generate-token-for-admin?email=$email")
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "POST"
-        connection.connectTimeout = 5000
-        connection.readTimeout = 5000
-
-        val responseCode = connection.responseCode
-        if (responseCode != 200) {
-            throw RuntimeException("Local helper returned code $responseCode")
-        }
-
-        val responseText = connection.inputStream.bufferedReader().readText()
-        return JSONObject(responseText).getString("customToken")
+        val serverResponse = LocalServerUtils.post(url)
+        return JSONObject(serverResponse.message).getString("customToken")
     }
 }
