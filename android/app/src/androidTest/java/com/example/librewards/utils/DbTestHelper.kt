@@ -6,7 +6,10 @@ import com.google.firebase.database.FirebaseDatabase
 import java.util.concurrent.TimeUnit
 
 object DbTestHelper {
-    fun createTestUser(email: String, firstname: String = "Test", surname: String = "User", university: String = "University of Bristol") {
+    fun createTestUser(
+        email: String, firstname: String = "Test",
+        surname: String = "User", university: String = "University of Bristol", points: String = "0",
+    ) {
         val db = FirebaseDatabase.getInstance()
         val usersRef = db.reference.child("users")
 
@@ -18,6 +21,7 @@ object DbTestHelper {
             surname = surname,
             email = email,
             university = university,
+            points = points,
         )
 
         val task = usersRef.child(userId).setValue(user)
