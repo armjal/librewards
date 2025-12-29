@@ -18,7 +18,6 @@ import com.example.librewards.R
 import com.example.librewards.ui.main.MainActivity
 import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.DbTestHelper
-import com.example.librewards.utils.ViewUtils.finishAllActivities
 import com.example.librewards.utils.ViewUtils.forceClick
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.instanceOf
@@ -53,10 +52,10 @@ class RegisterActivityIntegrationTest {
     @After
     fun tearDown() {
         Intents.release()
-        finishAllActivities()
+
         testUserEmail?.let { email ->
+            AuthTestHelper.deleteAuth(email)
             DbTestHelper.deleteTestUser(email)
-            AuthTestHelper.deleteUser()
         }
     }
 
