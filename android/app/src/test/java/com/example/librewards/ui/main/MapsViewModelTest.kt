@@ -3,21 +3,24 @@ package com.example.librewards.ui.main
 import android.location.Location
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.example.librewards.utils.MainDispatcherRule
+import com.example.librewards.utils.TestUtils
 import com.example.librewards.utils.getOrAwaitValue
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.Task
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers
 import org.mockito.Mock
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
@@ -75,9 +78,9 @@ class MapsViewModelTest {
         callbackCaptor.value.onLocationResult(locationResult)
 
         // Verify current location updated
-        val currentLatLng = viewModel.currentLatLng.getOrAwaitValue()
-        assertEquals(10.0, currentLatLng.latitude, 0.0)
-        assertEquals(20.0, currentLatLng.longitude, 0.0)
+        val currentLocation: CurrentLocation = viewModel.currentLocation.getOrAwaitValue()
+        assertEquals(10.0, currentLocation.latLng.latitude, 0.0)
+        assertEquals(20.0, currentLocation.latLng.longitude, 0.0)
     }
 
     @Test
@@ -94,16 +97,25 @@ class MapsViewModelTest {
         val locationResult = LocationResult.create(listOf(mockLocation))
         callbackCaptor.value.onLocationResult(locationResult)
 
+        // Mock the Task returned by getCurrentLocation
+        val mockTask = mock(Task::class.java) as Task<Location>
+        `when`(mockFusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null))
+            .thenReturn(mockTask)
+
+        `when`(mockTask.result).thenReturn(mockLocation)
+        TestUtils.mockTask(mockTask)
+
         // Set chosen location
         viewModel.setChosenLocation()
 
-        assertTrue(viewModel.hasChosenLocation.getOrAwaitValue())
+        assertEquals(mockLocation, viewModel.chosenLocation.getOrAwaitValue()?.location)
         assertEquals(0f, viewModel.distance.getOrAwaitValue(), 0.0f)
     }
 
     @Test
     fun `reset clears chosen location`() {
         viewModel.reset()
-        assertFalse(viewModel.hasChosenLocation.getOrAwaitValue())
+        assertNull(viewModel.chosenLocation.getOrAwaitValue())
+        assertEquals(0f, viewModel.distance.getOrAwaitValue(), 0.0f)
     }
 }

@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.widget.Chronometer.OnChronometerTickListener
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.VisibleForTesting
 import androidx.core.app.ActivityCompat
 import androidx.core.graphics.toColorInt
 import androidx.fragment.app.activityViewModels
@@ -45,7 +46,7 @@ class TimerFragment(
         MapsViewModelFactory(fusedLocationClient)
     }
     private var marker: Marker? = null
-    private lateinit var mapCircle: Circle
+    private var mapCircle: Circle? = null
     private var googleMap: GoogleMap? = null
     private var _binding: FragmentTimerBinding? = null
     private val binding get() = _binding!!
@@ -127,12 +128,12 @@ class TimerFragment(
         val redSemiTransparent = "#4dff0000".toColorInt()
         val blueSemiTransparent = "#4d318ce7".toColorInt()
         mapsViewModel.distance.observe(viewLifecycleOwner) { distance ->
-            if (distance == null || !this::mapCircle.isInitialized) return@observe
+            if (distance == null || mapCircle == null) return@observe
             if (distance > 40) {
-                mapCircle.fillColor = redSemiTransparent
+                mapCircle?.fillColor = redSemiTransparent
                 timerViewModel.reset()
             } else {
-                mapCircle.fillColor = blueSemiTransparent
+                mapCircle?.fillColor = blueSemiTransparent
             }
         }
     }
@@ -153,31 +154,28 @@ class TimerFragment(
     }
 
     private fun observeForMapDrawing() {
-        mapsViewModel.hasChosenLocation.observe(viewLifecycleOwner) { hasChosenLocation ->
-            if (hasChosenLocation) {
+        mapsViewModel.chosenLocation.observe(viewLifecycleOwner) {
+            if (it != null) {
                 googleMap?.let { map ->
-                    mapsViewModel.currentLatLng.value?.let { latLng ->
-                        drawMapCircle(latLng, map)
-                    }
+                    drawMapCircle(it.latLng, map)
                 }
             } else {
                 googleMap?.stopAnimation()
-                if (this::mapCircle.isInitialized) {
-                    mapCircle.remove()
-                }
+                mapCircle?.remove()
+                mapCircle = null
             }
         }
     }
 
     private fun observeLocationChanges() {
-        mapsViewModel.currentLatLng.observe(viewLifecycleOwner) { latLng ->
+        mapsViewModel.currentLocation.observe(viewLifecycleOwner) {
             if (marker == null) {
-                val markerOptions = MarkerOptions().position(latLng).title("I am here.")
+                val markerOptions = MarkerOptions().position(it.latLng).title("I am here.")
                 marker = googleMap?.addMarker(markerOptions)
             } else {
-                marker?.position = latLng
+                marker?.position = it.latLng
             }
-            googleMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17F))
+            googleMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(it.latLng, 17F))
         }
     }
 
@@ -257,4 +255,7 @@ class TimerFragment(
             }
         })
     }
+
+    @VisibleForTesting
+    fun getMapCircle(): Circle? = mapCircle
 }

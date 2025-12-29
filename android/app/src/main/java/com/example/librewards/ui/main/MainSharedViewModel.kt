@@ -109,6 +109,11 @@ class MainSharedViewModel(val userRepo: UserRepository, val productRepo: Product
         userRepo.stopAllListeners()
         productRepo.stopAllListeners()
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopListeningToData()
+    }
 }
 
 class MainViewModelFactory(

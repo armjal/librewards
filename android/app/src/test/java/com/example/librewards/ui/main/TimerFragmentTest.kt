@@ -14,6 +14,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.example.librewards.R
 import com.example.librewards.utils.BaseUiTest
+import com.example.librewards.utils.TestUtils
 import com.example.librewards.utils.generateIdFromKey
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -25,6 +26,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.Circle
 import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
@@ -36,6 +38,7 @@ import org.junit.After
 import org.junit.Assert
 import org.junit.Test
 import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mock
 import org.mockito.MockedStatic
 import org.mockito.Mockito
@@ -95,8 +98,11 @@ class TimerFragmentTest : BaseUiTest() {
     }
 
     private fun setupFirebase() {
+        val mockProductsRef = Mockito.mock(DatabaseReference::class.java)
         `when`(firebaseTestRule.mockRootRef.child("products"))
-            .thenReturn(Mockito.mock(DatabaseReference::class.java))
+            .thenReturn(mockProductsRef)
+        `when`(mockProductsRef.child(any())).thenReturn(mockProductsRef)
+
         `when`(firebaseTestRule.mockSpecificUserRef.child("studying")).thenReturn(mockStudyingRef)
         `when`(firebaseTestRule.mockSpecificUserRef.child("redeemingReward"))
             .thenReturn(Mockito.mock(DatabaseReference::class.java))
@@ -148,6 +154,12 @@ class TimerFragmentTest : BaseUiTest() {
             ActivityScenario.launch(MainActivity::class.java).use { scenario ->
                 scenario.onActivity { activity ->
                     setupPoints(params.initialPoints.toString())
+
+                    // Mock location call for startTimer which might trigger setChosenLocation
+                    val mockTask = Mockito.mock(Task::class.java) as Task<Location>
+                    `when`(mockFusedLocationClient.getCurrentLocation(anyInt(), ArgumentMatchers.any()))
+                        .thenReturn(mockTask)
+                    TestUtils.mockTask(mockTask)
 
                     startTimer()
 
@@ -245,8 +257,16 @@ class TimerFragmentTest : BaseUiTest() {
                 `when`(mockLocation1.distanceTo(mockLocation1)).thenReturn(0f)
                 callbackCaptor.firstValue.onLocationResult(LocationResult.create(listOf(mockLocation1)))
 
+                val mockTask = Mockito.mock(Task::class.java) as Task<Location>
+                `when`(mockFusedLocationClient.getCurrentLocation(anyInt(), ArgumentMatchers.any()))
+                    .thenReturn(mockTask)
+
+                `when`(mockTask.result).thenReturn(mockLocation1)
+                TestUtils.mockTask(mockTask)
+
                 startTimer()
 
+                ShadowLooper.runUiThreadTasks()
                 verify(mockCircle).fillColor = Color.parseColor("#4d318ce7")
 
                 ShadowSystemClock.advanceBy(Duration.ofSeconds(65))
@@ -274,6 +294,11 @@ class TimerFragmentTest : BaseUiTest() {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
                 ShadowDialog.reset()
+
+                val mockTask = Mockito.mock(Task::class.java) as Task<Location>
+                `when`(mockFusedLocationClient.getCurrentLocation(anyInt(), ArgumentMatchers.any()))
+                    .thenReturn(mockTask)
+                TestUtils.mockTask(mockTask)
 
                 startTimer()
 

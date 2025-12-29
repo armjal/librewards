@@ -52,6 +52,23 @@ fun main() {
                 }.onFailure { call.respond(mapOf("error" to it.message)) }
             }
 
+            post("/{uid}/update-user-field") {
+                val uid = call.parameters["uid"] ?: return@post call.respond(mapOf("error" to "Missing email"))
+                val json = Json.parseToJsonElement(call.receiveText()).jsonObject
+                val field = json["field"]?.toString()?.trim('"')
+                val value = json["value"]?.toString()?.trim('"')
+
+                runCatching {
+                    val db = FirebaseDatabase.getInstance()
+                    val ref = db.getReference("users").child(uid).child(field)
+                    ref.setValueAsync(value).get()
+                    call.respond(mapOf("status" to "success"))
+                }.onFailure {
+                    it.printStackTrace()
+                    call.respond(mapOf("error" to it.message))
+                }
+            }
+
             delete("/{uid}/user") {
                 val uid = call.parameters["uid"] ?: return@delete call.respond(mapOf("error" to "Missing uid"))
                 runCatching {

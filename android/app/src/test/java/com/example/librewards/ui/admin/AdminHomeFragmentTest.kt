@@ -6,6 +6,7 @@ import android.widget.EditText
 import com.example.librewards.R
 import com.example.librewards.data.models.User
 import com.example.librewards.utils.BaseUiTest
+import com.example.librewards.utils.TestUtils.mockTask
 import com.example.librewards.utils.generateIdFromKey
 import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DatabaseReference
@@ -42,6 +43,8 @@ class AdminHomeFragmentTest : BaseUiTest() {
     @Mock private lateinit var mockScanner: GmsBarcodeScanner
 
     @Mock private lateinit var mockBarcodeTask: Task<Barcode>
+
+    @Mock private lateinit var mockBarcode: Barcode
 
     private lateinit var mockedGmsBarcodeScanning: MockedStatic<GmsBarcodeScanning>
 
@@ -158,7 +161,8 @@ class AdminHomeFragmentTest : BaseUiTest() {
         mockedGmsBarcodeScanning.`when`<GmsBarcodeScanner> { GmsBarcodeScanning.getClient(any(), any()) }.thenReturn(mockScanner)
 
         `when`(mockScanner.startScan()).thenReturn(mockBarcodeTask)
-        mockTask(mockBarcodeTask)
+        `when`(mockBarcode.rawValue).thenReturn(studentId)
+        mockTask(mockBarcodeTask, mockBarcode)
     }
 
     private fun setupActiveStudent(id: String) {
