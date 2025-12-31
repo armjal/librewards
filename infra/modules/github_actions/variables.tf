@@ -7,8 +7,3 @@ variable "github_repo" {
   description = "The GitHub repository (format: owner/repo)"
   type        = string
 }
-
-variable "service_account_email" {
-  description = "The existing Service Account email to attach policies to"
-  type        = string
-}

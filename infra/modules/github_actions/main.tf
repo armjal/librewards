@@ -6,6 +6,33 @@ terraform {
   }
 }
 
+resource "google_service_account" "github_actions_sa" {
+  provider     = google-beta
+  account_id   = "github-actions-sa"
+  display_name = "GitHub Actions Service Account"
+  description  = "Service Account used by GitHub Actions for CI/CD"
+  project      = var.project_id
+}
+
+resource "google_project_iam_member" "github_actions_project_roles" {
+  provider = google-beta
+  for_each = toset([
+    "roles/firebasedatabase.admin",
+    "roles/firebaseauth.admin",
+    "roles/serviceusage.serviceUsageConsumer"
+  ])
+  project  = var.project_id
+  role     = each.key
+  member   = "serviceAccount:${google_service_account.github_actions_sa.email}"
+}
+
+resource "google_service_account_iam_member" "github_actions_token_creator_self" {
+  provider           = google-beta
+  service_account_id = google_service_account.github_actions_sa.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${google_service_account.github_actions_sa.email}"
+}
+
 resource "google_iam_workload_identity_pool" "github_pool" {
   provider                  = google-beta
   workload_identity_pool_id = "github-pool"
@@ -36,14 +63,7 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
 
 resource "google_service_account_iam_member" "workload_identity_user" {
   provider           = google-beta
-  service_account_id = "projects/${var.project_id}/serviceAccounts/${var.service_account_email}"
+  service_account_id = google_service_account.github_actions_sa.name
   role               = "roles/iam.workloadIdentityUser"
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/${var.github_repo}"
-}
-
-resource "google_service_account_iam_member" "sa_token_creator_self" {
-  provider           = google-beta
-  service_account_id = "projects/${var.project_id}/serviceAccounts/${var.service_account_email}"
-  role               = "roles/iam.serviceAccountTokenCreator"
-  member             = "serviceAccount:${var.service_account_email}"
 }
