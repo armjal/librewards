@@ -13,6 +13,11 @@ variable "app_sha1_fingerprint" {
   type        = string
 }
 
+variable "app_sha256_fingerprint" {
+  description = "The SHA256 fingerprint of the app (for App Check)"
+  type        = string
+}
+
 variable "github_repo" {
   description = "The GitHub repository (format: owner/repo)"
   type        = string
