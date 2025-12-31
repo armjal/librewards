@@ -13,9 +13,10 @@ provider "google-beta" {
 }
 
 module "project" {
-  source          = "./modules/project"
-  project_id      = var.project_id
-  billing_account = var.billing_account
+  source                 = "./modules/project"
+  project_id             = var.project_id
+  billing_account        = var.billing_account
+  app_sha256_fingerprint = var.app_sha256_fingerprint
 }
 
 module "auth" {

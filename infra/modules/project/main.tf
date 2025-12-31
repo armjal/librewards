@@ -24,7 +24,8 @@ resource "google_project_service" "default" {
     "apikeys.googleapis.com",
     "cloudfunctions.googleapis.com",
     "cloudbuild.googleapis.com",
-    "run.googleapis.com"
+    "run.googleapis.com",
+    "firebaseappcheck.googleapis.com"
   ])
   service = each.key
 }
@@ -35,8 +36,9 @@ resource "google_firebase_project" "firebase_project" {
 }
 
 resource "google_firebase_android_app" "app" {
-  provider     = google-beta
-  project      = google_firebase_project.firebase_project.project
+  provider      = google-beta
+  project       = google_firebase_project.firebase_project.project
   display_name  = "LibRewards"
   package_name  = "android.librewards"
+  sha256_hashes = [var.app_sha256_fingerprint]
 }
