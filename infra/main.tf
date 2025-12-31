@@ -52,10 +52,9 @@ module "iam" {
 }
 
 module "github_actions" {
-  source                = "./modules/github_actions"
-  project_id            = module.project.project_id
-  github_repo           = var.github_repo
-  service_account_email = module.iam.auth_service_account_email
+  source      = "./modules/github_actions"
+  project_id  = module.project.project_id
+  github_repo = var.github_repo
 }
 
 output "android_maps_api_key_string" {
@@ -67,6 +66,6 @@ output "workload_identity_provider_name" {
   value = module.github_actions.workload_identity_provider_name
 }
 
-output "auth_service_account_email" {
-  value = module.iam.auth_service_account_email
+output "github_actions_service_account_email" {
+  value = module.github_actions.github_actions_service_account_email
 }
