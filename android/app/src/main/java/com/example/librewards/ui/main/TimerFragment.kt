@@ -109,12 +109,14 @@ class TimerFragment(
         timerViewModel.state.observe(viewLifecycleOwner) { state ->
             when (state) {
                 TimerState.Started -> {
+                    Log.d(TAG, "Timer Started")
                     binding.stopwatch.base = SystemClock.elapsedRealtime()
                     binding.stopwatch.start()
                     mapsViewModel.setChosenLocation()
                 }
 
                 TimerState.Stopped, TimerState.Reset -> {
+                    Log.d(TAG, "Timer Stopped/Reset")
                     resetTimerState()
                     timerViewModel.reset()
                 }
@@ -130,9 +132,11 @@ class TimerFragment(
         mapsViewModel.distance.observe(viewLifecycleOwner) { distance ->
             if (distance == null || mapCircle == null) return@observe
             if (distance > 40) {
+                Log.d(TAG, "observeDistanceForTimer: Student has gone out of the studying zone. Setting circle to red")
                 mapCircle?.fillColor = redSemiTransparent
                 timerViewModel.reset()
             } else {
+                Log.d(TAG, "observeDistanceForTimer: Student is within the studying zone. Setting circle to blue")
                 mapCircle?.fillColor = blueSemiTransparent
             }
         }
@@ -157,9 +161,11 @@ class TimerFragment(
         mapsViewModel.chosenLocation.observe(viewLifecycleOwner) {
             if (it != null) {
                 googleMap?.let { map ->
+                    Log.d(TAG, "observeForMapDrawing: Drawing map circle, chosen location=$it")
                     drawMapCircle(it.latLng, map)
                 }
             } else {
+                Log.d(TAG, "observeForMapDrawing: chosen location is null, removing circle")
                 googleMap?.stopAnimation()
                 mapCircle?.remove()
                 mapCircle = null
@@ -169,6 +175,7 @@ class TimerFragment(
 
     private fun observeLocationChanges() {
         mapsViewModel.currentLocation.observe(viewLifecycleOwner) {
+            Log.d(TAG, "observeLocationChanges: $it")
             if (marker == null) {
                 val markerOptions = MarkerOptions().position(it.latLng).title("I am here.")
                 marker = googleMap?.addMarker(markerOptions)
@@ -237,6 +244,7 @@ class TimerFragment(
     }
 
     override fun onMapReady(map: GoogleMap) {
+        Log.d(TAG, "Map is ready")
         googleMap = map
     }
 
