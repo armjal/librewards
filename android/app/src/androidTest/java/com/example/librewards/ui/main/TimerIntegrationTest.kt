@@ -1,6 +1,7 @@
 package com.example.librewards.ui.main
 
 import android.graphics.Color
+import android.location.Location
 import android.os.SystemClock
 import android.widget.Chronometer
 import androidx.test.core.app.ActivityScenario
@@ -15,6 +16,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.example.librewards.R
 import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.DbTestHelper
+import com.google.android.gms.maps.model.LatLng
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -29,8 +31,9 @@ class TimerIntegrationTest {
         val uiAutomation = instrumentation.uiAutomation
 
         // Grant location permissions
-        uiAutomation.executeShellCommand("pm grant $packageName android.permission.ACCESS_FINE_LOCATION")
         uiAutomation.executeShellCommand("pm grant $packageName android.permission.ACCESS_COARSE_LOCATION")
+        uiAutomation.executeShellCommand("pm grant $packageName android.permission.ACCESS_FINE_LOCATION")
+        uiAutomation.executeShellCommand("appops set $packageName android:mock_location allow")
     }
 
     @After
@@ -102,6 +105,57 @@ class TimerIntegrationTest {
         scenario.close()
     }
 
+    @Test
+    fun timer_circleTurnsRed_whenLeavingStudyZone_andBlue_whenReturning() {
+        val email = "test_zone_movement@example.com"
+        val password = "password123"
+        testUserEmail = email
+
+        // 1. Create User inside the study zone (Abertay University coords)
+        val inZoneLatLng = LatLng(56.463057, -2.973966)
+
+        // Coords approx 50m away (0.00045 deg lat difference is ~50m)
+        val outZoneLatLng = LatLng(56.463457, -2.973966)
+
+        AuthTestHelper.createUser(email, password)
+        DbTestHelper.createTestUser(
+            email = email,
+            firstname = "Zone",
+            surname = "Walker",
+            university = "Abertay University",
+        )
+
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
+
+        scenario.setMockLocation(inZoneLatLng)
+
+        Thread.sleep(3000) // Wait for login
+
+        // 2. Start Timer
+        val startTime = SystemClock.elapsedRealtime()
+        DbTestHelper.updateUserField(email, "studying", "1")
+
+        scenario.assertChronometerStarted(startTime)
+
+        // Wait for initial map setup and "blue" state (Inside zone)
+        Thread.sleep(3000)
+        scenario.assertCircleShownOrColour("blue")
+
+        // 3. Move OUT of the zone
+        scenario.setMockLocation(outZoneLatLng)
+
+        Thread.sleep(3000) // Wait for app to detect location change
+        scenario.assertCircleShownOrColour("red")
+
+        // 4. Move BACK INTO the zone
+        scenario.setMockLocation(inZoneLatLng)
+
+        Thread.sleep(3000) // Wait for app to detect return
+        scenario.assertCircleShownOrColour("blue")
+
+        scenario.close()
+    }
+
     private fun ActivityScenario<MainActivity>.assertCircleShownOrColour(colour: String?): ActivityScenario<MainActivity>? = onActivity {
         val circle = (it.supportFragmentManager.fragments.find { f -> f is TimerFragment } as? TimerFragment)?.getMapCircle()
         val colourMap = mapOf(
@@ -122,6 +176,27 @@ class TimerIntegrationTest {
         val base = chronometer.base
         if (base < minTimestamp) {
             throw AssertionError("Chronometer base ($base) is older than start time ($minTimestamp). Diff: ${minTimestamp - base}")
+        }
+    }
+
+    private fun ActivityScenario<MainActivity>.setMockLocation(latLng: LatLng) {
+        this.onActivity { activity ->
+            val fragment = activity.supportFragmentManager.fragments.firstOrNull { it is TimerFragment } as? TimerFragment
+            fragment?.let {
+                val appFusedLocationClient = it.getMapsViewModelTest().fusedLocationClient
+
+                appFusedLocationClient.setMockMode(true)
+
+                val mockLocation = Location("fused").apply {
+                    latitude = latLng.latitude
+                    longitude = latLng.longitude
+                    accuracy = 5f
+                    time = System.currentTimeMillis()
+                    elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+                }
+
+                appFusedLocationClient.setMockLocation(mockLocation)
+            }
         }
     }
 }

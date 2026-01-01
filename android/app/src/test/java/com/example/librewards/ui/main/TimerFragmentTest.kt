@@ -267,17 +267,18 @@ class TimerFragmentTest : BaseUiTest() {
                 startTimer()
 
                 ShadowLooper.runUiThreadTasks()
-                verify(mockCircle).fillColor = Color.parseColor("#4d318ce7")
+                val blue = "#4d318ce7"
+                verify(mockCircle).fillColor = Color.parseColor(blue)
 
                 ShadowSystemClock.advanceBy(Duration.ofSeconds(65))
 
-                `when`(mockLocation2.latitude).thenReturn(10.0005)
-                `when`(mockLocation2.longitude).thenReturn(10.0005)
-                `when`(mockLocation1.distanceTo(mockLocation2)).thenReturn(50f)
+                `when`(mockLocation2.latitude).thenReturn(11.0000)
+                `when`(mockLocation2.longitude).thenReturn(11.0000)
+                `when`(mockLocation1.distanceTo(mockLocation2)).thenReturn(70f)
                 callbackCaptor.firstValue.onLocationResult(LocationResult.create(listOf(mockLocation2)))
                 ShadowLooper.runUiThreadTasks()
 
-                verify(mockCircle).fillColor = Color.parseColor("#4dff0000")
+                verify(mockCircle).remove()
 
                 verify(mockStudyingRef).setValue("2")
 
