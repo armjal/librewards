@@ -57,6 +57,7 @@ class RegisterActivityIntegrationTest {
             AuthTestHelper.deleteAuth(email)
             DbTestHelper.deleteTestUser(email)
         }
+        testUserEmail = null
     }
 
     @Test
@@ -90,7 +91,6 @@ class RegisterActivityIntegrationTest {
     fun registration_whenPasswordNotInAcceptableFormat_remainsOnRegistrationPage() {
         val email = "test@example.com"
         val invalidPassword = "1"
-        testUserEmail = email
 
         onView(withId(R.id.registrationFirstName)).perform(replaceText("test"))
         onView(withId(R.id.registrationLastName)).perform(replaceText("user"))

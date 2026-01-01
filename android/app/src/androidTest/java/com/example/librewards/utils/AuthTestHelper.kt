@@ -23,7 +23,7 @@ object AuthTestHelper {
         val url = URL("http://10.0.2.2:8080/$email/auth")
         val serverResponse = LocalServerUtils.delete(url)
         if (serverResponse.status != 200) {
-            throw RuntimeException("Local helper returned code ${serverResponse.status}")
+            throw RuntimeException("Delete Auth: Local helper returned code ${serverResponse.status}")
         }
     }
 
@@ -33,7 +33,7 @@ object AuthTestHelper {
 
             // Sign in with the custom token to apply the admin claim
             val auth = FirebaseAuth.getInstance()
-            Tasks.await(auth.signInWithCustomToken(customToken), 10, TimeUnit.SECONDS)
+            Tasks.await(auth.signInWithCustomToken(customToken), 20, TimeUnit.SECONDS)
         } catch (e: Exception) {
             throw RuntimeException("Failed to set admin via local server. Ensure :local-admin-server is running.", e)
         }
@@ -43,6 +43,9 @@ object AuthTestHelper {
         // Connect to local server running on host machine
         val url = URL("http://10.0.2.2:8080/generate-token-for-admin?email=$email")
         val serverResponse = LocalServerUtils.post(url)
+        if (serverResponse.status != 200) {
+            throw RuntimeException("Get Custom Token: Local helper returned code ${serverResponse.status}")
+        }
         return JSONObject(serverResponse.message).getString("customToken")
     }
 }

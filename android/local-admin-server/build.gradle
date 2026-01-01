@@ -2,11 +2,18 @@ plugins {
     id 'java-library'
     id 'org.jetbrains.kotlin.jvm'
     id 'application'
+    id "org.jlleitschuh.gradle.ktlint" version "14.0.1"
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+}
+
+ktlint {
+    enableExperimentalRules = true
+    android = true
+    verbose = true
 }
 
 application {
@@ -17,11 +24,11 @@ dependencies {
     implementation("com.google.firebase:firebase-admin:9.2.0")
 
     // LOCAL SERVER
-    implementation("io.ktor:ktor-server-core:2.3.0")
-    implementation("io.ktor:ktor-server-netty:2.3.0")
-    implementation("io.ktor:ktor-server-content-negotiation:2.3.0")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.0")
-    implementation "ch.qos.logback:logback-classic:1.4.6"
+    implementation("io.ktor:ktor-server-core:3.3.3")
+    implementation("io.ktor:ktor-server-netty:3.3.3")
+    implementation("io.ktor:ktor-server-content-negotiation:3.3.3")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.3.3")
+    implementation "ch.qos.logback:logback-classic:1.5.23"
 
     // Dotenv
     implementation("io.github.cdimascio:dotenv-java:3.2.0")

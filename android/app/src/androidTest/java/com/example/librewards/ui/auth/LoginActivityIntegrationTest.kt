@@ -107,7 +107,7 @@ class LoginActivityIntegrationTest {
         onView(withId(R.id.loginButton)).check(matches(isDisplayed())).perform(forceClick())
 
         // Wait for async login network call
-        Thread.sleep(1000)
+        Thread.sleep(5000)
 
         intended(hasComponent(AdminActivity::class.java.name))
     }
