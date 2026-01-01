@@ -131,9 +131,10 @@ class TimerFragment(
         val blueSemiTransparent = "#4d318ce7".toColorInt()
         mapsViewModel.distance.observe(viewLifecycleOwner) { distance ->
             if (distance == null || mapCircle == null) return@observe
-            if (distance > 40) {
+            if (distance > 40 && distance < 60) {
                 Log.d(TAG, "observeDistanceForTimer: Student has gone out of the studying zone. Setting circle to red")
                 mapCircle?.fillColor = redSemiTransparent
+            } else if (distance > 60) {
                 timerViewModel.reset()
             } else {
                 Log.d(TAG, "observeDistanceForTimer: Student is within the studying zone. Setting circle to blue")
@@ -161,7 +162,10 @@ class TimerFragment(
         mapsViewModel.chosenLocation.observe(viewLifecycleOwner) {
             if (it != null) {
                 googleMap?.let { map ->
-                    Log.d(TAG, "observeForMapDrawing: Drawing map circle, chosen location=$it")
+                    Log.d(
+                        TAG,
+                        "observeForMapDrawing: Drawing map circle, chosen location= Lat: ${it.latLng.latitude} Lng: ${it.latLng.longitude}",
+                    )
                     drawMapCircle(it.latLng, map)
                 }
             } else {
@@ -266,4 +270,7 @@ class TimerFragment(
 
     @VisibleForTesting
     fun getMapCircle(): Circle? = mapCircle
+
+    @VisibleForTesting
+    fun getMapsViewModelTest(): MapsViewModel = mapsViewModel
 }
