@@ -17,17 +17,15 @@ jobs:
       - name: Create local.properties for test usage
         run: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
 
-      - uses: gradle/actions/setup-gradle@v3
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Run unit tests
         run: bash -c "cd android && ./gradlew testDebugUnitTest --no-daemon"
-      - name: Upload test report
-        uses: actions/upload-artifact@v4.6.2
-        with:
-          name: unit_test_report
-          path: android/app/build/reports/test/testDebugUnitTest/
 
   integration-test:
     name: Perform integration testing
@@ -49,12 +47,11 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          build-root-directory: android
 
       - name: Create local.properties for test usage
         run: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+          echo "maps.api_key=${{ secrets.GOOGLE_MAPS_API_KEY }}" >> android/local.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
@@ -79,6 +76,7 @@ jobs:
         env:
           GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT }}
           SERVICE_ACCOUNT_EMAIL: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          REALTIME_DB_URL: ${{ secrets.REALTIME_DB_URL }}
         run: |
           # Start the server using the built script
           ./android/local-admin-server/build/install/local-admin-server/bin/local-admin-server &
@@ -96,7 +94,10 @@ jobs:
       - name: Run Instrumentation Tests on Android Emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 29
-          ram-size: 2048M
-          cores: 4
-          script: cd android && ./gradlew connectedCheck --stacktrace
+          api-level: 31
+          target: google_apis_playstore
+          arch: x86_64
+          profile: pixel
+          ram-size: 4096M
+          script: |
+            cd android && ./gradlew connectedCheck --stacktrace
