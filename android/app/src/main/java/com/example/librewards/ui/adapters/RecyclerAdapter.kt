@@ -1,5 +1,6 @@
 package com.example.librewards.ui.adapters
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,7 +25,20 @@ class RecyclerAdapter(
         val product: Product = list[position].product
         holder.itemTitle.text = product.productName
         (product.productCost + " points").also { holder.itemDetail.text = it }
-        Picasso.get().load(product.productImageUrl).into(holder.itemImage)
+        Picasso.get().load(product.productImageUrl)
+            .into(
+                holder.itemImage,
+                object : com.squareup.picasso.Callback {
+                    override fun onSuccess() {
+                        Log.d("RecyclerAdapter", "Picasso loaded image for ${product.productName}")
+                        holder.itemImage.tag = product.productName
+                    }
+
+                    override fun onError(e: Exception?) {
+                        Log.e("RecyclerAdapter", "Picasso failed to load image for ${product.productName}", e)
+                    }
+                },
+            )
     }
 
     fun updateList(newList: List<ProductEntry>) {

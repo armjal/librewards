@@ -7,19 +7,6 @@ import org.json.JSONObject
 import java.net.URL
 
 object StorageTestHelper {
-    val products = listOf(
-        Product(
-            productName = "Snickers",
-            productCost = "20",
-            productImageUrl = "",
-        ),
-        Product(
-            productName = "Coffee",
-            productCost = "10",
-            productImageUrl = "",
-        ),
-    )
-
     fun createProduct(university: String, product: Product, productImageBase64Encoded: String) {
         val encodedUniversity = university.replace(" ", "%20")
         val createProductUrl = URL("http://10.0.2.2:8080/$encodedUniversity/product")
@@ -35,7 +22,7 @@ object StorageTestHelper {
         }
     }
 
-    fun createTestProducts(university: String = "University of Integration Tests") {
+    fun createTestProducts(university: String = "University of Integration Tests", products: List<Product>) {
         val context = getInstrumentation().context
 
         for (product in products) {
