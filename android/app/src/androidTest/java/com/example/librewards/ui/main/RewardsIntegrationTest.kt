@@ -14,7 +14,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withTagValue
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import com.example.librewards.R
 import com.example.librewards.data.models.Product
 import com.example.librewards.ui.adapters.RecyclerAdapter
@@ -46,7 +46,7 @@ class RewardsIntegrationTest {
 
     @Before
     fun setup() {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val instrumentation = getInstrumentation()
         val packageName = instrumentation.targetContext.packageName
         val uiAutomation = instrumentation.uiAutomation
 
@@ -111,6 +111,52 @@ class RewardsIntegrationTest {
 
         val newPointsAfterPurchase = "480"
         onView(withId(R.id.rewardsPoints)).check(matches(withText(newPointsAfterPurchase)))
+
+        scenario.close()
+    }
+
+    @Test
+    fun rewards_userCannotRedeem_whenFundsAreInsufficient() {
+        val email = "test_rewards@example.com"
+        val password = "password123"
+        val firstName = "Rewards"
+        val lastName = "Tester"
+        val initialPoints = "5"
+        testUserEmail = email
+
+        AuthTestHelper.createUser(email, password)
+        DbTestHelper.createTestUser(
+            email = email,
+            firstname = firstName,
+            surname = lastName,
+            university = testUniversity,
+            points = initialPoints,
+        )
+
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
+        Thread.sleep(3000)
+
+        onView(withId(R.id.viewPager)).perform(swipeLeft())
+        Thread.sleep(1000)
+
+        onView(withId(R.id.rewardsRecycler)).perform(
+            RecyclerViewActions.actionOnItem<RecyclerAdapter.ViewHolder>(
+                hasDescendant(withText("Coffee")), click(),
+            ),
+        )
+
+        Thread.sleep(1000)
+
+        onView(withId(R.id.popupText)).check(matches(withText("Coffee")))
+        onView(withId(R.id.popupCost)).check(matches(withText("10 points")))
+        onView(withId(R.id.popupImageView)).check(matches(withTagValue(`is`("Coffee"))))
+        onView(withId(R.id.popupQr)).check(matches(isDisplayed()))
+
+        DbTestHelper.updateUserField(testUserEmail!!, "redeemingReward", "1")
+
+        onView(withId(R.id.closeBtn)).perform(click())
+        onView(withId(R.id.popupText)).check(doesNotExist())
+        onView(withId(R.id.rewardsPoints)).check(matches(withText(initialPoints)))
 
         scenario.close()
     }
