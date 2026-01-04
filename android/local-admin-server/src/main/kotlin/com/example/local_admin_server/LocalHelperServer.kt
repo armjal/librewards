@@ -134,6 +134,10 @@ fun main() {
                     }
                     db.getReference("products").child(university).removeValueAsync().get()
                     call.respond(mapOf("status" to "success"))
+                }.onFailure {
+                    println("Error deleting products: ${it.message}")
+                    it.printStackTrace()
+                    call.respond(HttpStatusCode.InternalServerError, mapOf("error" to it.message))
                 }
             }
 
