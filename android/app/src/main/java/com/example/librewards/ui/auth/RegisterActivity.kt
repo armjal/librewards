@@ -1,6 +1,5 @@
 package com.example.librewards.ui.auth
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -13,6 +12,7 @@ import com.example.librewards.data.models.User
 import com.example.librewards.data.repositories.UserRepository
 import com.example.librewards.data.resources.universities
 import com.example.librewards.databinding.ActivityRegisterBinding
+import com.example.librewards.ui.main.MainActivity
 import com.example.librewards.utils.getDbReference
 import com.example.librewards.utils.startLibRewardsActivity
 import com.example.librewards.utils.toastMessage
@@ -91,9 +91,11 @@ class RegisterActivity : AppCompatActivity() {
         registerViewModel.registerStatus.observe(this) { status ->
             when (status) {
                 RegisterStatus.Registered -> {
-                    val intent = Intent(this, LoginActivity::class.java)
-                    startActivity(intent)
-                    finish()
+                    startLibRewardsActivity(MainActivity::class.java)
+                }
+
+                RegisterStatus.RegisteredWithoutLogin -> {
+                    startLibRewardsActivity(LoginActivity::class.java)
                 }
 
                 RegisterStatus.Failed -> {

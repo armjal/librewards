@@ -7,10 +7,12 @@ import android.widget.Spinner
 import android.widget.TextView
 import com.example.librewards.R
 import com.example.librewards.data.resources.universities
+import com.example.librewards.ui.main.MainActivity
 import com.example.librewards.utils.BaseUiTest
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.AuthResult
 import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.Test
 import org.mockito.ArgumentMatchers
 import org.mockito.Mock
@@ -21,6 +23,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowLooper
 import org.robolectric.shadows.ShadowToast
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class RegisterActivityTest : BaseUiTest() {
     @Mock
     private lateinit var mockAuthResultTask: Task<AuthResult>
@@ -76,7 +79,7 @@ class RegisterActivityTest : BaseUiTest() {
     }
 
     @Test
-    fun `successful registration navigates to LoginActivity`() {
+    fun `successful registration navigates to MainActivity`() {
         `when`(mockAuthResultTask.isSuccessful).thenReturn(true)
 
         launchActivity<RegisterActivity> {
@@ -95,6 +98,29 @@ class RegisterActivityTest : BaseUiTest() {
             verify(firebaseTestRule.mockUsersRef).child(any())
 
             // Verify navigation
+            val expectedIntent = Intent(it, MainActivity::class.java)
+            val actualIntent = shadowOf(it).nextStartedActivity
+            assertEquals(expectedIntent.component, actualIntent.component)
+        }
+    }
+
+    @Test
+    fun `successful registration without login navigates to LoginActivity`() {
+        `when`(mockAuthResultTask.isSuccessful).thenReturn(true)
+        `when`(mockAuthResult.user).thenReturn(null)
+        `when`(firebaseTestRule.mockFirebaseAuth.currentUser).thenReturn(null)
+
+        launchActivity<RegisterActivity> {
+            it.findViewById<EditText>(R.id.registrationFirstName).setText("John")
+            it.findViewById<EditText>(R.id.registrationLastName).setText("Doe")
+            it.findViewById<EditText>(R.id.registrationEmail).setText("john@example.com")
+            it.findViewById<EditText>(R.id.registrationPassword).setText("password123")
+            it.findViewById<Spinner>(R.id.registrationSpinner).setSelection(1)
+
+            it.findViewById<TextView>(R.id.registerHereButton).performClick()
+
+            ShadowLooper.runUiThreadTasks()
+
             val expectedIntent = Intent(it, LoginActivity::class.java)
             val actualIntent = shadowOf(it).nextStartedActivity
             assertEquals(expectedIntent.component, actualIntent.component)
