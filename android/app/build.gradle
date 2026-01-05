@@ -131,6 +131,7 @@ dependencies {
     androidTestImplementation "androidx.test:runner:1.7.0"
     androidTestImplementation "androidx.test:rules:1.7.0"
     androidTestImplementation "androidx.test:core:1.7.0"
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.7.0'
 
     // Android Test Orchestrator
     androidTestUtil "androidx.test:orchestrator:1.5.1"
