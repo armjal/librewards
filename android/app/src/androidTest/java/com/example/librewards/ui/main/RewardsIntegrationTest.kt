@@ -21,6 +21,7 @@ import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.BaseIntegrationTest
 import com.example.librewards.utils.DbTestHelper
 import com.example.librewards.utils.StorageTestHelper
+import com.example.librewards.utils.ViewUtils.forceClick
 import org.hamcrest.Matchers.`is`
 import org.junit.After
 import org.junit.Before
@@ -74,33 +75,44 @@ class RewardsIntegrationTest : BaseIntegrationTest() {
         )
 
         val scenario = ActivityScenario.launch(MainActivity::class.java)
-        Thread.sleep(3000)
+
+        // Wait for data load
+        waitForCondition {
+            onView(withId(R.id.usersPoints)).check(matches(isDisplayed()))
+        }
 
         onView(withId(R.id.viewPager)).perform(swipeLeft())
-        Thread.sleep(1000)
 
-        onView(withId(R.id.rewardsPoints)).check(matches(withText(initialPoints)))
+        // Wait for Rewards fragment to be visible
+        waitForCondition {
+            onView(withId(R.id.rewardsPoints)).check(matches(withText(initialPoints)))
+        }
 
-        onView(withId(R.id.rewardsRecycler)).perform(
-            RecyclerViewActions.actionOnItem<RecyclerAdapter.ViewHolder>(
-                hasDescendant(withText("Snickers")), click(),
-            ),
-        )
+        waitForCondition {
+            onView(withId(R.id.rewardsRecycler)).perform(
+                RecyclerViewActions.actionOnItem<RecyclerAdapter.ViewHolder>(
+                    hasDescendant(withText("Snickers")), forceClick(),
+                ),
+            )
+        }
 
-        Thread.sleep(1000)
-
-        onView(withId(R.id.popupText)).check(matches(withText("Snickers")))
-        onView(withId(R.id.popupCost)).check(matches(withText("20 points")))
-        onView(withId(R.id.popupImageView)).check(matches(withTagValue(`is`("Snickers"))))
-        onView(withId(R.id.popupQr)).check(matches(isDisplayed()))
-
+        // Wait for popup
+        waitForCondition {
+            onView(withId(R.id.popupText)).check(matches(withText("Snickers")))
+            onView(withId(R.id.popupCost)).check(matches(withText("20 points")))
+            onView(withId(R.id.popupImageView)).check(matches(withTagValue(`is`("Snickers"))))
+            onView(withId(R.id.popupQr)).check(matches(isDisplayed()))
+        }
         DbTestHelper.updateUserField(testUserEmail!!, "redeemingReward", "1")
 
         onView(withId(R.id.closeBtn)).perform(click())
-        onView(withId(R.id.popupText)).check(doesNotExist())
+
+        waitForCondition { onView(withId(R.id.popupText)).check(doesNotExist()) }
 
         val newPointsAfterPurchase = "480"
-        onView(withId(R.id.rewardsPoints)).check(matches(withText(newPointsAfterPurchase)))
+        waitForCondition {
+            onView(withId(R.id.rewardsPoints)).check(matches(withText(newPointsAfterPurchase)))
+        }
 
         scenario.close()
     }
@@ -124,29 +136,39 @@ class RewardsIntegrationTest : BaseIntegrationTest() {
         )
 
         val scenario = ActivityScenario.launch(MainActivity::class.java)
-        Thread.sleep(3000)
+
+        // Wait for data load
+        waitForCondition { onView(withId(R.id.usersPoints)).check(matches(isDisplayed())) }
 
         onView(withId(R.id.viewPager)).perform(swipeLeft())
-        Thread.sleep(1000)
 
-        onView(withId(R.id.rewardsRecycler)).perform(
-            RecyclerViewActions.actionOnItem<RecyclerAdapter.ViewHolder>(
-                hasDescendant(withText("Coffee")), click(),
-            ),
-        )
+        // Wait for Rewards fragment to be visible
+        waitForCondition { onView(withId(R.id.rewardsPoints)).check(matches(isDisplayed())) }
 
-        Thread.sleep(1000)
+        waitForCondition {
+            onView(withId(R.id.rewardsRecycler)).perform(
+                RecyclerViewActions.actionOnItem<RecyclerAdapter.ViewHolder>(
+                    hasDescendant(withText("Coffee")), forceClick(),
+                ),
+            )
+        }
 
-        onView(withId(R.id.popupText)).check(matches(withText("Coffee")))
-        onView(withId(R.id.popupCost)).check(matches(withText("10 points")))
-        onView(withId(R.id.popupImageView)).check(matches(withTagValue(`is`("Coffee"))))
-        onView(withId(R.id.popupQr)).check(matches(isDisplayed()))
+        // Wait for popup
+        waitForCondition {
+            onView(withId(R.id.popupText)).check(matches(withText("Coffee")))
+            onView(withId(R.id.popupCost)).check(matches(withText("10 points")))
+            onView(withId(R.id.popupImageView)).check(matches(withTagValue(`is`("Coffee"))))
+            onView(withId(R.id.popupQr)).check(matches(isDisplayed()))
+        }
 
         DbTestHelper.updateUserField(testUserEmail!!, "redeemingReward", "1")
 
         onView(withId(R.id.closeBtn)).perform(click())
-        onView(withId(R.id.popupText)).check(doesNotExist())
-        onView(withId(R.id.rewardsPoints)).check(matches(withText(initialPoints)))
+
+        waitForCondition {
+            onView(withId(R.id.popupText)).check(doesNotExist())
+            onView(withId(R.id.rewardsPoints)).check(matches(withText(initialPoints)))
+        }
 
         scenario.close()
     }

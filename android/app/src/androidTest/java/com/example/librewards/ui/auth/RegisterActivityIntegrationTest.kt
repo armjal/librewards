@@ -61,10 +61,8 @@ class RegisterActivityIntegrationTest : BaseIntegrationTest() {
 
         onView(withId(R.id.registerHereButton)).perform(forceClick())
 
-        // Wait for async registration network call
-        Thread.sleep(2000)
-
-        intended(hasComponent(MainActivity::class.java.name))
+        // Wait for async registration network call and navigation
+        waitForCondition { intended(hasComponent(MainActivity::class.java.name)) }
     }
 
     @Test
@@ -82,8 +80,8 @@ class RegisterActivityIntegrationTest : BaseIntegrationTest() {
 
         onView(withId(R.id.registerHereButton)).perform(forceClick())
 
-        // Wait for async registration network call
-        Thread.sleep(2000)
+        // Ensure we are still on the registration screen
+        waitForCondition { onView(withId(R.id.registrationSpinner)).check(matches(isDisplayed())) }
 
         onView(withId(R.id.registrationSpinner)).check(matches(isDisplayed()))
     }
