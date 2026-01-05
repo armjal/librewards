@@ -1,6 +1,7 @@
 package com.example.local_admin_server
 
 import com.google.auth.oauth2.GoogleCredentials
+import com.google.cloud.storage.Bucket
 import com.google.cloud.storage.Storage
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
@@ -25,6 +26,10 @@ import kotlinx.serialization.json.jsonObject
 import java.net.URLEncoder
 import java.util.UUID
 
+private lateinit var dbInstance: FirebaseDatabase
+private lateinit var storageBucket: Bucket
+private lateinit var authInstance: FirebaseAuth
+
 fun Application.module() {
     println("Starting LocalHelperServer...")
     install(ContentNegotiation) { json() }
@@ -47,7 +52,7 @@ private fun Application.setupRouting() {
             val university = call.parameters["university"]
             val productName = json["productName"]?.toString()?.trim('"')
             val productCost = json["productCost"]?.toString()?.trim('"')
-            val productImageBase64 = json["productImageBase64"]?.toString()?.trim('"') ?: json["image"]?.toString()?.trim('"')
+            val productImageBase64 = json["productImageBase64"]?.toString()?.trim('"')
 
             if (university == null || productName == null || productCost == null || productImageBase64 == null) {
                 println("Error: Missing fields")
@@ -58,7 +63,7 @@ private fun Application.setupRouting() {
                 val productImageBytes = java.util.Base64.getDecoder().decode(productImageBase64)
                 val objectName = "$university/images/$productName"
 
-                val blob = StorageClient.getInstance().bucket().create(
+                val blob = storageBucket.create(
                     objectName,
                     productImageBytes,
                     "image/jpeg",
@@ -70,19 +75,20 @@ private fun Application.setupRouting() {
                     .build()
                     .update()
 
-                val encodedPath = URLEncoder.encode(blob.name, "UTF-8")
+                val encodedPath = URLEncoder.encode(blob?.name, "UTF-8")
                 val downloadUrl =
-                    "https://firebasestorage.googleapis.com/v0/b/${StorageClient.getInstance().bucket().name}/o/$encodedPath?alt=media&token=$token"
+                    "https://firebasestorage.googleapis.com/v0/b/${
+                        StorageClient.getInstance().bucket().name
+                    }/o/$encodedPath?alt=media&token=$token"
 
-                val db = FirebaseDatabase.getInstance()
-                val ref = db.getReference("products").child(university).push()
+                val productDbRef = dbInstance.getReference("products")?.child(university)?.push()
                 val productData = mapOf(
                     "productName" to productName,
                     "productCost" to productCost,
                     "productImageUrl" to downloadUrl,
                 )
-                ref.setValueAsync(productData).get()
-                call.respond(mapOf("status" to "success", "productId" to ref.key))
+                productDbRef?.setValueAsync(productData)?.get()
+                call.respond(mapOf("status" to "success", "productId" to productDbRef?.key))
             }.onFailure {
                 println("Error creating product: ${it.message}")
                 it.printStackTrace()
@@ -97,11 +103,7 @@ private fun Application.setupRouting() {
             if (university == null) return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing university"))
 
             runCatching {
-                val db = FirebaseDatabase.getInstance()
-                val storage = StorageClient.getInstance()
-                val bucket = storage.bucket()
-
-                val blobs = bucket.list(
+                val blobs = storageBucket.list(
                     Storage.BlobListOption.prefix("$university/images/"),
                 ).iterateAll()
 
@@ -109,7 +111,7 @@ private fun Application.setupRouting() {
                     println("Deleting: ${blob.name}")
                     blob.delete()
                 }
-                db.getReference("products").child(university).removeValueAsync().get()
+                dbInstance.getReference("products").child(university).removeValueAsync().get()
                 call.respond(mapOf("status" to "success"))
             }.onFailure {
                 println("Error deleting products: ${it.message}")
@@ -127,11 +129,10 @@ private fun Application.setupRouting() {
             }
 
             runCatching {
-                val auth = FirebaseAuth.getInstance()
-                val uid = auth.getUserByEmail(email).uid
-                auth.setCustomUserClaims(uid, mapOf("admin" to true))
+                val uid = authInstance.getUserByEmail(email).uid
+                authInstance.setCustomUserClaims(uid, mapOf("admin" to true))
 
-                val token = auth.createCustomToken(uid, mapOf("admin" to true))
+                val token = authInstance.createCustomToken(uid, mapOf("admin" to true))
                 call.respond(mapOf("customToken" to token))
             }.onFailure {
                 println("Error generating token: ${it.message}")
@@ -154,9 +155,8 @@ private fun Application.setupRouting() {
             if (field == null) return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing field"))
 
             runCatching {
-                val db = FirebaseDatabase.getInstance()
-                val ref = db.getReference("users").child(uid).child(field)
-                ref.setValueAsync(value).get()
+                val usersDbRef = dbInstance.getReference("users").child(uid).child(field)
+                usersDbRef.setValueAsync(value).get()
                 call.respond(mapOf("status" to "success"))
             }.onFailure {
                 println("Error updating user field: ${it.message}")
@@ -171,8 +171,7 @@ private fun Application.setupRouting() {
             if (uid == null) return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing uid"))
 
             runCatching {
-                val db = FirebaseDatabase.getInstance()
-                db.getReference("users").child(uid).removeValueAsync().get()
+                dbInstance.getReference("users").child(uid).removeValueAsync().get()
                 call.respond(mapOf("status" to "success"))
             }.onFailure {
                 println("Error deleting user DB entry: ${it.message}")
@@ -187,9 +186,8 @@ private fun Application.setupRouting() {
             if (email == null) return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing email"))
 
             runCatching {
-                val auth = FirebaseAuth.getInstance()
-                val authUid = auth.getUserByEmail(email).uid
-                auth.deleteUser(authUid)
+                val authUid = authInstance.getUserByEmail(email).uid
+                authInstance.deleteUser(authUid)
                 call.respond(mapOf("status" to "success"))
             }.onFailure {
                 println("Error deleting auth user: ${it.message}")
@@ -222,6 +220,10 @@ private fun initialiseFirebase() {
         } else {
             println("Firebase App already initialized.")
         }
+
+        dbInstance = FirebaseDatabase.getInstance()
+        storageBucket = StorageClient.getInstance().bucket()
+        authInstance = FirebaseAuth.getInstance()
     }.onFailure {
         println("Firebase init failed: ${it.message}")
         it.printStackTrace()
