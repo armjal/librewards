@@ -79,11 +79,6 @@ class RegisterActivityIntegrationTest {
         // Wait for async registration network call
         Thread.sleep(2000)
 
-        intended(hasComponent(LoginActivity::class.java.name))
-
-        // Wait for async login network call
-        Thread.sleep(2000)
-
         intended(hasComponent(MainActivity::class.java.name))
     }
 

@@ -12,6 +12,8 @@ import com.google.firebase.auth.FirebaseAuth
 sealed class RegisterStatus() {
     object Registered : RegisterStatus()
 
+    object RegisteredWithoutLogin : RegisterStatus()
+
     object Failed : RegisterStatus()
 }
 
@@ -25,10 +27,13 @@ class RegisterViewModel(val auth: FirebaseAuth, val userRepo: UserRepository) : 
 
     fun signUp(user: User, password: String) {
         auth.createUserWithEmailAndPassword(user.email, password).addOnCompleteListener {
-            if (it.isSuccessful) {
+            if (it.isSuccessful && auth.currentUser != null) {
                 _registerStatus.value = RegisterStatus.Registered
                 userRepo.addUser(user)
                 Log.d(TAG, "createUserWithEmail:success")
+            } else if (it.isSuccessful) {
+                Log.d(TAG, "createUserWithEmail:success. Not logged in.")
+                _registerStatus.value = RegisterStatus.RegisteredWithoutLogin
             } else {
                 _registerStatus.value = RegisterStatus.Failed
                 Log.w(TAG, "createUserWithEmail:failure", it.exception)
