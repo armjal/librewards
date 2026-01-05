@@ -14,11 +14,11 @@ import androidx.test.espresso.matcher.ViewMatchers.withTagValue
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import com.example.librewards.R
 import com.example.librewards.data.models.Product
 import com.example.librewards.ui.adapters.RecyclerAdapter
 import com.example.librewards.utils.AuthTestHelper
+import com.example.librewards.utils.BaseIntegrationTest
 import com.example.librewards.utils.DbTestHelper
 import com.example.librewards.utils.StorageTestHelper
 import org.hamcrest.Matchers.`is`
@@ -29,7 +29,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
-class RewardsIntegrationTest {
+class RewardsIntegrationTest : BaseIntegrationTest() {
     val testProducts = listOf(
         Product(
             productName = "Snickers",
@@ -41,28 +41,18 @@ class RewardsIntegrationTest {
         ),
     )
 
-    private var testUserEmail: String? = null
     private val testUniversity = "University of Integration Tests"
 
     @Before
-    fun setup() {
-        val instrumentation = getInstrumentation()
-        val packageName = instrumentation.targetContext.packageName
-        val uiAutomation = instrumentation.uiAutomation
-
-        uiAutomation.executeShellCommand("pm grant $packageName android.permission.ACCESS_FINE_LOCATION")
-        uiAutomation.executeShellCommand("pm grant $packageName android.permission.ACCESS_COARSE_LOCATION")
-
+    override fun setup() {
+        super.setup()
         StorageTestHelper.createTestProducts(testUniversity, testProducts)
     }
 
     @After
-    fun tearDown() {
+    override fun tearDown() {
         StorageTestHelper.deleteProducts(testUniversity)
-        testUserEmail?.let { email ->
-            AuthTestHelper.deleteAuth(email)
-            DbTestHelper.deleteTestUser(email)
-        }
+        super.tearDown()
     }
 
     @Test

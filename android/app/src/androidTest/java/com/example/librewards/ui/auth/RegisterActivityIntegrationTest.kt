@@ -13,11 +13,9 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import androidx.test.platform.app.InstrumentationRegistry
 import com.example.librewards.R
 import com.example.librewards.ui.main.MainActivity
-import com.example.librewards.utils.AuthTestHelper
-import com.example.librewards.utils.DbTestHelper
+import com.example.librewards.utils.BaseIntegrationTest
 import com.example.librewards.utils.ViewUtils.forceClick
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.instanceOf
@@ -30,34 +28,21 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
-class RegisterActivityIntegrationTest {
+class RegisterActivityIntegrationTest : BaseIntegrationTest() {
     @Rule
     @JvmField
     val scenarioRule = ActivityScenarioRule(RegisterActivity::class.java)
 
-    private var testUserEmail: String? = null
-
     @Before
-    fun setup() {
+    override fun setup() {
+        super.setup()
         Intents.init()
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val packageName = instrumentation.targetContext.packageName
-        val uiAutomation = instrumentation.uiAutomation
-
-        // Grant location permissions
-        uiAutomation.executeShellCommand("pm grant $packageName android.permission.ACCESS_FINE_LOCATION")
-        uiAutomation.executeShellCommand("pm grant $packageName android.permission.ACCESS_COARSE_LOCATION")
     }
 
     @After
-    fun tearDown() {
+    override fun tearDown() {
         Intents.release()
-
-        testUserEmail?.let { email ->
-            AuthTestHelper.deleteAuth(email)
-            DbTestHelper.deleteTestUser(email)
-        }
-        testUserEmail = null
+        super.tearDown()
     }
 
     @Test
