@@ -77,6 +77,7 @@ jobs:
           GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT }}
           SERVICE_ACCOUNT_EMAIL: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           REALTIME_DB_URL: ${{ secrets.REALTIME_DB_URL }}
+          PRODUCT_IMAGE_BUCKET_NAME: ${{ secrets.PRODUCT_IMAGE_BUCKET_NAME }}
         run: |
           # Start the server using the built script
           ./android/local-admin-server/build/install/local-admin-server/bin/local-admin-server &
