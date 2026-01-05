@@ -15,7 +15,7 @@ object AuthTestHelper {
         }
 
         val task = auth.createUserWithEmailAndPassword(email, password)
-        val result = Tasks.await(task, 10, TimeUnit.SECONDS)
+        val result = Tasks.await(task, 20, TimeUnit.SECONDS)
         return result.user
     }
 
@@ -31,11 +31,17 @@ object AuthTestHelper {
         try {
             val customToken = getCustomTokenFromLocalHelper(email)
 
-            // Sign in with the custom token to apply the admin claim
             val auth = FirebaseAuth.getInstance()
-            Tasks.await(auth.signInWithCustomToken(customToken), 20, TimeUnit.SECONDS)
+            if (auth.currentUser != null) {
+                auth.signOut()
+            }
+
+            Tasks.await(auth.signInWithCustomToken(customToken), 30, TimeUnit.SECONDS)
         } catch (e: Exception) {
-            throw RuntimeException("Failed to set admin via local server. Ensure :local-admin-server is running.", e)
+            throw RuntimeException(
+                "Failed to set admin via local server. Ensure :local-admin-server is running and emulator has internet.",
+                e,
+            )
         }
     }
 
