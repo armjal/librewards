@@ -55,7 +55,9 @@ class LoginActivityIntegrationTest : BaseIntegrationTest() {
         onView(withId(R.id.loginButton))
             .perform(forceClick())
 
-        Thread.sleep(1000)
+        // Ensure we are still on the login screen
+        waitForCondition { onView(withId(R.id.loginEmail)).check(matches(isDisplayed())) }
+
         onView(withId(R.id.loginEmail)).check(matches(isDisplayed()))
     }
 
@@ -69,14 +71,13 @@ class LoginActivityIntegrationTest : BaseIntegrationTest() {
         DbTestHelper.createTestUser(email)
         FirebaseAuth.getInstance().signOut()
 
-        onView(withId(R.id.loginEmail)).check(matches(isDisplayed())).perform(replaceText(email))
-        onView(withId(R.id.loginPassword)).check(matches(isDisplayed())).perform(replaceText(password))
-        onView(withId(R.id.loginButton)).check(matches(isDisplayed())).perform(forceClick())
+        waitForCondition {
+            onView(withId(R.id.loginEmail)).check(matches(isDisplayed())).perform(replaceText(email))
+            onView(withId(R.id.loginPassword)).check(matches(isDisplayed())).perform(replaceText(password))
+            onView(withId(R.id.loginButton)).check(matches(isDisplayed())).perform(forceClick())
+        }
 
-        // Wait for async login network call
-        Thread.sleep(1000)
-
-        intended(hasComponent(MainActivity::class.java.name))
+        waitForCondition { intended(hasComponent(MainActivity::class.java.name)) }
     }
 
     @Test
@@ -90,13 +91,12 @@ class LoginActivityIntegrationTest : BaseIntegrationTest() {
         DbTestHelper.createTestUser(email)
         FirebaseAuth.getInstance().signOut()
 
-        onView(withId(R.id.loginEmail)).check(matches(isDisplayed())).perform(replaceText(email))
-        onView(withId(R.id.loginPassword)).check(matches(isDisplayed())).perform(replaceText(password))
-        onView(withId(R.id.loginButton)).check(matches(isDisplayed())).perform(forceClick())
+        waitForCondition {
+            onView(withId(R.id.loginEmail)).check(matches(isDisplayed())).perform(replaceText(email))
+            onView(withId(R.id.loginPassword)).check(matches(isDisplayed())).perform(replaceText(password))
+            onView(withId(R.id.loginButton)).check(matches(isDisplayed())).perform(forceClick())
+        }
 
-        // Wait for async login network call
-        Thread.sleep(5000)
-
-        intended(hasComponent(AdminActivity::class.java.name))
+        waitForCondition { intended(hasComponent(AdminActivity::class.java.name)) }
     }
 }

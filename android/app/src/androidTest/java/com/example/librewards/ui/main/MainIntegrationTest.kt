@@ -42,28 +42,36 @@ class MainIntegrationTest : BaseIntegrationTest() {
         )
 
         val scenario = ActivityScenario.launch(MainActivity::class.java)
-        // Wait for async data loading (MainActivity loads user data)
-        Thread.sleep(3000)
 
-        // Verify TimerFragment views
-        onView(withId(R.id.username)).check(matches(withText("$firstName $lastName")))
-        onView(withId(R.id.usersPoints)).check(matches(withText(points))) // Initial points
-        onView(withId(R.id.stopwatch)).check(matches(isDisplayed()))
+        // Wait for async data loading (MainActivity loads user data)
+        waitForCondition {
+            onView(withId(R.id.username)).check(matches(isDisplayed()))
+
+            // Verify TimerFragment views
+            onView(withId(R.id.username)).check(matches(withText("$firstName $lastName")))
+            onView(withId(R.id.usersPoints)).check(matches(withText(points))) // Initial points
+            onView(withId(R.id.stopwatch)).check(matches(isDisplayed()))
+        }
 
         onView(withId(R.id.slidingPanel)).perform(expandSlidingPanel())
-        Thread.sleep(1000)
 
-        onView(withId(R.id.qrCode)).check(matches(isDisplayed()))
-        onView(withId(R.id.qrCodeNumber)).check(matches(isDisplayed()))
+        waitForCondition {
+            onView(withId(R.id.qrCode)).check(matches(isDisplayed()))
+
+            onView(withId(R.id.qrCode)).check(matches(isDisplayed()))
+            onView(withId(R.id.qrCodeNumber)).check(matches(isDisplayed()))
+        }
+
         onView(withId(R.id.slidingPanel)).perform(collapseSlidingPanel())
-        Thread.sleep(1000)
 
-        // Verify RewardsFragment
-        onView(withId(R.id.viewPager)).perform(swipeLeft())
-        Thread.sleep(1000) // Wait for swipe animation
+        waitForCondition {
+            onView(withId(R.id.viewPager)).perform(swipeLeft())
+        }
 
-        onView(withId(R.id.rewardsText)).check(matches(withText(containsString("REWARDS FROM ${university.uppercase()}"))))
-        onView(withId(R.id.rewardsPoints)).check(matches(withText(points)))
+        waitForCondition {
+            onView(withId(R.id.rewardsText)).check(matches(withText(containsString("REWARDS FROM ${university.uppercase()}"))))
+            onView(withId(R.id.rewardsPoints)).check(matches(withText(points)))
+        }
 
         scenario.close()
     }

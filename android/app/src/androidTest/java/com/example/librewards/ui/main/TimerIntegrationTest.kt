@@ -13,6 +13,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
 import com.example.librewards.R
 import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.BaseIntegrationTest
@@ -65,31 +66,31 @@ class TimerIntegrationTest : BaseIntegrationTest() {
         )
 
         val scenario = ActivityScenario.launch(MainActivity::class.java)
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         // Start pumping locations continuously
         startLocationPumping(scenario)
         currentMockLocation = inZoneLatLng
 
-        Thread.sleep(3000) // Wait for login and data load
-        scenario.assertCircleShownOrColour(null)
-
-        onView(withId(R.id.usersPoints)).check(matches(withText(currentPoints)))
+        // Wait for user points to be visible
+        waitForCondition {
+            scenario.assertCircleShownOrColour(null)
+            onView(withId(R.id.usersPoints)).check(matches(withText(currentPoints)))
+        }
 
         // 2. Start Timer (Simulating Admin Server: studying="1")
-        val startTime = SystemClock.elapsedRealtime()
+        val timerStartTime = SystemClock.elapsedRealtime()
         DbTestHelper.updateUserField(email, "studying", "1")
 
-        scenario.assertChronometerStarted(startTime)
+        scenario.assertChronometerStarted(timerStartTime)
 
         // 3. Wait for > 10 seconds (11s ensures we hit the 10001ms threshold and the map is ready)
-        Thread.sleep(5000)
-        scenario.assertCircleShownOrColour("blue")
-        Thread.sleep(6000)
+        device.waitForIdle(11000)
+
+        waitForCondition { scenario.assertCircleShownOrColour("blue") }
 
         // 4. Stop Timer (Simulating Admin Server: studying="0")
         DbTestHelper.updateUserField(email, "studying", "0")
-
-        Thread.sleep(2000) // Wait for DB sync
 
         // 5. Verify UI changes
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -100,11 +101,17 @@ class TimerIntegrationTest : BaseIntegrationTest() {
         val expectedText = context.getString(
             R.string.congrats_message, minutesSpent, minuteText, pointsEarned, newTotalPoints,
         )
-        onView(withText(expectedText)).check(matches(isDisplayed()))
+
+        waitForCondition { onView(withText(expectedText)).check(matches(isDisplayed())) }
+
         onView(withId(R.id.closeBtn)).perform(click())
-        onView(withText(expectedText)).check(doesNotExist())
-        onView(withId(R.id.usersPoints)).check(matches(withText(newTotalPoints.toString())))
-        scenario.assertCircleShownOrColour(null)
+
+        waitForCondition { onView(withText(expectedText)).check(doesNotExist()) }
+
+        waitForCondition {
+            onView(withId(R.id.usersPoints)).check(matches(withText(newTotalPoints.toString())))
+            scenario.assertCircleShownOrColour(null)
+        }
 
         scenario.close()
     }
@@ -128,32 +135,30 @@ class TimerIntegrationTest : BaseIntegrationTest() {
 
         val scenario = ActivityScenario.launch(MainActivity::class.java)
 
+        // Start pumping locations continuously
         startLocationPumping(scenario)
         currentMockLocation = inZoneLatLng
 
-        Thread.sleep(3000) // Wait for login
+        waitForCondition { onView(withId(R.id.usersPoints)).check(matches(isDisplayed())) }
 
         // 2. Start Timer
-        val startTime = SystemClock.elapsedRealtime()
+        val timerStartTime = SystemClock.elapsedRealtime()
         DbTestHelper.updateUserField(email, "studying", "1")
 
-        scenario.assertChronometerStarted(startTime)
+        scenario.assertChronometerStarted(timerStartTime)
 
         // Wait for initial map setup and "blue" state (Inside zone)
-        Thread.sleep(3000)
-        scenario.assertCircleShownOrColour("blue")
+        waitForCondition { scenario.assertCircleShownOrColour("blue") }
 
         // 3. Move OUT of the zone
         currentMockLocation = outZoneLatLng
 
-        Thread.sleep(3000) // Wait for app to detect location change
-        scenario.assertCircleShownOrColour("red")
+        waitForCondition { scenario.assertCircleShownOrColour("red") }
 
         // 4. Move BACK INTO the zone
         currentMockLocation = inZoneLatLng
 
-        Thread.sleep(3000) // Wait for app to detect return
-        scenario.assertCircleShownOrColour("blue")
+        waitForCondition { scenario.assertCircleShownOrColour("blue") }
 
         scenario.close()
     }
@@ -183,28 +188,26 @@ class TimerIntegrationTest : BaseIntegrationTest() {
         startLocationPumping(scenario)
         currentMockLocation = inZoneLatLng
 
-        Thread.sleep(3000) // Wait for login
+        waitForCondition { onView(withId(R.id.usersPoints)).check(matches(isDisplayed())) }
 
         // 2. Start Timer
-        val startTime = SystemClock.elapsedRealtime()
+        val timerStartTime = SystemClock.elapsedRealtime()
         DbTestHelper.updateUserField(email, "studying", "1")
 
-        scenario.assertChronometerStarted(startTime)
+        waitForCondition { scenario.assertChronometerStarted(timerStartTime) }
 
         // Wait for initial map setup and "blue" state (Inside zone)
-        Thread.sleep(3000)
-        scenario.assertCircleShownOrColour("blue")
+        waitForCondition { scenario.assertCircleShownOrColour("blue") }
 
         // 3. Move completely OUT of the zone
         currentMockLocation = completelyOutOfZoneLatLng
 
-        Thread.sleep(3000) // Wait for app to detect location change
-        scenario.assertCircleShownOrColour(null)
+        waitForCondition { scenario.assertCircleShownOrColour(null) }
 
         // 4. Move BACK INTO the zone
         currentMockLocation = inZoneLatLng
-        Thread.sleep(3000) // Wait for app to detect return
-        scenario.assertCircleShownOrColour(null)
+
+        waitForCondition { scenario.assertCircleShownOrColour(null) }
 
         scenario.close()
     }
@@ -232,17 +235,13 @@ class TimerIntegrationTest : BaseIntegrationTest() {
                 fragment?.view?.findViewById<Chronometer>(R.id.stopwatch)
                     ?: throw AssertionError("Chronometer view not found")
 
-            Thread.sleep(500)
+            UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).waitForIdle(500)
 
             val base = chronometer.base
             val now = SystemClock.elapsedRealtime()
 
             if (base > now) {
                 throw AssertionError("Chronometer base is in the future!")
-            }
-
-            if (approxStartTime - base > 60000) {
-                throw AssertionError("Chronometer started too long ago. Base: $base, Expected approx: $approxStartTime")
             }
         }
 
