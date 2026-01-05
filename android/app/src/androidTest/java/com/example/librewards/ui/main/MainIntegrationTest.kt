@@ -9,42 +9,19 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import androidx.test.platform.app.InstrumentationRegistry
 import com.example.librewards.R
 import com.example.librewards.utils.AuthTestHelper
+import com.example.librewards.utils.BaseIntegrationTest
 import com.example.librewards.utils.DbTestHelper
 import com.example.librewards.utils.ViewUtils.collapseSlidingPanel
 import com.example.librewards.utils.ViewUtils.expandSlidingPanel
 import org.hamcrest.Matchers.containsString
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
-class MainIntegrationTest {
-    private var testUserEmail: String? = null
-
-    @Before
-    fun setup() {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val packageName = instrumentation.targetContext.packageName
-        val uiAutomation = instrumentation.uiAutomation
-
-        // Grant location permissions
-        uiAutomation.executeShellCommand("pm grant $packageName android.permission.ACCESS_FINE_LOCATION")
-        uiAutomation.executeShellCommand("pm grant $packageName android.permission.ACCESS_COARSE_LOCATION")
-    }
-
-    @After
-    fun tearDown() {
-        testUserEmail?.let { email ->
-            AuthTestHelper.deleteAuth(email)
-            DbTestHelper.deleteTestUser(email)
-        }
-    }
-
+class MainIntegrationTest : BaseIntegrationTest() {
     @Test
     fun mainUi_displaysCorrectValue_whenUserIsLoggedIn() {
         val email = "test_main@example.com"

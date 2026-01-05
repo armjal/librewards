@@ -15,34 +15,19 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.librewards.R
 import com.example.librewards.utils.AuthTestHelper
+import com.example.librewards.utils.BaseIntegrationTest
 import com.example.librewards.utils.DbTestHelper
 import com.google.android.gms.maps.model.LatLng
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-class TimerIntegrationTest {
-    private var testUserEmail: String? = null
+class TimerIntegrationTest : BaseIntegrationTest() {
     val inZoneLatLng = LatLng(56.463057, -2.973966)
 
     @Before
-    fun setup() {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val packageName = instrumentation.targetContext.packageName
-        val uiAutomation = instrumentation.uiAutomation
-
-        // Grant location permissions
-        uiAutomation.executeShellCommand("pm grant $packageName android.permission.ACCESS_COARSE_LOCATION")
-        uiAutomation.executeShellCommand("pm grant $packageName android.permission.ACCESS_FINE_LOCATION")
-        uiAutomation.executeShellCommand("appops set $packageName android:mock_location allow")
-    }
-
-    @After
-    fun tearDown() {
-        testUserEmail?.let { email ->
-            DbTestHelper.deleteTestUser(email)
-            AuthTestHelper.deleteAuth(email)
-        }
+    override fun setup() {
+        super.setup()
+        grantMockLocationPermission()
     }
 
     @Test
