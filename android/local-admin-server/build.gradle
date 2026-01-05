@@ -17,11 +17,11 @@ ktlint {
 }
 
 application {
-    mainClass.set("com.example.local_admin_server.LocalHelperServerKt")
+    mainClass.set("io.ktor.server.netty.EngineMain")
 }
 
 dependencies {
-    implementation("com.google.firebase:firebase-admin:9.2.0")
+    implementation("com.google.firebase:firebase-admin:9.7.0")
 
     // LOCAL SERVER
     implementation("io.ktor:ktor-server-core:3.3.3")

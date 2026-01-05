@@ -3,6 +3,7 @@ package com.example.librewards.ui.main
 import android.app.Dialog
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -82,8 +83,20 @@ class RewardsFragment(override val icon: Int = R.drawable.reward) :
         with(popupBinding) {
             popupText.text = chosenProduct.productName
             popupCost.text = "${chosenProduct.productCost} points"
+            Picasso.get().load(chosenProduct.productImageUrl)
+                .into(
+                    popupImageView,
+                    object : com.squareup.picasso.Callback {
+                        override fun onSuccess() {
+                            Log.d(TAG, "Picasso loaded image for ${chosenProduct.productName}")
+                            popupImageView.tag = chosenProduct.productName
+                        }
 
-            Picasso.get().load(chosenProduct.productImageUrl).into(popupImageView)
+                        override fun onError(e: Exception?) {
+                            Log.e(TAG, "Picasso failed to load image for ${chosenProduct.productName}", e)
+                        }
+                    },
+                )
         }
         productPopup.show()
     }

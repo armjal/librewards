@@ -17,6 +17,7 @@ resource "google_service_account" "github_actions_sa" {
 resource "google_project_iam_member" "github_actions_project_roles" {
   provider = google-beta
   for_each = toset([
+    "roles/storage.admin",
     "roles/firebasedatabase.admin",
     "roles/firebaseauth.admin",
     "roles/serviceusage.serviceUsageConsumer"
