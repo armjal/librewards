@@ -18,16 +18,30 @@ import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.BaseIntegrationTest
 import com.example.librewards.utils.DbTestHelper
 import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 class TimerIntegrationTest : BaseIntegrationTest() {
     val inZoneLatLng = LatLng(56.463057, -2.973966)
+    private var locationPumpingJob: Job? = null
+    private var currentMockLocation: LatLng = inZoneLatLng
 
     @Before
     override fun setup() {
         super.setup()
         grantMockLocationPermission()
+    }
+
+    @After
+    override fun tearDown() {
+        stopLocationPumping()
+        super.tearDown()
     }
 
     @Test
@@ -51,7 +65,10 @@ class TimerIntegrationTest : BaseIntegrationTest() {
         )
 
         val scenario = ActivityScenario.launch(MainActivity::class.java)
-        scenario.setMockLocation(inZoneLatLng)
+
+        // Start pumping locations continuously
+        startLocationPumping(scenario)
+        currentMockLocation = inZoneLatLng
 
         Thread.sleep(3000) // Wait for login and data load
         scenario.assertCircleShownOrColour(null)
@@ -111,7 +128,8 @@ class TimerIntegrationTest : BaseIntegrationTest() {
 
         val scenario = ActivityScenario.launch(MainActivity::class.java)
 
-        scenario.setMockLocation(inZoneLatLng)
+        startLocationPumping(scenario)
+        currentMockLocation = inZoneLatLng
 
         Thread.sleep(3000) // Wait for login
 
@@ -126,13 +144,13 @@ class TimerIntegrationTest : BaseIntegrationTest() {
         scenario.assertCircleShownOrColour("blue")
 
         // 3. Move OUT of the zone
-        scenario.setMockLocation(outZoneLatLng)
+        currentMockLocation = outZoneLatLng
 
         Thread.sleep(3000) // Wait for app to detect location change
         scenario.assertCircleShownOrColour("red")
 
         // 4. Move BACK INTO the zone
-        scenario.setMockLocation(inZoneLatLng)
+        currentMockLocation = inZoneLatLng
 
         Thread.sleep(3000) // Wait for app to detect return
         scenario.assertCircleShownOrColour("blue")
@@ -162,7 +180,8 @@ class TimerIntegrationTest : BaseIntegrationTest() {
 
         val scenario = ActivityScenario.launch(MainActivity::class.java)
 
-        scenario.setMockLocation(inZoneLatLng)
+        startLocationPumping(scenario)
+        currentMockLocation = inZoneLatLng
 
         Thread.sleep(3000) // Wait for login
 
@@ -177,13 +196,13 @@ class TimerIntegrationTest : BaseIntegrationTest() {
         scenario.assertCircleShownOrColour("blue")
 
         // 3. Move completely OUT of the zone
-        scenario.setMockLocation(completelyOutOfZoneLatLng)
+        currentMockLocation = completelyOutOfZoneLatLng
 
         Thread.sleep(3000) // Wait for app to detect location change
         scenario.assertCircleShownOrColour(null)
 
         // 4. Move BACK INTO the zone
-        scenario.setMockLocation(inZoneLatLng)
+        currentMockLocation = inZoneLatLng
         Thread.sleep(3000) // Wait for app to detect return
         scenario.assertCircleShownOrColour(null)
 
@@ -199,7 +218,11 @@ class TimerIntegrationTest : BaseIntegrationTest() {
 
         if (colour != null && circle == null) throw AssertionError("Map circle should be visible")
         if (colour == null && circle != null) throw AssertionError("Map circle should not be visible")
-        if (colour != null && circle?.fillColor != colourMap[colour]) throw AssertionError("Map circle wrong color")
+        if (colour != null &&
+            circle?.fillColor != colourMap[colour]
+        ) {
+            throw AssertionError("Map circle wrong color. Expected: $colour, Actual: ${circle?.fillColor}")
+        }
     }
 
     private fun ActivityScenario<MainActivity>.assertChronometerStarted(approxStartTime: Long): ActivityScenario<MainActivity>? =
@@ -222,6 +245,20 @@ class TimerIntegrationTest : BaseIntegrationTest() {
                 throw AssertionError("Chronometer started too long ago. Base: $base, Expected approx: $approxStartTime")
             }
         }
+
+    private fun startLocationPumping(scenario: ActivityScenario<MainActivity>) {
+        locationPumpingJob = CoroutineScope(Dispatchers.IO).launch {
+            while (true) {
+                scenario.setMockLocation(currentMockLocation)
+                delay(1000) // Send update every second
+            }
+        }
+    }
+
+    private fun stopLocationPumping() {
+        locationPumpingJob?.cancel()
+        locationPumpingJob = null
+    }
 
     private fun ActivityScenario<MainActivity>.setMockLocation(latLng: LatLng) {
         this.onActivity { activity ->
