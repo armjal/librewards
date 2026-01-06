@@ -7,6 +7,7 @@ import android.net.Uri
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.swipeLeft
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -115,6 +116,116 @@ class AdminRewardsIntegrationTest : BaseIntegrationTest() {
             onView(withId(R.id.manageProductName)).check(matches(withText("Book loan extension by 1 week")))
             onView(withId(R.id.manageProductCost)).check(matches(withText("6")))
             onView(withId(R.id.manageProductImage)).check(matches(withTagValue(`is`("Book loan extension by 1 week"))))
+        }
+    }
+
+    @Test
+    fun adminRewards_userCanDeleteReward() {
+        val email = "test_rewards@example.com"
+        val password = "password123"
+        val firstName = "Rewards"
+        val lastName = "Tester"
+
+        testUserEmail = email
+
+        AuthTestHelper.createUser(email, password)
+        AuthTestHelper.setUserAsAdmin(email)
+
+        DbTestHelper.createTestUser(
+            email = email,
+            firstname = firstName,
+            surname = lastName,
+            university = testUniversity,
+        )
+
+        val scenario = ActivityScenario.launch(AdminActivity::class.java)
+
+        // Wait for data load
+        waitForCondition {
+            onView(withId(R.id.adminUsername)).check(matches(isDisplayed()))
+        }
+
+        onView(withId(R.id.adminViewPager)).perform(swipeLeft())
+
+        waitForCondition {
+            onView(withId(R.id.adminRewardsRecycler)).perform(
+                RecyclerViewActions.actionOnItem<RecyclerAdapter.ViewHolder>(
+                    hasDescendant(withText("Snickers")), forceClick(),
+                ),
+            )
+        }
+
+        waitForCondition {
+            onView(withId(R.id.deleteButton)).perform(forceClick())
+        }
+
+        // Refresh UI to trigger fresh load of products
+        scenario.recreate()
+
+        waitForCondition {
+            onView(withId(R.id.adminRewardsRecycler))
+                .check(matches(not(hasDescendant(withText("Snickers")))))
+        }
+    }
+
+    @Test
+    fun adminRewards_userCanManageRewardDetails() {
+        val email = "test_rewards@example.com"
+        val password = "password123"
+        val firstName = "Rewards"
+        val lastName = "Tester"
+
+        testUserEmail = email
+
+        AuthTestHelper.createUser(email, password)
+        AuthTestHelper.setUserAsAdmin(email)
+        DbTestHelper.createTestUser(
+            email = email,
+            firstname = firstName,
+            surname = lastName,
+            university = testUniversity,
+        )
+
+        val scenario = ActivityScenario.launch(AdminActivity::class.java)
+
+        // Wait for data load
+        waitForCondition {
+            onView(withId(R.id.adminUsername)).check(matches(isDisplayed()))
+        }
+
+        onView(withId(R.id.adminViewPager)).perform(swipeLeft())
+
+        waitForCondition {
+            onView(withId(R.id.adminRewardsRecycler)).perform(
+                RecyclerViewActions.actionOnItem<RecyclerAdapter.ViewHolder>(
+                    hasDescendant(withText("Snickers")), forceClick(),
+                ),
+            )
+        }
+
+        val snickersNewName = "Chocolate Bar"
+        val snickersNewCost = "10"
+
+        waitForCondition {
+            onView(withId(R.id.manageProductCost)).perform(replaceText(snickersNewCost))
+            onView(withId(R.id.manageProductName)).perform(replaceText(snickersNewName))
+            onView(withId(R.id.updateButton)).perform(click())
+        }
+
+        // Refresh UI to trigger fresh load of products
+        scenario.recreate()
+
+        waitForCondition {
+            onView(withId(R.id.adminRewardsRecycler)).perform(
+                RecyclerViewActions.actionOnItem<RecyclerAdapter.ViewHolder>(
+                    hasDescendant(withText(snickersNewName)), forceClick(),
+                ),
+            )
+        }
+
+        waitForCondition {
+            onView(withId(R.id.manageProductCost)).check(matches(withText(snickersNewCost)))
+            onView(withId(R.id.manageProductName)).check(matches(withText(snickersNewName)))
         }
     }
 
