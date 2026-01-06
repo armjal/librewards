@@ -23,6 +23,7 @@ import com.example.librewards.utils.ViewUtils.forceClick
 import com.google.firebase.auth.FirebaseAuth
 import junit.framework.TestCase.assertEquals
 import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.not
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -52,30 +53,24 @@ class MainIntegrationTest : BaseIntegrationTest() {
 
         // Wait for async data loading (MainActivity loads user data)
         waitForCondition {
-            onView(withId(R.id.username)).check(matches(isDisplayed()))
-
-            // Verify TimerFragment views
             onView(withId(R.id.username)).check(matches(withText("$firstName $lastName")))
             onView(withId(R.id.usersPoints)).check(matches(withText(points))) // Initial points
             onView(withId(R.id.stopwatch)).check(matches(isDisplayed()))
         }
-
-        onView(withId(R.id.slidingPanel)).perform(expandSlidingPanel())
-
         waitForCondition {
+            onView(withId(R.id.slidingPanel)).perform(expandSlidingPanel())
             onView(withId(R.id.qrCode)).check(matches(isDisplayed()))
-
             onView(withId(R.id.qrCode)).check(matches(isDisplayed()))
             onView(withId(R.id.qrCodeNumber)).check(matches(isDisplayed()))
         }
 
-        onView(withId(R.id.slidingPanel)).perform(collapseSlidingPanel())
-
         waitForCondition {
-            onView(withId(R.id.viewPager)).perform(swipeLeft())
+            onView(withId(R.id.slidingPanel)).perform(collapseSlidingPanel())
+            onView(withId(R.id.qrCode)).check(matches(not(isDisplayed())))
         }
 
         waitForCondition {
+            onView(withId(R.id.viewPager)).perform(swipeLeft())
             onView(withId(R.id.rewardsText)).check(matches(withText(containsString("REWARDS FROM ${university.uppercase()}"))))
             onView(withId(R.id.rewardsPoints)).check(matches(withText(points)))
         }
