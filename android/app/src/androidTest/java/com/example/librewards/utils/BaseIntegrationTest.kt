@@ -7,6 +7,7 @@ import org.junit.Before
 
 open class BaseIntegrationTest {
     protected var testUserEmail: String? = null
+    protected var testUniversity = "University of Integration Tests"
 
     @Before
     open fun setup() {
@@ -49,5 +50,6 @@ open class BaseIntegrationTest {
                 device.waitForIdle(100)
             }
         }
+        condition()
     }
 }

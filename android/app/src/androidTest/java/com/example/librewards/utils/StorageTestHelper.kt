@@ -37,7 +37,7 @@ object StorageTestHelper {
         }
     }
 
-    fun deleteProducts(university: String) {
+    fun deleteProducts(university: String = "University of Integration Tests") {
         val encodedUniversity = university.replace(" ", "%20")
         val deleteProductsUrl = URL("http://10.0.2.2:8080/$encodedUniversity/products")
 

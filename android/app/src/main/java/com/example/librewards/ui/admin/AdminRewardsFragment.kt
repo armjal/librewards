@@ -99,7 +99,20 @@ class AdminRewardsFragment(override val icon: Int = R.drawable.reward) : Fragmen
         manageProductBinding = ManageProductPopupBinding.inflate(layoutInflater)
         showPopupWithContents(manageProductBinding!!) {
             manageProductBinding!!.apply {
-                Picasso.get().load(chosenProduct.productImageUrl).into(manageProductImage)
+                Picasso.get().load(chosenProduct.productImageUrl)
+                    .into(
+                        manageProductImage,
+                        object : com.squareup.picasso.Callback {
+                            override fun onSuccess() {
+                                Log.d(TAG, "Picasso loaded image for ${chosenProduct.productName}")
+                                manageProductImage.tag = chosenProduct.productName
+                            }
+
+                            override fun onError(e: Exception?) {
+                                Log.e(TAG, "Picasso failed to load image for ${chosenProduct.productName}", e)
+                            }
+                        },
+                    )
                 manageProductName.setText(chosenProduct.productName)
                 manageProductCost.setText(chosenProduct.productCost)
                 closeBtnManageAdmin.setOnClickListener { currentDialog?.dismiss() }

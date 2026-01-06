@@ -4,6 +4,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.swipeLeft
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -90,6 +91,7 @@ class AdminMainIntegrationTest : BaseIntegrationTest() {
             points = points,
         )
 
+        Intents.init()
         val scenario = ActivityScenario.launch(AdminActivity::class.java)
 
         waitForCondition {
@@ -103,5 +105,6 @@ class AdminMainIntegrationTest : BaseIntegrationTest() {
         assertEquals(null, FirebaseAuth.getInstance().currentUser)
 
         scenario.close()
+        Intents.release()
     }
 }

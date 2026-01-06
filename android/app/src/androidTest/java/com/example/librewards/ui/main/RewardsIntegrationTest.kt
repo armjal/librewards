@@ -42,8 +42,6 @@ class RewardsIntegrationTest : BaseIntegrationTest() {
         ),
     )
 
-    private val testUniversity = "University of Integration Tests"
-
     @Before
     override fun setup() {
         super.setup()
