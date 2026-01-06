@@ -15,7 +15,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import com.example.librewards.R
-import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.BaseIntegrationTest
 import com.example.librewards.utils.DbTestHelper
 import com.google.android.gms.maps.model.LatLng
@@ -47,21 +46,14 @@ class TimerIntegrationTest : BaseIntegrationTest() {
     @Test
     fun timer_accumulatesPoints_whenStudyingSessionCompleted() {
         val email = "test@example.com"
-        val password = "password123"
-        val firstName = "Timer"
-        val lastName = "Test"
         val university = "Abertay University"
         val currentPoints = "20"
-        testUserEmail = email
 
         // 1. Create User with default values
-        AuthTestHelper.createUser(email, password)
-        DbTestHelper.createTestUser(
+        createStudentUser(
             email = email,
-            firstname = firstName,
-            surname = lastName,
             university = university,
-            points = "20",
+            points = currentPoints,
         )
 
         val scenario = ActivityScenario.launch(MainActivity::class.java)
@@ -119,19 +111,11 @@ class TimerIntegrationTest : BaseIntegrationTest() {
     @Test
     fun timer_circleTurnsRed_whenLeavingStudyZone_andBlue_whenReturning() {
         val email = "test@example.com"
-        val password = "password123"
-        testUserEmail = email
 
         // Coords approx 50m away (0.00045 deg lat difference is ~50m)
         val outZoneLatLng = LatLng(56.463457, -2.973966)
 
-        AuthTestHelper.createUser(email, password)
-        DbTestHelper.createTestUser(
-            email = email,
-            firstname = "Zone",
-            surname = "Walker",
-            university = "Abertay University",
-        )
+        createStudentUser(email = email, university = "Abertay University")
 
         val scenario = ActivityScenario.launch(MainActivity::class.java)
 
@@ -167,8 +151,6 @@ class TimerIntegrationTest : BaseIntegrationTest() {
     @Test
     fun timer_whenStudentCompletelyLeavesStudyZone_timerStops_andCircleClears() {
         val email = "test@example.com"
-        val password = "password123"
-        testUserEmail = email
 
         // 1. Create User inside the study zone (Abertay University coords)
         val inZoneLatLng = LatLng(56.463057, -2.973966)
@@ -176,13 +158,7 @@ class TimerIntegrationTest : BaseIntegrationTest() {
         // Coords approx 70m away
         val completelyOutOfZoneLatLng = LatLng(56.463687, -2.973966)
 
-        AuthTestHelper.createUser(email, password)
-        DbTestHelper.createTestUser(
-            email = email,
-            firstname = "Zone",
-            surname = "Walker",
-            university = "Abertay University",
-        )
+        createStudentUser(email = email, university = "Abertay University")
 
         val scenario = ActivityScenario.launch(MainActivity::class.java)
 

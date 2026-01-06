@@ -14,9 +14,7 @@ import androidx.test.filters.LargeTest
 import com.example.librewards.R
 import com.example.librewards.ui.admin.AdminActivity
 import com.example.librewards.ui.main.MainActivity
-import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.BaseIntegrationTest
-import com.example.librewards.utils.DbTestHelper
 import com.example.librewards.utils.ViewUtils.forceClick
 import com.google.firebase.auth.FirebaseAuth
 import org.junit.After
@@ -65,10 +63,8 @@ class LoginActivityIntegrationTest : BaseIntegrationTest() {
     fun login_withStudentCredentials_navigatesToMainActivity() {
         val email = "test@example.com"
         val password = "password123"
-        testUserEmail = email
 
-        AuthTestHelper.createUser(email, password)
-        DbTestHelper.createTestUser(email)
+        createStudentUser(email, password)
         FirebaseAuth.getInstance().signOut()
 
         waitForCondition {
@@ -84,11 +80,8 @@ class LoginActivityIntegrationTest : BaseIntegrationTest() {
     fun login_withAdminCredentials_navigatesToAdminActivity() {
         val email = "admin@example.com"
         val password = "password123"
-        testUserEmail = email
 
-        AuthTestHelper.createUser(email, password)
-        AuthTestHelper.setUserAsAdmin(email)
-        DbTestHelper.createTestUser(email)
+        createAdminUser(email, password)
         FirebaseAuth.getInstance().signOut()
 
         waitForCondition {

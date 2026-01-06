@@ -14,9 +14,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import com.example.librewards.R
 import com.example.librewards.ui.auth.LoginActivity
-import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.BaseIntegrationTest
-import com.example.librewards.utils.DbTestHelper
 import com.example.librewards.utils.ViewUtils.forceClick
 import com.google.firebase.auth.FirebaseAuth
 import junit.framework.TestCase.assertEquals
@@ -28,23 +26,10 @@ import org.junit.runner.RunWith
 class AdminMainIntegrationTest : BaseIntegrationTest() {
     @Test
     fun adminUi_displaysCorrectValue_whenUserIsLoggedIn() {
-        val email = "test_admin@example.com"
-        val password = "password123"
         val firstName = "Admin"
         val lastName = "User"
-        val university = "Abertay University"
-        val points = "100"
-        testUserEmail = email
 
-        AuthTestHelper.createUser(email, password)
-        AuthTestHelper.setUserAsAdmin(email)
-        DbTestHelper.createTestUser(
-            email = email,
-            firstname = firstName,
-            surname = lastName,
-            university = university,
-            points = points,
-        )
+        createAdminUser(firstName = firstName, lastName = lastName)
 
         val scenario = ActivityScenario.launch(AdminActivity::class.java)
 
@@ -73,23 +58,7 @@ class AdminMainIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun admin_navigatesToLogin_whenUserIsLoggedOut() {
-        val email = "test_admin@example.com"
-        val password = "password123"
-        val firstName = "Admin"
-        val lastName = "User"
-        val university = "Abertay University"
-        val points = "100"
-        testUserEmail = email
-
-        AuthTestHelper.createUser(email, password)
-        AuthTestHelper.setUserAsAdmin(email)
-        DbTestHelper.createTestUser(
-            email = email,
-            firstname = firstName,
-            surname = lastName,
-            university = university,
-            points = points,
-        )
+        createAdminUser()
 
         Intents.init()
         val scenario = ActivityScenario.launch(AdminActivity::class.java)
