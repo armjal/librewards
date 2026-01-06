@@ -41,7 +41,6 @@ class TimerIntegrationTest : BaseIntegrationTest() {
 
     @After
     override fun tearDown() {
-        stopLocationPumping()
         super.tearDown()
     }
 
@@ -113,6 +112,7 @@ class TimerIntegrationTest : BaseIntegrationTest() {
             scenario.assertCircleShownOrColour(null)
         }
 
+        stopLocationPumping()
         scenario.close()
     }
 
@@ -160,6 +160,7 @@ class TimerIntegrationTest : BaseIntegrationTest() {
 
         waitForCondition { scenario.assertCircleShownOrColour("blue") }
 
+        stopLocationPumping()
         scenario.close()
     }
 
@@ -209,6 +210,7 @@ class TimerIntegrationTest : BaseIntegrationTest() {
 
         waitForCondition { scenario.assertCircleShownOrColour(null) }
 
+        stopLocationPumping()
         scenario.close()
     }
 
