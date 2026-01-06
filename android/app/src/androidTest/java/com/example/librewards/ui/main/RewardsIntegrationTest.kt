@@ -17,7 +17,6 @@ import androidx.test.filters.LargeTest
 import com.example.librewards.R
 import com.example.librewards.data.models.Product
 import com.example.librewards.ui.adapters.RecyclerAdapter
-import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.BaseIntegrationTest
 import com.example.librewards.utils.DbTestHelper
 import com.example.librewards.utils.StorageTestHelper
@@ -56,18 +55,9 @@ class RewardsIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun rewards_userCanSeeRewardsAndRedeem_whenFundsAreSufficient() {
-        val email = "test_rewards@example.com"
-        val password = "password123"
-        val firstName = "Rewards"
-        val lastName = "Tester"
         val initialPoints = "500"
-        testUserEmail = email
 
-        AuthTestHelper.createUser(email, password)
-        DbTestHelper.createTestUser(
-            email = email,
-            firstname = firstName,
-            surname = lastName,
+        createStudentUser(
             university = testUniversity,
             points = initialPoints,
         )
@@ -117,21 +107,9 @@ class RewardsIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun rewards_userCannotRedeem_whenFundsAreInsufficient() {
-        val email = "test_rewards@example.com"
-        val password = "password123"
-        val firstName = "Rewards"
-        val lastName = "Tester"
         val initialPoints = "5"
-        testUserEmail = email
 
-        AuthTestHelper.createUser(email, password)
-        DbTestHelper.createTestUser(
-            email = email,
-            firstname = firstName,
-            surname = lastName,
-            university = testUniversity,
-            points = initialPoints,
-        )
+        createStudentUser(points = initialPoints)
 
         val scenario = ActivityScenario.launch(MainActivity::class.java)
 

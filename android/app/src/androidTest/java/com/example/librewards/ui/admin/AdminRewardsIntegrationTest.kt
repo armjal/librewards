@@ -24,9 +24,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.example.librewards.R
 import com.example.librewards.data.models.Product
 import com.example.librewards.ui.adapters.RecyclerAdapter
-import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.BaseIntegrationTest
-import com.example.librewards.utils.DbTestHelper
 import com.example.librewards.utils.StorageTestHelper
 import com.example.librewards.utils.ViewUtils.forceClick
 import org.hamcrest.CoreMatchers.`is`
@@ -61,22 +59,7 @@ class AdminRewardsIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun adminRewards_userCanAddReward() {
-        val email = "test_rewards@example.com"
-        val password = "password123"
-        val firstName = "Rewards"
-        val lastName = "Tester"
-        val initialPoints = "500"
-        testUserEmail = email
-
-        AuthTestHelper.createUser(email, password)
-        AuthTestHelper.setUserAsAdmin(email)
-        DbTestHelper.createTestUser(
-            email = email,
-            firstname = firstName,
-            surname = lastName,
-            university = testUniversity,
-            points = initialPoints,
-        )
+        createAdminUser()
 
         val scenario = ActivityScenario.launch(AdminActivity::class.java)
 
@@ -121,22 +104,7 @@ class AdminRewardsIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun adminRewards_userCanDeleteReward() {
-        val email = "test_rewards@example.com"
-        val password = "password123"
-        val firstName = "Rewards"
-        val lastName = "Tester"
-
-        testUserEmail = email
-
-        AuthTestHelper.createUser(email, password)
-        AuthTestHelper.setUserAsAdmin(email)
-
-        DbTestHelper.createTestUser(
-            email = email,
-            firstname = firstName,
-            surname = lastName,
-            university = testUniversity,
-        )
+        createAdminUser()
 
         val scenario = ActivityScenario.launch(AdminActivity::class.java)
 
@@ -170,21 +138,7 @@ class AdminRewardsIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun adminRewards_userCanManageRewardDetails() {
-        val email = "test_rewards@example.com"
-        val password = "password123"
-        val firstName = "Rewards"
-        val lastName = "Tester"
-
-        testUserEmail = email
-
-        AuthTestHelper.createUser(email, password)
-        AuthTestHelper.setUserAsAdmin(email)
-        DbTestHelper.createTestUser(
-            email = email,
-            firstname = firstName,
-            surname = lastName,
-            university = testUniversity,
-        )
+        createAdminUser()
 
         val scenario = ActivityScenario.launch(AdminActivity::class.java)
 

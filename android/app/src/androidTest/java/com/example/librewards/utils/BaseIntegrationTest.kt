@@ -23,6 +23,45 @@ open class BaseIntegrationTest {
         testUserEmail = null
     }
 
+    protected fun createStudentUser(
+        email: String = "test_user@example.com",
+        password: String = "password123",
+        firstName: String = "Test",
+        lastName: String = "User",
+        university: String = "University of Integration Tests",
+        points: String = "0",
+    ) {
+        testUserEmail = email
+        AuthTestHelper.createUser(email, password)
+        DbTestHelper.createTestUser(
+            email = email,
+            firstname = firstName,
+            surname = lastName,
+            university = university,
+            points = points,
+        )
+    }
+
+    protected fun createAdminUser(
+        email: String = "admin_user@example.com",
+        password: String = "password123",
+        firstName: String = "Admin",
+        lastName: String = "User",
+        university: String = "University of Integration Tests",
+        points: String = "0",
+    ) {
+        testUserEmail = email
+        AuthTestHelper.createUser(email, password)
+        AuthTestHelper.setUserAsAdmin(email)
+        DbTestHelper.createTestUser(
+            email = email,
+            firstname = firstName,
+            surname = lastName,
+            university = university,
+            points = points,
+        )
+    }
+
     protected fun grantLocationPermissions() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val packageName = instrumentation.targetContext.packageName

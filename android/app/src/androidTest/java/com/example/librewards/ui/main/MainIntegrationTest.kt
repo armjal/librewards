@@ -14,9 +14,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import com.example.librewards.R
 import com.example.librewards.ui.auth.LoginActivity
-import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.BaseIntegrationTest
-import com.example.librewards.utils.DbTestHelper
 import com.example.librewards.utils.ViewUtils.collapseSlidingPanel
 import com.example.librewards.utils.ViewUtils.expandSlidingPanel
 import com.example.librewards.utils.ViewUtils.forceClick
@@ -32,20 +30,13 @@ import org.junit.runner.RunWith
 class MainIntegrationTest : BaseIntegrationTest() {
     @Test
     fun mainUi_displaysCorrectValue_whenUserIsLoggedIn() {
-        val email = "test_main@example.com"
-        val password = "password123"
-        val firstName = "Integration"
+        val firstName = "Main"
         val lastName = "Tester"
-        val university = "Abertay University"
         val points = "50"
-        testUserEmail = email
 
-        AuthTestHelper.createUser(email, password)
-        DbTestHelper.createTestUser(
-            email = email,
-            firstname = firstName,
-            surname = lastName,
-            university = university,
+        createStudentUser(
+            firstName = firstName,
+            lastName = lastName,
             points = points,
         )
 
@@ -71,7 +62,7 @@ class MainIntegrationTest : BaseIntegrationTest() {
 
         waitForCondition {
             onView(withId(R.id.viewPager)).perform(swipeLeft())
-            onView(withId(R.id.rewardsText)).check(matches(withText(containsString("REWARDS FROM ${university.uppercase()}"))))
+            onView(withId(R.id.rewardsText)).check(matches(withText(containsString("REWARDS FROM ${testUniversity.uppercase()}"))))
             onView(withId(R.id.rewardsPoints)).check(matches(withText(points)))
         }
 
@@ -80,22 +71,9 @@ class MainIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun main_navigatesToLogin_whenUserIsLoggedOut() {
-        val email = "test_main@example.com"
-        val password = "password123"
-        val firstName = "Integration"
-        val lastName = "Tester"
-        val university = "Abertay University"
         val points = "50"
-        testUserEmail = email
 
-        AuthTestHelper.createUser(email, password)
-        DbTestHelper.createTestUser(
-            email = email,
-            firstname = firstName,
-            surname = lastName,
-            university = university,
-            points = points,
-        )
+        createStudentUser(points = points)
         Intents.init()
 
         val scenario = ActivityScenario.launch(MainActivity::class.java)
