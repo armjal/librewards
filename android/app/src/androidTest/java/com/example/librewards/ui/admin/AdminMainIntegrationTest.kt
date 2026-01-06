@@ -1,4 +1,4 @@
-package com.example.librewards.ui.main
+package com.example.librewards.ui.admin
 
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
@@ -16,29 +16,27 @@ import com.example.librewards.ui.auth.LoginActivity
 import com.example.librewards.utils.AuthTestHelper
 import com.example.librewards.utils.BaseIntegrationTest
 import com.example.librewards.utils.DbTestHelper
-import com.example.librewards.utils.ViewUtils.collapseSlidingPanel
-import com.example.librewards.utils.ViewUtils.expandSlidingPanel
 import com.example.librewards.utils.ViewUtils.forceClick
 import com.google.firebase.auth.FirebaseAuth
 import junit.framework.TestCase.assertEquals
-import org.hamcrest.Matchers.containsString
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
-class MainIntegrationTest : BaseIntegrationTest() {
+class AdminMainIntegrationTest : BaseIntegrationTest() {
     @Test
-    fun mainUi_displaysCorrectValue_whenUserIsLoggedIn() {
-        val email = "test_main@example.com"
+    fun adminUi_displaysCorrectValue_whenUserIsLoggedIn() {
+        val email = "test_admin@example.com"
         val password = "password123"
-        val firstName = "Integration"
-        val lastName = "Tester"
+        val firstName = "Admin"
+        val lastName = "User"
         val university = "Abertay University"
-        val points = "50"
+        val points = "100"
         testUserEmail = email
 
         AuthTestHelper.createUser(email, password)
+        AuthTestHelper.setUserAsAdmin(email)
         DbTestHelper.createTestUser(
             email = email,
             firstname = firstName,
@@ -47,52 +45,43 @@ class MainIntegrationTest : BaseIntegrationTest() {
             points = points,
         )
 
-        val scenario = ActivityScenario.launch(MainActivity::class.java)
+        val scenario = ActivityScenario.launch(AdminActivity::class.java)
 
-        // Wait for async data loading (MainActivity loads user data)
+        // Wait for async data loading (AdminActivity loads user data)
         waitForCondition {
-            onView(withId(R.id.username)).check(matches(isDisplayed()))
+            onView(withId(R.id.adminUsername)).check(matches(isDisplayed()))
+            onView(withId(R.id.adminUsername)).check(matches(withText("$firstName $lastName")))
 
-            // Verify TimerFragment views
-            onView(withId(R.id.username)).check(matches(withText("$firstName $lastName")))
-            onView(withId(R.id.usersPoints)).check(matches(withText(points))) // Initial points
-            onView(withId(R.id.stopwatch)).check(matches(isDisplayed()))
+            // Verify AdminHomeFragment views
+            onView(withId(R.id.scanTimerButton)).check(matches(isDisplayed()))
+            onView(withId(R.id.scanRewardButton)).check(matches(isDisplayed()))
+            onView(withId(R.id.enterQr)).check(matches(isDisplayed()))
         }
 
-        onView(withId(R.id.slidingPanel)).perform(expandSlidingPanel())
+        // Swipe to Rewards Fragment
+        onView(withId(R.id.adminViewPager)).perform(swipeLeft())
 
         waitForCondition {
-            onView(withId(R.id.qrCode)).check(matches(isDisplayed()))
-
-            onView(withId(R.id.qrCode)).check(matches(isDisplayed()))
-            onView(withId(R.id.qrCodeNumber)).check(matches(isDisplayed()))
-        }
-
-        onView(withId(R.id.slidingPanel)).perform(collapseSlidingPanel())
-
-        waitForCondition {
-            onView(withId(R.id.viewPager)).perform(swipeLeft())
-        }
-
-        waitForCondition {
-            onView(withId(R.id.rewardsText)).check(matches(withText(containsString("REWARDS FROM ${university.uppercase()}"))))
-            onView(withId(R.id.rewardsPoints)).check(matches(withText(points)))
+            // Verify AdminRewardsFragment views
+            onView(withId(R.id.addAProduct)).check(matches(isDisplayed()))
+            onView(withId(R.id.adminRewardsRecycler)).check(matches(isDisplayed()))
         }
 
         scenario.close()
     }
 
     @Test
-    fun main_navigatesToLogin_whenUserIsLoggedOut() {
-        val email = "test_main@example.com"
+    fun admin_navigatesToLogin_whenUserIsLoggedOut() {
+        val email = "test_admin@example.com"
         val password = "password123"
-        val firstName = "Integration"
-        val lastName = "Tester"
+        val firstName = "Admin"
+        val lastName = "User"
         val university = "Abertay University"
-        val points = "50"
+        val points = "100"
         testUserEmail = email
 
         AuthTestHelper.createUser(email, password)
+        AuthTestHelper.setUserAsAdmin(email)
         DbTestHelper.createTestUser(
             email = email,
             firstname = firstName,
@@ -101,10 +90,10 @@ class MainIntegrationTest : BaseIntegrationTest() {
             points = points,
         )
 
-        val scenario = ActivityScenario.launch(MainActivity::class.java)
+        val scenario = ActivityScenario.launch(AdminActivity::class.java)
 
         waitForCondition {
-            onView(withId(R.id.profileImage)).perform(forceClick())
+            onView(withId(R.id.adminProfileImage)).perform(forceClick())
         }
 
         waitForCondition {
