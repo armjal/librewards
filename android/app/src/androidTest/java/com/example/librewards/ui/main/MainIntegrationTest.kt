@@ -4,6 +4,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.swipeLeft
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -100,6 +101,7 @@ class MainIntegrationTest : BaseIntegrationTest() {
             university = university,
             points = points,
         )
+        Intents.init()
 
         val scenario = ActivityScenario.launch(MainActivity::class.java)
 
@@ -114,5 +116,6 @@ class MainIntegrationTest : BaseIntegrationTest() {
         assertEquals(null, FirebaseAuth.getInstance().currentUser)
 
         scenario.close()
+        Intents.release()
     }
 }

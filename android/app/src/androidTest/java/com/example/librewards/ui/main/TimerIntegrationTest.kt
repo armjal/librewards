@@ -85,9 +85,9 @@ class TimerIntegrationTest : BaseIntegrationTest() {
         scenario.assertChronometerStarted(timerStartTime)
 
         // 3. Wait for > 10 seconds (11s ensures we hit the 10001ms threshold and the map is ready)
-        device.waitForIdle(11000)
-
+        Thread.sleep(5000)
         waitForCondition { scenario.assertCircleShownOrColour("blue") }
+        Thread.sleep(6000)
 
         // 4. Stop Timer (Simulating Admin Server: studying="0")
         DbTestHelper.updateUserField(email, "studying", "0")
