@@ -1,5 +1,6 @@
 package com.example.local_admin_server
 
+import com.example.local_admin_server.models.CreateProductRequest
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.storage.Bucket
 import com.google.cloud.storage.Storage
@@ -46,22 +47,18 @@ private fun Application.setupRouting() {
 
         post("/{university}/product") {
             println("Received POST /product")
-            val text = call.receiveText()
-            val json = Json.parseToJsonElement(text).jsonObject
 
-            val university = call.parameters["university"]
-            val productName = json["productName"]?.toString()?.trim('"')
-            val productCost = json["productCost"]?.toString()?.trim('"')
-            val productImageBase64 = json["productImageBase64"]?.toString()?.trim('"')
-
-            if (university == null || productName == null || productCost == null || productImageBase64 == null) {
-                println("Error: Missing fields")
+            var createProductRequest: CreateProductRequest
+            try {
+                createProductRequest = CreateProductRequest(call.parameters, call.receiveText())
+            } catch (e: IllegalArgumentException) {
+                println("Error: ${e.message}")
                 return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing fields"))
             }
 
             runCatching {
-                val productImageBytes = java.util.Base64.getDecoder().decode(productImageBase64)
-                val objectName = "$university/images/$productName"
+                val productImageBytes = java.util.Base64.getDecoder().decode(createProductRequest.imageBase64)
+                val objectName = "${createProductRequest.university}/images/${createProductRequest.name}"
 
                 val blob = storageBucket.create(
                     objectName,
@@ -81,10 +78,10 @@ private fun Application.setupRouting() {
                         StorageClient.getInstance().bucket().name
                     }/o/$encodedPath?alt=media&token=$token"
 
-                val productDbRef = dbInstance.getReference("products")?.child(university)?.push()
+                val productDbRef = dbInstance.getReference("products")?.child(createProductRequest.university)?.push()
                 val productData = mapOf(
-                    "productName" to productName,
-                    "productCost" to productCost,
+                    "productName" to createProductRequest.name,
+                    "productCost" to createProductRequest.cost,
                     "productImageUrl" to downloadUrl,
                 )
                 productDbRef?.setValueAsync(productData)?.get()
@@ -203,8 +200,7 @@ private fun initialiseFirebase() {
     println("Environment loaded.")
 
     runCatching {
-        val creds = GoogleCredentials.getApplicationDefault()
-
+        val creds = GoogleCredentials.fromStream(java.io.FileInputStream(env["GOOGLE_APPLICATION_CREDENTIALS"]))
         if (FirebaseApp.getApps().isEmpty()) {
             println("Initializing Firebase App...")
             FirebaseApp.initializeApp(
