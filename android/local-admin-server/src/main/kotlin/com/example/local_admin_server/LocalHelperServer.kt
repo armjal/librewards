@@ -15,6 +15,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.statuspages.StatusPages // Ensure this import exists
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
@@ -35,6 +36,12 @@ fun Application.module() {
     println("Starting LocalHelperServer...")
     install(ContentNegotiation) { json() }
     initialiseFirebase()
+    install(StatusPages) {
+        exception<IllegalArgumentException> { call, cause ->
+            println("IllegalArgumentException caught: ${cause.message}")
+            call.respond(HttpStatusCode.BadRequest, mapOf("error" to (cause.message ?: "Invalid request")))
+        }
+    }
     setupRouting()
 }
 
@@ -48,13 +55,7 @@ private fun Application.setupRouting() {
         post("/{university}/product") {
             println("Received POST /product")
 
-            var createProductRequest: CreateProductRequest
-            try {
-                createProductRequest = CreateProductRequest(call.parameters, call.receiveText())
-            } catch (e: IllegalArgumentException) {
-                println("Error: ${e.message}")
-                return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing fields"))
-            }
+            val createProductRequest = CreateProductRequest(call.parameters, call.receiveText())
 
             runCatching {
                 val productImageBytes = java.util.Base64.getDecoder().decode(createProductRequest.imageBase64)
