@@ -1,4 +1,4 @@
-package com.example.local_admin_server.models
+package com.example.local_admin_server.validation
 
 import io.ktor.http.Parameters
 import kotlinx.serialization.json.Json

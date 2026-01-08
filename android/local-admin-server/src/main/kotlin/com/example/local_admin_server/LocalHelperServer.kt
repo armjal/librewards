@@ -1,7 +1,9 @@
 package com.example.local_admin_server
 
-import com.example.local_admin_server.models.CreateProductRequest
-import com.example.local_admin_server.models.UpdateUserFieldRequest
+import com.example.local_admin_server.validation.CallExtensions.requireStringParameter
+import com.example.local_admin_server.validation.CallExtensions.requireStringQueryParameter
+import com.example.local_admin_server.validation.CreateProductRequest
+import com.example.local_admin_server.validation.UpdateUserFieldRequest
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.storage.Bucket
 import com.google.cloud.storage.Storage
@@ -95,10 +97,8 @@ private fun Application.setupRouting() {
         }
 
         delete("/{university}/products") {
-            val university = call.parameters["university"]
+            val university = call.requireStringParameter("university")
             println("Received DELETE /:university/products with university: $university")
-
-            if (university == null) return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing university"))
 
             val blobs = storageBucket.list(
                 Storage.BlobListOption.prefix("$university/images/"),
@@ -113,12 +113,8 @@ private fun Application.setupRouting() {
         }
 
         post("/generate-token-for-admin") {
-            val email = call.request.queryParameters["email"]
+            val email = call.requireStringQueryParameter("email")
             println("Received POST /generate-token-for-admin with email: $email")
-            if (email == null) {
-                println("Error: Missing email")
-                return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing email"))
-            }
 
             val uid = authInstance.getUserByEmail(email).uid
             authInstance.setCustomUserClaims(uid, mapOf("admin" to true))
@@ -137,18 +133,16 @@ private fun Application.setupRouting() {
         }
 
         delete("/{uid}/user") {
-            val uid = call.parameters["uid"]
+            val uid = call.requireStringParameter("uid")
             println("Received DELETE /:uid/user with uid: $uid")
-            if (uid == null) return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing uid"))
 
             dbInstance.getReference("users").child(uid).removeValueAsync().get()
             call.respond(mapOf("status" to "success"))
         }
 
         delete("/{email}/auth") {
-            val email = call.parameters["email"]
+            val email = call.requireStringParameter("email")
             println("Received DELETE /:email/auth with email: $email")
-            if (email == null) return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing email"))
 
             val authUid = authInstance.getUserByEmail(email).uid
             authInstance.deleteUser(authUid)
