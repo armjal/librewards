@@ -20,8 +20,8 @@ data class CreateProductRequest(
         cost = jsonRequestBody["productCost"].toString().trim('"')
         imageBase64 = jsonRequestBody["productImageBase64"].toString().trim('"')
 
-        if (university.isBlank() || name.isBlank() || cost.isBlank() || imageBase64.isBlank()) {
-            throw IllegalArgumentException("All fields must be non-empty")
+        require(university.isNotBlank() || name.isNotBlank() || cost.isNotBlank() || imageBase64.isNotBlank()) {
+            "All fields must be non-empty"
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.local_admin_server
 
 import com.example.local_admin_server.models.CreateProductRequest
+import com.example.local_admin_server.models.UpdateUserFieldRequest
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.storage.Bucket
 import com.google.cloud.storage.Storage
@@ -24,8 +25,6 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
 import java.net.URLEncoder
 import java.util.UUID
 
@@ -129,20 +128,11 @@ private fun Application.setupRouting() {
         }
 
         post("/{uid}/update-user-field") {
-            val uid = call.parameters["uid"]
-            println("Received POST /:uid/update-user-field with uid: $uid")
-            if (uid == null) return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing uid"))
+            val request = UpdateUserFieldRequest(call.parameters, call.receiveText())
+            println("Received POST /:uid/update-user-field with uid: ${request.uid}")
 
-            val text = call.receiveText()
-
-            val json = Json.parseToJsonElement(text).jsonObject
-            val field = json["field"]?.toString()?.trim('"')
-            val value = json["value"]?.toString()?.trim('"')
-
-            if (field == null) return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing field"))
-
-            val usersDbRef = dbInstance.getReference("users").child(uid).child(field)
-            usersDbRef.setValueAsync(value).get()
+            val usersDbRef = dbInstance.getReference("users").child(request.uid).child(request.field)
+            usersDbRef.setValueAsync(request.value).get()
             call.respond(mapOf("status" to "success"))
         }
 
