@@ -10,7 +10,10 @@ data class ServerResponse(
 )
 
 object LocalServerUtils {
-    fun post(url: URL, requestBody: JSONObject? = null): ServerResponse {
+    const val BASE_URL = "http://10.0.2.2:8080"
+
+    fun post(path: String, requestBody: JSONObject? = null): ServerResponse {
+        val url = URL("$BASE_URL$path")
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "POST"
         connection.connectTimeout = 5000
@@ -21,7 +24,8 @@ object LocalServerUtils {
         return ServerResponse(responseCode, connection.inputStream.bufferedReader().readText())
     }
 
-    fun delete(url: URL): ServerResponse {
+    fun delete(path: String): ServerResponse {
+        val url = URL("$BASE_URL$path")
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "DELETE"
         return ServerResponse(connection.responseCode, connection.responseMessage)
