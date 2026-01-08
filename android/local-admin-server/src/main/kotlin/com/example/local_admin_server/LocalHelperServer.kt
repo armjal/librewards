@@ -19,6 +19,7 @@ import io.ktor.server.plugins.statuspages.StatusPages // Ensure this import exis
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
+import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -35,14 +36,20 @@ private lateinit var authInstance: FirebaseAuth
 fun Application.module() {
     println("Starting LocalHelperServer...")
     install(ContentNegotiation) { json() }
+    install(IgnoreTrailingSlash)
     initialiseFirebase()
+    setupRouting()
     install(StatusPages) {
         exception<IllegalArgumentException> { call, cause ->
             println("IllegalArgumentException caught: ${cause.message}")
             call.respond(HttpStatusCode.BadRequest, mapOf("error" to (cause.message ?: "Invalid request")))
         }
+        exception<Throwable> { call, cause ->
+            println("Error caught: ${cause.message}")
+            cause.printStackTrace()
+            call.respond(HttpStatusCode.InternalServerError, mapOf("error" to cause.message))
+        }
     }
-    setupRouting()
 }
 
 private fun Application.setupRouting() {
@@ -57,41 +64,35 @@ private fun Application.setupRouting() {
 
             val createProductRequest = CreateProductRequest(call.parameters, call.receiveText())
 
-            runCatching {
-                val productImageBytes = java.util.Base64.getDecoder().decode(createProductRequest.imageBase64)
-                val objectName = "${createProductRequest.university}/images/${createProductRequest.name}"
+            val productImageBytes = java.util.Base64.getDecoder().decode(createProductRequest.imageBase64)
+            val objectName = "${createProductRequest.university}/images/${createProductRequest.name}"
 
-                val blob = storageBucket.create(
-                    objectName,
-                    productImageBytes,
-                    "image/jpeg",
-                )
+            val blob = storageBucket.create(
+                objectName,
+                productImageBytes,
+                "image/jpeg",
+            )
 
-                val token = UUID.randomUUID().toString()
-                blob.toBuilder()
-                    .setMetadata(mapOf("firebaseStorageDownloadTokens" to token))
-                    .build()
-                    .update()
+            val token = UUID.randomUUID().toString()
+            blob.toBuilder()
+                .setMetadata(mapOf("firebaseStorageDownloadTokens" to token))
+                .build()
+                .update()
 
-                val encodedPath = URLEncoder.encode(blob?.name, "UTF-8")
-                val downloadUrl =
-                    "https://firebasestorage.googleapis.com/v0/b/${
-                        StorageClient.getInstance().bucket().name
-                    }/o/$encodedPath?alt=media&token=$token"
+            val encodedPath = URLEncoder.encode(blob?.name, "UTF-8")
+            val downloadUrl =
+                "https://firebasestorage.googleapis.com/v0/b/${
+                    StorageClient.getInstance().bucket().name
+                }/o/$encodedPath?alt=media&token=$token"
 
-                val productDbRef = dbInstance.getReference("products")?.child(createProductRequest.university)?.push()
-                val productData = mapOf(
-                    "productName" to createProductRequest.name,
-                    "productCost" to createProductRequest.cost,
-                    "productImageUrl" to downloadUrl,
-                )
-                productDbRef?.setValueAsync(productData)?.get()
-                call.respond(mapOf("status" to "success", "productId" to productDbRef?.key))
-            }.onFailure {
-                println("Error creating product: ${it.message}")
-                it.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to it.message))
-            }
+            val productDbRef = dbInstance.getReference("products")?.child(createProductRequest.university)?.push()
+            val productData = mapOf(
+                "productName" to createProductRequest.name,
+                "productCost" to createProductRequest.cost,
+                "productImageUrl" to downloadUrl,
+            )
+            productDbRef?.setValueAsync(productData)?.get()
+            call.respond(mapOf("status" to "success", "productId" to productDbRef?.key))
         }
 
         delete("/{university}/products") {
@@ -100,22 +101,16 @@ private fun Application.setupRouting() {
 
             if (university == null) return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing university"))
 
-            runCatching {
-                val blobs = storageBucket.list(
-                    Storage.BlobListOption.prefix("$university/images/"),
-                ).iterateAll()
+            val blobs = storageBucket.list(
+                Storage.BlobListOption.prefix("$university/images/"),
+            ).iterateAll()
 
-                for (blob in blobs) {
-                    println("Deleting: ${blob.name}")
-                    blob.delete()
-                }
-                dbInstance.getReference("products").child(university).removeValueAsync().get()
-                call.respond(mapOf("status" to "success"))
-            }.onFailure {
-                println("Error deleting products: ${it.message}")
-                it.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to it.message))
+            for (blob in blobs) {
+                println("Deleting: ${blob.name}")
+                blob.delete()
             }
+            dbInstance.getReference("products").child(university).removeValueAsync().get()
+            call.respond(mapOf("status" to "success"))
         }
 
         post("/generate-token-for-admin") {
@@ -126,17 +121,11 @@ private fun Application.setupRouting() {
                 return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing email"))
             }
 
-            runCatching {
-                val uid = authInstance.getUserByEmail(email).uid
-                authInstance.setCustomUserClaims(uid, mapOf("admin" to true))
+            val uid = authInstance.getUserByEmail(email).uid
+            authInstance.setCustomUserClaims(uid, mapOf("admin" to true))
 
-                val token = authInstance.createCustomToken(uid, mapOf("admin" to true))
-                call.respond(mapOf("customToken" to token))
-            }.onFailure {
-                println("Error generating token: ${it.message}")
-                it.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to it.message))
-            }
+            val token = authInstance.createCustomToken(uid, mapOf("admin" to true))
+            call.respond(mapOf("customToken" to token))
         }
 
         post("/{uid}/update-user-field") {
@@ -152,15 +141,9 @@ private fun Application.setupRouting() {
 
             if (field == null) return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing field"))
 
-            runCatching {
-                val usersDbRef = dbInstance.getReference("users").child(uid).child(field)
-                usersDbRef.setValueAsync(value).get()
-                call.respond(mapOf("status" to "success"))
-            }.onFailure {
-                println("Error updating user field: ${it.message}")
-                it.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to it.message))
-            }
+            val usersDbRef = dbInstance.getReference("users").child(uid).child(field)
+            usersDbRef.setValueAsync(value).get()
+            call.respond(mapOf("status" to "success"))
         }
 
         delete("/{uid}/user") {
@@ -168,14 +151,8 @@ private fun Application.setupRouting() {
             println("Received DELETE /:uid/user with uid: $uid")
             if (uid == null) return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing uid"))
 
-            runCatching {
-                dbInstance.getReference("users").child(uid).removeValueAsync().get()
-                call.respond(mapOf("status" to "success"))
-            }.onFailure {
-                println("Error deleting user DB entry: ${it.message}")
-                it.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to it.message))
-            }
+            dbInstance.getReference("users").child(uid).removeValueAsync().get()
+            call.respond(mapOf("status" to "success"))
         }
 
         delete("/{email}/auth") {
@@ -183,15 +160,9 @@ private fun Application.setupRouting() {
             println("Received DELETE /:email/auth with email: $email")
             if (email == null) return@delete call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing email"))
 
-            runCatching {
-                val authUid = authInstance.getUserByEmail(email).uid
-                authInstance.deleteUser(authUid)
-                call.respond(mapOf("status" to "success"))
-            }.onFailure {
-                println("Error deleting auth user: ${it.message}")
-                it.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to it.message))
-            }
+            val authUid = authInstance.getUserByEmail(email).uid
+            authInstance.deleteUser(authUid)
+            call.respond(mapOf("status" to "success"))
         }
     }
 }
@@ -201,7 +172,7 @@ private fun initialiseFirebase() {
     println("Environment loaded.")
 
     runCatching {
-        val creds = GoogleCredentials.fromStream(java.io.FileInputStream(env["GOOGLE_APPLICATION_CREDENTIALS"]))
+        val creds = GoogleCredentials.getApplicationDefault()
         if (FirebaseApp.getApps().isEmpty()) {
             println("Initializing Firebase App...")
             FirebaseApp.initializeApp(
