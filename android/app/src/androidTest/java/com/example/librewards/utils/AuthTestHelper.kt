@@ -4,7 +4,6 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import org.json.JSONObject
-import java.net.URL
 import java.util.concurrent.TimeUnit
 
 object AuthTestHelper {
@@ -20,8 +19,8 @@ object AuthTestHelper {
     }
 
     fun deleteAuth(email: String) {
-        val url = URL("http://10.0.2.2:8080/$email/auth")
-        val serverResponse = LocalServerUtils.delete(url)
+        val path = "/$email/auth"
+        val serverResponse = LocalServerUtils.delete(path)
         if (serverResponse.status != 200) {
             throw RuntimeException("Delete Auth: Local helper returned code ${serverResponse.status}")
         }
@@ -46,9 +45,8 @@ object AuthTestHelper {
     }
 
     private fun getCustomTokenFromLocalHelper(email: String): String {
-        // Connect to local server running on host machine
-        val url = URL("http://10.0.2.2:8080/generate-token-for-admin?email=$email")
-        val serverResponse = LocalServerUtils.post(url)
+        val path = "/generate-token-for-admin?email=$email"
+        val serverResponse = LocalServerUtils.post(path)
         if (serverResponse.status != 200) {
             throw RuntimeException("Get Custom Token: Local helper returned code ${serverResponse.status}")
         }

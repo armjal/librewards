@@ -4,19 +4,18 @@ import android.util.Base64
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import com.example.librewards.data.models.Product
 import org.json.JSONObject
-import java.net.URL
 
 object StorageTestHelper {
     fun createProduct(university: String, product: Product, productImageBase64Encoded: String) {
         val encodedUniversity = university.replace(" ", "%20")
-        val createProductUrl = URL("http://10.0.2.2:8080/$encodedUniversity/product")
+        val createProductPath = "/$encodedUniversity/product"
 
         val requestBody = JSONObject().apply {
             put("productName", product.productName)
             put("productCost", product.productCost)
             put("productImageBase64", productImageBase64Encoded)
         }
-        val serverResponse = LocalServerUtils.post(createProductUrl, requestBody)
+        val serverResponse = LocalServerUtils.post(createProductPath, requestBody)
         if (serverResponse.status != 200) {
             throw RuntimeException("Product failed to create, returned code ${serverResponse.status}")
         }
@@ -39,9 +38,9 @@ object StorageTestHelper {
 
     fun deleteProducts(university: String = "University of Integration Tests") {
         val encodedUniversity = university.replace(" ", "%20")
-        val deleteProductsUrl = URL("http://10.0.2.2:8080/$encodedUniversity/products")
+        val deleteProductsPath = "/$encodedUniversity/products"
 
-        val serverResponse = LocalServerUtils.delete(deleteProductsUrl)
+        val serverResponse = LocalServerUtils.delete(deleteProductsPath)
         if (serverResponse.status != 200) {
             throw RuntimeException("Products failed to delete for $university, returned code ${serverResponse.status}")
         }
