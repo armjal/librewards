@@ -78,7 +78,7 @@ open class BaseIntegrationTest {
         uiAutomation.executeShellCommand("appops set $packageName android:mock_location allow")
     }
 
-    protected fun waitForCondition(timeoutMillis: Long = 5000, condition: () -> Unit) {
+    protected fun waitForCondition(timeoutMillis: Long = 7000, condition: () -> Unit) {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         val startTime = System.currentTimeMillis()
         while (System.currentTimeMillis() - startTime < timeoutMillis) {

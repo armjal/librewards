@@ -57,7 +57,6 @@ class TimerIntegrationTest : BaseIntegrationTest() {
         )
 
         val scenario = ActivityScenario.launch(MainActivity::class.java)
-        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         // Start pumping locations continuously
         startLocationPumping(scenario)
@@ -93,11 +92,12 @@ class TimerIntegrationTest : BaseIntegrationTest() {
             R.string.congrats_message, minutesSpent, minuteText, pointsEarned, newTotalPoints,
         )
 
-        waitForCondition { onView(withText(expectedText)).check(matches(isDisplayed())) }
+        waitForCondition { onView(withId(R.id.popupText)).check(matches(withText(expectedText))) }
 
-        onView(withId(R.id.closeBtn)).perform(click())
-
-        waitForCondition { onView(withText(expectedText)).check(doesNotExist()) }
+        waitForCondition {
+            onView(withId(R.id.closeBtn)).perform(click())
+            onView(withText(expectedText)).check(doesNotExist())
+        }
 
         waitForCondition {
             onView(withId(R.id.usersPoints)).check(matches(withText(newTotalPoints.toString())))
