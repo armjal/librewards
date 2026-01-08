@@ -11,14 +11,15 @@ data class CreateProductRequest(
     var university: String
     var name: String
     var cost: String
-    var imageBase64: String
+    var productImageBytes: ByteArray
 
     init {
         val jsonRequestBody = Json.parseToJsonElement(requestBody).jsonObject
         university = requestParameters["university"].toString()
         name = jsonRequestBody["productName"].toString().trim('"')
         cost = jsonRequestBody["productCost"].toString().trim('"')
-        imageBase64 = jsonRequestBody["productImageBase64"].toString().trim('"')
+        val imageBase64 = jsonRequestBody["productImageBase64"].toString().trim('"')
+        productImageBytes = java.util.Base64.getDecoder().decode(imageBase64)
 
         require(university.isNotBlank() || name.isNotBlank() || cost.isNotBlank() || imageBase64.isNotBlank()) {
             "All fields must be non-empty"

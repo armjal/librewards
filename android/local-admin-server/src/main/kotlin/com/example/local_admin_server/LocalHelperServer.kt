@@ -5,12 +5,14 @@ import com.example.local_admin_server.validation.CallExtensions.requireStringQue
 import com.example.local_admin_server.validation.CreateProductRequest
 import com.example.local_admin_server.validation.UpdateUserFieldRequest
 import com.google.auth.oauth2.GoogleCredentials
+import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.Bucket
 import com.google.cloud.storage.Storage
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.cloud.StorageClient
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import io.github.cdimascio.dotenv.Dotenv
 import io.ktor.http.HttpStatusCode
@@ -30,7 +32,8 @@ import io.ktor.server.routing.routing
 import java.net.URLEncoder
 import java.util.UUID
 
-private lateinit var dbInstance: FirebaseDatabase
+private lateinit var userDbRef: DatabaseReference
+private lateinit var productDbRef: DatabaseReference
 private lateinit var storageBucket: Bucket
 private lateinit var authInstance: FirebaseAuth
 
@@ -65,35 +68,31 @@ private fun Application.setupRouting() {
 
             val createProductRequest = CreateProductRequest(call.parameters, call.receiveText())
 
-            val productImageBytes = java.util.Base64.getDecoder().decode(createProductRequest.imageBase64)
             val objectName = "${createProductRequest.university}/images/${createProductRequest.name}"
-
-            val blob = storageBucket.create(
-                objectName,
-                productImageBytes,
-                "image/jpeg",
-            )
-
             val token = UUID.randomUUID().toString()
-            blob.toBuilder()
+
+            val blobInfo = BlobInfo.newBuilder(storageBucket.name, objectName)
+                .setContentType("image/jpeg")
                 .setMetadata(mapOf("firebaseStorageDownloadTokens" to token))
                 .build()
-                .update()
+
+            val blob = storageBucket.storage.create(
+                blobInfo,
+                createProductRequest.productImageBytes,
+            )
 
             val encodedPath = URLEncoder.encode(blob?.name, "UTF-8")
             val downloadUrl =
-                "https://firebasestorage.googleapis.com/v0/b/${
-                    StorageClient.getInstance().bucket().name
-                }/o/$encodedPath?alt=media&token=$token"
+                "https://firebasestorage.googleapis.com/v0/b/${StorageClient.getInstance().bucket().name}/o/$encodedPath?alt=media&token=$token"
 
-            val productDbRef = dbInstance.getReference("products")?.child(createProductRequest.university)?.push()
+            val productUniDbRef = productDbRef.child(createProductRequest.university)?.push()
             val productData = mapOf(
                 "productName" to createProductRequest.name,
                 "productCost" to createProductRequest.cost,
                 "productImageUrl" to downloadUrl,
             )
-            productDbRef?.setValueAsync(productData)?.get()
-            call.respond(mapOf("status" to "success", "productId" to productDbRef?.key))
+            productUniDbRef?.setValueAsync(productData)?.get()
+            call.respond(mapOf("status" to "success", "productId" to productUniDbRef?.key))
         }
 
         delete("/{university}/products") {
@@ -108,7 +107,7 @@ private fun Application.setupRouting() {
                 println("Deleting: ${blob.name}")
                 blob.delete()
             }
-            dbInstance.getReference("products").child(university).removeValueAsync().get()
+            productDbRef.child(university).removeValueAsync().get()
             call.respond(mapOf("status" to "success"))
         }
 
@@ -127,7 +126,7 @@ private fun Application.setupRouting() {
             val request = UpdateUserFieldRequest(call.parameters, call.receiveText())
             println("Received POST /:uid/update-user-field with uid: ${request.uid}")
 
-            val usersDbRef = dbInstance.getReference("users").child(request.uid).child(request.field)
+            val usersDbRef = userDbRef.child(request.uid).child(request.field)
             usersDbRef.setValueAsync(request.value).get()
             call.respond(mapOf("status" to "success"))
         }
@@ -136,7 +135,7 @@ private fun Application.setupRouting() {
             val uid = call.requireStringParameter("uid")
             println("Received DELETE /:uid/user with uid: $uid")
 
-            dbInstance.getReference("users").child(uid).removeValueAsync().get()
+            userDbRef.child(uid).removeValueAsync().get()
             call.respond(mapOf("status" to "success"))
         }
 
@@ -173,7 +172,9 @@ private fun initialiseFirebase() {
             println("Firebase App already initialized.")
         }
 
-        dbInstance = FirebaseDatabase.getInstance()
+        val dbInstance = FirebaseDatabase.getInstance()
+        userDbRef = dbInstance.getReference("users")
+        productDbRef = dbInstance.getReference("products")
         storageBucket = StorageClient.getInstance().bucket()
         authInstance = FirebaseAuth.getInstance()
     }.onFailure {
