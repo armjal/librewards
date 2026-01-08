@@ -18,7 +18,7 @@ open class BaseIntegrationTest {
     open fun tearDown() {
         testUserEmail?.let { email ->
             runCatching { AuthTestHelper.deleteAuth(email) }
-            runCatching { DbTestHelper.deleteTestUser(email) }
+            runCatching { UserTestHelper.deleteTestUser(email) }
         }
         testUserEmail = null
     }
@@ -33,7 +33,7 @@ open class BaseIntegrationTest {
     ) {
         testUserEmail = email
         AuthTestHelper.createUser(email, password)
-        DbTestHelper.createTestUser(
+        UserTestHelper.createTestUser(
             email = email,
             firstname = firstName,
             surname = lastName,
@@ -53,7 +53,7 @@ open class BaseIntegrationTest {
         testUserEmail = email
         AuthTestHelper.createUser(email, password)
         AuthTestHelper.setUserAsAdmin(email)
-        DbTestHelper.createTestUser(
+        UserTestHelper.createTestUser(
             email = email,
             firstname = firstName,
             surname = lastName,

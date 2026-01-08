@@ -16,7 +16,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import com.example.librewards.R
 import com.example.librewards.utils.BaseIntegrationTest
-import com.example.librewards.utils.DbTestHelper
+import com.example.librewards.utils.UserTestHelper
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -70,7 +70,7 @@ class TimerIntegrationTest : BaseIntegrationTest() {
 
         // 2. Start Timer (Simulating Admin Server: studying="1")
         val timerStartTime = SystemClock.elapsedRealtime()
-        DbTestHelper.updateUserField(email, "studying", "1")
+        UserTestHelper.updateUserField(email, "studying", "1")
 
         scenario.assertChronometerStarted(timerStartTime)
 
@@ -80,7 +80,7 @@ class TimerIntegrationTest : BaseIntegrationTest() {
         Thread.sleep(6000)
 
         // 4. Stop Timer (Simulating Admin Server: studying="0")
-        DbTestHelper.updateUserField(email, "studying", "0")
+        UserTestHelper.updateUserField(email, "studying", "0")
 
         // 5. Verify UI changes
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -127,7 +127,7 @@ class TimerIntegrationTest : BaseIntegrationTest() {
 
         // 2. Start Timer
         val timerStartTime = SystemClock.elapsedRealtime()
-        DbTestHelper.updateUserField(email, "studying", "1")
+        UserTestHelper.updateUserField(email, "studying", "1")
 
         scenario.assertChronometerStarted(timerStartTime)
 
@@ -169,7 +169,7 @@ class TimerIntegrationTest : BaseIntegrationTest() {
 
         // 2. Start Timer
         val timerStartTime = SystemClock.elapsedRealtime()
-        DbTestHelper.updateUserField(email, "studying", "1")
+        UserTestHelper.updateUserField(email, "studying", "1")
 
         waitForCondition { scenario.assertChronometerStarted(timerStartTime) }
 

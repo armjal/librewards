@@ -6,7 +6,7 @@ import com.google.firebase.database.FirebaseDatabase
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
-object DbTestHelper {
+object UserTestHelper {
     fun createTestUser(
         email: String, firstname: String = "Test",
         surname: String = "User", university: String = "University of Bristol", points: String = "0",

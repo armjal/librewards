@@ -25,7 +25,7 @@ import com.example.librewards.R
 import com.example.librewards.data.models.Product
 import com.example.librewards.ui.adapters.RecyclerAdapter
 import com.example.librewards.utils.BaseIntegrationTest
-import com.example.librewards.utils.StorageTestHelper
+import com.example.librewards.utils.ProductTestHelper
 import com.example.librewards.utils.ViewUtils.forceClick
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.not
@@ -47,13 +47,13 @@ class AdminRewardsIntegrationTest : BaseIntegrationTest() {
 
     @Before
     override fun setup() {
-        StorageTestHelper.createTestProducts(products = testProducts)
+        ProductTestHelper.createTestProducts(products = testProducts)
         super.setup()
     }
 
     @After
     override fun tearDown() {
-        StorageTestHelper.deleteProducts()
+        ProductTestHelper.deleteProducts()
         super.tearDown()
     }
 

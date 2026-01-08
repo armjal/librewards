@@ -18,8 +18,8 @@ import com.example.librewards.R
 import com.example.librewards.data.models.Product
 import com.example.librewards.ui.adapters.RecyclerAdapter
 import com.example.librewards.utils.BaseIntegrationTest
-import com.example.librewards.utils.DbTestHelper
-import com.example.librewards.utils.StorageTestHelper
+import com.example.librewards.utils.ProductTestHelper
+import com.example.librewards.utils.UserTestHelper
 import com.example.librewards.utils.ViewUtils.forceClick
 import org.hamcrest.Matchers.`is`
 import org.junit.After
@@ -44,12 +44,12 @@ class RewardsIntegrationTest : BaseIntegrationTest() {
     @Before
     override fun setup() {
         super.setup()
-        StorageTestHelper.createTestProducts(testUniversity, testProducts)
+        ProductTestHelper.createTestProducts(testUniversity, testProducts)
     }
 
     @After
     override fun tearDown() {
-        StorageTestHelper.deleteProducts(testUniversity)
+        ProductTestHelper.deleteProducts(testUniversity)
         super.tearDown()
     }
 
@@ -91,7 +91,7 @@ class RewardsIntegrationTest : BaseIntegrationTest() {
             onView(withId(R.id.popupImageView)).check(matches(withTagValue(`is`("Snickers"))))
             onView(withId(R.id.popupQr)).check(matches(isDisplayed()))
         }
-        DbTestHelper.updateUserField(testUserEmail!!, "redeemingReward", "1")
+        UserTestHelper.updateUserField(testUserEmail!!, "redeemingReward", "1")
 
         onView(withId(R.id.closeBtn)).perform(click())
 
@@ -136,7 +136,7 @@ class RewardsIntegrationTest : BaseIntegrationTest() {
             onView(withId(R.id.popupQr)).check(matches(isDisplayed()))
         }
 
-        DbTestHelper.updateUserField(testUserEmail!!, "redeemingReward", "1")
+        UserTestHelper.updateUserField(testUserEmail!!, "redeemingReward", "1")
 
         onView(withId(R.id.closeBtn)).perform(click())
 

@@ -5,7 +5,7 @@ import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import com.example.librewards.data.models.Product
 import org.json.JSONObject
 
-object StorageTestHelper {
+object ProductTestHelper {
     fun createProduct(university: String, product: Product, productImageBase64Encoded: String) {
         val encodedUniversity = university.replace(" ", "%20")
         val createProductPath = "/$encodedUniversity/product"
