@@ -20,11 +20,11 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.plugins.statuspages.StatusPages // Ensure this import exists
+import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondText
 import io.ktor.server.routing.IgnoreTrailingSlash
+import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -58,95 +58,108 @@ fun Application.module() {
 
 private fun Application.setupRouting() {
     routing {
-        get("/") {
-            println("Received GET /")
-            call.respondText("OK")
+        defaultRoute()
+        authRoutes()
+        userRoutes()
+        productRoutes()
+    }
+}
+
+private fun Route.defaultRoute() {
+    get("/") {
+        println("Received GET /")
+        call.respond(mapOf("status" to "success"))
+    }
+}
+
+private fun Route.productRoutes() {
+    post("/{university}/product") {
+        println("Received POST /product")
+
+        val createProductRequest = CreateProductRequest(call.parameters, call.receiveText())
+
+        val objectName = "${createProductRequest.university}/images/${createProductRequest.name}"
+        val token = UUID.randomUUID().toString()
+
+        val blobInfo = BlobInfo.newBuilder(storageBucket.name, objectName)
+            .setContentType("image/jpeg")
+            .setMetadata(mapOf("firebaseStorageDownloadTokens" to token))
+            .build()
+
+        val blob = storageBucket.storage.create(
+            blobInfo,
+            createProductRequest.productImageBytes,
+        )
+
+        val encodedPath = URLEncoder.encode(blob?.name, "UTF-8")
+        val downloadUrl =
+            "https://firebasestorage.googleapis.com/v0/b/${StorageClient.getInstance().bucket().name}/o/$encodedPath?alt=media&token=$token"
+
+        val productUniDbRef = productDbRef.child(createProductRequest.university)?.push()
+        val productData = mapOf(
+            "productName" to createProductRequest.name,
+            "productCost" to createProductRequest.cost,
+            "productImageUrl" to downloadUrl,
+        )
+        productUniDbRef?.setValueAsync(productData)?.get()
+        call.respond(mapOf("status" to "success", "productId" to productUniDbRef?.key))
+    }
+
+    delete("/{university}/products") {
+        val university = call.requireStringParameter("university")
+        println("Received DELETE /:university/products with university: $university")
+
+        val blobs = storageBucket.list(
+            Storage.BlobListOption.prefix("$university/images/"),
+        ).iterateAll()
+
+        for (blob in blobs) {
+            println("Deleting: ${blob.name}")
+            blob.delete()
         }
+        productDbRef.child(university).removeValueAsync().get()
+        call.respond(mapOf("status" to "success"))
+    }
+}
 
-        post("/{university}/product") {
-            println("Received POST /product")
+private fun Route.userRoutes() {
+    post("/{uid}/update-user-field") {
+        val request = UpdateUserFieldRequest(call.parameters, call.receiveText())
+        println("Received POST /:uid/update-user-field with uid: ${request.uid}")
 
-            val createProductRequest = CreateProductRequest(call.parameters, call.receiveText())
+        val usersDbRef = userDbRef.child(request.uid).child(request.field)
+        usersDbRef.setValueAsync(request.value).get()
+        call.respond(mapOf("status" to "success"))
+    }
 
-            val objectName = "${createProductRequest.university}/images/${createProductRequest.name}"
-            val token = UUID.randomUUID().toString()
+    delete("/{uid}/user") {
+        val uid = call.requireStringParameter("uid")
+        println("Received DELETE /:uid/user with uid: $uid")
 
-            val blobInfo = BlobInfo.newBuilder(storageBucket.name, objectName)
-                .setContentType("image/jpeg")
-                .setMetadata(mapOf("firebaseStorageDownloadTokens" to token))
-                .build()
+        userDbRef.child(uid).removeValueAsync().get()
+        call.respond(mapOf("status" to "success"))
+    }
+}
 
-            val blob = storageBucket.storage.create(
-                blobInfo,
-                createProductRequest.productImageBytes,
-            )
+private fun Route.authRoutes() {
+    post("/generate-token-for-admin") {
+        val email = call.requireStringQueryParameter("email")
+        println("Received POST /generate-token-for-admin with email: $email")
 
-            val encodedPath = URLEncoder.encode(blob?.name, "UTF-8")
-            val downloadUrl =
-                "https://firebasestorage.googleapis.com/v0/b/${StorageClient.getInstance().bucket().name}/o/$encodedPath?alt=media&token=$token"
+        val uid = authInstance.getUserByEmail(email).uid
+        authInstance.setCustomUserClaims(uid, mapOf("admin" to true))
 
-            val productUniDbRef = productDbRef.child(createProductRequest.university)?.push()
-            val productData = mapOf(
-                "productName" to createProductRequest.name,
-                "productCost" to createProductRequest.cost,
-                "productImageUrl" to downloadUrl,
-            )
-            productUniDbRef?.setValueAsync(productData)?.get()
-            call.respond(mapOf("status" to "success", "productId" to productUniDbRef?.key))
-        }
+        val token = authInstance.createCustomToken(uid, mapOf("admin" to true))
+        call.respond(mapOf("customToken" to token))
+    }
 
-        delete("/{university}/products") {
-            val university = call.requireStringParameter("university")
-            println("Received DELETE /:university/products with university: $university")
+    delete("/{email}/auth") {
+        val email = call.requireStringParameter("email")
+        println("Received DELETE /:email/auth with email: $email")
 
-            val blobs = storageBucket.list(
-                Storage.BlobListOption.prefix("$university/images/"),
-            ).iterateAll()
-
-            for (blob in blobs) {
-                println("Deleting: ${blob.name}")
-                blob.delete()
-            }
-            productDbRef.child(university).removeValueAsync().get()
-            call.respond(mapOf("status" to "success"))
-        }
-
-        post("/generate-token-for-admin") {
-            val email = call.requireStringQueryParameter("email")
-            println("Received POST /generate-token-for-admin with email: $email")
-
-            val uid = authInstance.getUserByEmail(email).uid
-            authInstance.setCustomUserClaims(uid, mapOf("admin" to true))
-
-            val token = authInstance.createCustomToken(uid, mapOf("admin" to true))
-            call.respond(mapOf("customToken" to token))
-        }
-
-        post("/{uid}/update-user-field") {
-            val request = UpdateUserFieldRequest(call.parameters, call.receiveText())
-            println("Received POST /:uid/update-user-field with uid: ${request.uid}")
-
-            val usersDbRef = userDbRef.child(request.uid).child(request.field)
-            usersDbRef.setValueAsync(request.value).get()
-            call.respond(mapOf("status" to "success"))
-        }
-
-        delete("/{uid}/user") {
-            val uid = call.requireStringParameter("uid")
-            println("Received DELETE /:uid/user with uid: $uid")
-
-            userDbRef.child(uid).removeValueAsync().get()
-            call.respond(mapOf("status" to "success"))
-        }
-
-        delete("/{email}/auth") {
-            val email = call.requireStringParameter("email")
-            println("Received DELETE /:email/auth with email: $email")
-
-            val authUid = authInstance.getUserByEmail(email).uid
-            authInstance.deleteUser(authUid)
-            call.respond(mapOf("status" to "success"))
-        }
+        val authUid = authInstance.getUserByEmail(email).uid
+        authInstance.deleteUser(authUid)
+        call.respond(mapOf("status" to "success"))
     }
 }
 
