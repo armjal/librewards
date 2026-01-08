@@ -95,10 +95,9 @@ class RewardsIntegrationTest : BaseIntegrationTest() {
 
         onView(withId(R.id.closeBtn)).perform(click())
 
-        waitForCondition { onView(withId(R.id.popupText)).check(doesNotExist()) }
-
         val newPointsAfterPurchase = "480"
         waitForCondition {
+            onView(withId(R.id.popupText)).check(doesNotExist())
             onView(withId(R.id.rewardsPoints)).check(matches(withText(newPointsAfterPurchase)))
         }
 
