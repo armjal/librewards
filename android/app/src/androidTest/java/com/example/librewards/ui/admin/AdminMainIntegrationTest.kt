@@ -11,7 +11,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
 import com.example.librewards.R
 import com.example.librewards.ui.auth.LoginActivity
 import com.example.librewards.utils.BaseIntegrationTest
@@ -22,7 +21,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-@LargeTest
 class AdminMainIntegrationTest : BaseIntegrationTest() {
     @Test
     fun adminUi_displaysCorrectValue_whenUserIsLoggedIn() {
