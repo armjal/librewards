@@ -1,4 +1,5 @@
 #!/bin/bash
+# Usage: ./set-admin.sh <email>
 
 EMAIL=$1
 
