@@ -149,3 +149,6 @@ The CI pipeline (GitHub Actions) runs both unit and integration tests automatica
 5. Run `./gradlew connectedCheck` to execute all instrumented tests
 
 GitHub Actions has its own dedicated service account as shown in the [github-actions module](infra/modules/github_actions). With the permissions defined in IaC, this allows the CI pipeline to manage resources in database, storage, and auth services while performing integration tests.
+
+## Additional project context
+This application was initially created in 2021 as part of a final year project. It has since been enhanced and refactored from November 2025. The initial commit containing all the code from 2021 can be found [here](https://github.com/armjal/librewards/commit/976aebe3fcb07dd03e1ccbf43904125bcc79b1e0)
